@@ -4,9 +4,11 @@
 // reviewed, and regenerating one is a deliberate act (delete it first).
 //
 //   pnpm bench:generate --split=dev [--seed=42] [--personas=8]
-import { existsSync, writeFileSync } from 'node:fs';
+//   pnpm bench:generate --split=dev-long          (dev plus filler sessions)
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { loadEnv, makeProviders } from '../runner/providers.js';
+import { FILLER_SESSIONS, fillerPlans, personaStrings, verbalizeFiller } from './filler.js';
 import { buildPersona, rng } from './personas.js';
 import type { Persona } from './personas.js';
 import { questionsFor } from './questions.js';
@@ -80,17 +82,73 @@ export function select(
   return chosen;
 }
 
+/**
+ * dev-long (P05): dev's items and fact turns unchanged, with filler sessions
+ * merged in by time. Built from the frozen dev.json so the two splits differ
+ * only in history length.
+ */
+async function generateLong(out: string): Promise<void> {
+  const dev = SplitFile.parse(
+    JSON.parse(readFileSync(path.resolve(import.meta.dirname, 'dev.json'), 'utf8')),
+  );
+  const { verbalizer } = makeProviders();
+  const llm = verbalizer(VERBALIZER_MODEL);
+  const filler = new Map<string, SetupSession[]>();
+  for (const personaId of [...new Set(dev.items.map((i) => i.persona))]) {
+    const persona = buildPersona(Number(personaId.slice(1)) - 1, dev.seed);
+    const askedAt = new Date(
+      Math.max(
+        ...dev.items.filter((i) => i.persona === personaId).map((i) => Date.parse(i.asked_at)),
+      ),
+    );
+    const forbid = personaStrings(persona);
+    const sessions: SetupSession[] = [];
+    for (const plan of fillerPlans(persona, dev.seed, askedAt)) {
+      const turns = await verbalizeFiller(llm, plan, forbid);
+      sessions.push({
+        session_id: plan.sessionId,
+        occurred_at: plan.occurredAt.toISOString(),
+        turns,
+      });
+      console.log(`${plan.sessionId} (${plan.topic}): ${turns.length} turn(s)`);
+    }
+    filler.set(personaId, sessions);
+  }
+  const items = dev.items.map((item) => ({
+    ...item,
+    split: 'dev-long' as const,
+    setup_sessions: [
+      ...item.setup_sessions,
+      ...(filler.get(item.persona) ?? []).filter((f) => f.occurred_at < item.asked_at),
+    ].sort((a, b) => a.occurred_at.localeCompare(b.occurred_at)),
+  }));
+  const file = SplitFile.parse({
+    ...dev,
+    split: 'dev-long',
+    generated_at: new Date().toISOString(),
+    review: `${dev.review ?? ''} dev-long adds ${FILLER_SESSIONS} filler sessions per persona (no personal facts), checked against every persona string.`,
+    items,
+  });
+  writeFileSync(out, `${JSON.stringify(file, null, 2)}\n`);
+  const turns = items.map((i) => i.setup_sessions.reduce((n, s) => n + s.turns.length, 0));
+  console.log(
+    `wrote ${items.length} items to ${path.basename(out)}; ${Math.min(...turns)}-${Math.max(...turns)} turns per history`,
+  );
+}
+
 async function main(): Promise<void> {
   loadEnv();
-  const split = arg('split', 'dev') as 'dev' | 'test';
+  const split = arg('split', 'dev') as 'dev' | 'dev-long' | 'test';
   const seed = Number(arg('seed', '42'));
-  const count = Number(arg('personas', split === 'dev' ? '8' : '40'));
+  const count = Number(arg('personas', split === 'test' ? '40' : '8'));
   const out = path.resolve(import.meta.dirname, `${split}.json`);
   if (existsSync(out)) {
     throw new Error(
       `${path.basename(out)} already exists and is frozen. Delete it deliberately to regenerate.`,
     );
   }
+
+  if (split === 'dev-long') return generateLong(out);
 
   const { verbalizer } = makeProviders();
   const llm = verbalizer(VERBALIZER_MODEL);
@@ -108,7 +166,7 @@ async function main(): Promise<void> {
     sessions.set(p.id, done);
   }
 
-  const chosen = select(personas, TARGETS[split], seed);
+  const chosen = select(personas, TARGETS[split === 'test' ? 'test' : 'dev'], seed);
   chosen.sort(
     (a, b) =>
       a.persona.id.localeCompare(b.persona.id, 'en', { numeric: true }) ||

@@ -26,7 +26,7 @@ export type SetupSession = z.infer<typeof SetupSession>;
 
 export const BenchItem = z.object({
   id: z.string().min(1),
-  split: z.enum(['dev', 'test']),
+  split: z.enum(['dev', 'dev-long', 'test']),
   category: z.enum(CATEGORIES),
   persona: z.string().min(1),
   setup_sessions: z.array(SetupSession).min(1),
@@ -41,7 +41,7 @@ export const BenchItem = z.object({
 export type BenchItem = z.infer<typeof BenchItem>;
 
 export const SplitFile = z.object({
-  split: z.enum(['dev', 'test']),
+  split: z.enum(['dev', 'dev-long', 'test']),
   seed: z.number().int(),
   generated_at: z.iso.datetime(),
   /** Models that verbalized the turns; the ground truth itself is code. */

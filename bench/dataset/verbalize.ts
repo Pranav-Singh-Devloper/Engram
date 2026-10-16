@@ -4,6 +4,7 @@
 // topics absent, and implicit updates kept implicit.
 import { z } from 'zod';
 import type { GroqRequest } from '@engram/core';
+import { checkShape } from './filler.js';
 import type { SessionPlan } from './personas.js';
 
 export const VERBALIZER_MODEL = 'qwen/qwen3.8-27b';
@@ -29,7 +30,7 @@ export function checkTurns(
   forbid: readonly string[],
 ): string[] {
   const text = turns.join('\n');
-  const problems: string[] = [];
+  const problems: string[] = checkShape(turns);
   for (const s of plan.statements) {
     for (const needed of s.mustInclude) {
       if (!text.toLowerCase().includes(needed.toLowerCase())) problems.push(`missing "${needed}"`);
