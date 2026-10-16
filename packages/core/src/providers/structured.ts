@@ -50,7 +50,7 @@ function replyText(json: unknown): string {
   return text;
 }
 
-function check<T>(
+export function check<T>(
   schema: z.ZodType<T>,
   text: string,
 ): { ok: true; value: T } | { ok: false; issues: string } {

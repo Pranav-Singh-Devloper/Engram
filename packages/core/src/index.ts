@@ -83,3 +83,6 @@ export { entityLabel, resolveEntity } from './resolve/entities.js';
 export type { EntityResolution, ResolveContext, ResolvedVia } from './resolve/entities.js';
 export { history } from './temporal/history.js';
 export type { HistoryEntry, HistoryOptions } from './temporal/history.js';
+export { DEFAULT_JUDGE_MODEL, GROQ_BASE_URL, GroqProvider } from './providers/groq.js';
+export type { GroqOptions, GroqRequest } from './providers/groq.js';
+export { DONT_KNOW } from './compose/prompt.js';

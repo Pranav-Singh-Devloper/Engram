@@ -16,7 +16,13 @@ import {
   processEpisodeUser,
 } from '../extract/prompt.js';
 import { ADJUDICATE_SYSTEM, WireAdjudicate, adjudicateUser } from '../conflict/prompt.js';
-import { AdjudicateInput, DisambiguateInput, ProcessEpisodeInput } from './contracts.js';
+import { COMPOSE_SYSTEM, WireCompose, composeUser, normalizeCompose } from '../compose/prompt.js';
+import {
+  AdjudicateInput,
+  ComposeInput,
+  DisambiguateInput,
+  ProcessEpisodeInput,
+} from './contracts.js';
 import type { EmbedPurpose, MethodInput, MethodOutput, StructuredMethod } from './contracts.js';
 import { DEFAULT_RETRY, defaultHttpDeps, postJson } from './http.js';
 import type { HttpDeps, RetryOptions } from './http.js';
@@ -31,6 +37,7 @@ export const DEFAULT_EMBED_MODEL = 'gemini-embedding-2';
 const PROCESS_EPISODE_JSON_SCHEMA = jsonSchemaFor(WireProcessEpisode);
 const DISAMBIGUATE_JSON_SCHEMA = jsonSchemaFor(WireDisambiguate);
 const ADJUDICATE_JSON_SCHEMA = jsonSchemaFor(WireAdjudicate);
+const COMPOSE_JSON_SCHEMA = jsonSchemaFor(WireCompose);
 
 /** batchEmbedContents accepts at most 100 requests per call. */
 const EMBED_BATCH = 100;
@@ -117,8 +124,8 @@ export class GeminiProvider implements Provider {
     );
   }
 
-  private notYet<M extends StructuredMethod>(method: M, phase: string): Promise<MethodOutput<M>> {
-    return Promise.reject(new ProviderError(`GeminiProvider.${method} lands in ${phase}.`));
+  private notYet<M extends StructuredMethod>(method: M, where: string): Promise<MethodOutput<M>> {
+    return Promise.reject(new ProviderError(`GeminiProvider.${method}: see ${where}.`));
   }
 
   processEpisode = (input: MethodInput<'processEpisode'>) =>
@@ -145,7 +152,17 @@ export class GeminiProvider implements Provider {
       jsonSchema: DISAMBIGUATE_JSON_SCHEMA,
     });
 
-  compose = () => this.notYet('compose', 'P04');
+  compose = async (input: MethodInput<'compose'>) => {
+    const parsed = ComposeInput.parse(input);
+    const out = await this.generate({
+      system: COMPOSE_SYSTEM,
+      user: composeUser(parsed),
+      schema: WireCompose,
+      jsonSchema: COMPOSE_JSON_SCHEMA,
+    });
+    return normalizeCompose(out, parsed);
+  };
   summarize = () => this.notYet('summarize', 'P06b');
-  judge = () => this.notYet('judge', 'P04');
+  /** The bench judge runs on a different model family (GroqProvider). */
+  judge = () => this.notYet('judge', 'GroqProvider');
 }
