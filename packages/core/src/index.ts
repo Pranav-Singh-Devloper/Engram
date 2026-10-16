@@ -53,3 +53,27 @@ export type { RetryOptions } from './providers/http.js';
 
 export { ingest } from './ingest/ingest.js';
 export type { IngestInput } from './ingest/ingest.js';
+
+export { systemClock } from './config/clock.js';
+export type { Clock } from './config/clock.js';
+export {
+  PREDICATES,
+  PREDICATE_NAMES,
+  getPredicate,
+  lookupPredicate,
+} from './conflict/predicates.js';
+export type { PredicateSpec } from './conflict/predicates.js';
+export { cleanName, normalizeName, normalizePredicate, toSnakeCase } from './extract/normalize.js';
+export { PROMPT_VERSION } from './extract/prompt.js';
+export { resolveHint } from './extract/temporal.js';
+export { processEpisode } from './ingest/process.js';
+export type { ProcessOptions, ProcessStatus, ProcessSummary } from './ingest/process.js';
+export { insertOnlyResolver } from './ingest/resolver.js';
+export type {
+  CandidateResolver,
+  Resolution,
+  ResolutionKind,
+  ResolvedCandidate,
+} from './ingest/resolver.js';
+export { entityLabel, resolveEntity } from './resolve/entities.js';
+export type { EntityResolution, ResolveContext, ResolvedVia } from './resolve/entities.js';
