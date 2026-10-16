@@ -21,7 +21,8 @@
     "fixtures:record": "pnpm --filter @engram/scripts fixtures:record",
     "demo:offline": "pnpm --filter @engram/scripts demo:offline",
     "bench": "pnpm --filter @engram/bench bench",
-    "bench:generate": "pnpm --filter @engram/bench bench:generate"
+    "bench:generate": "pnpm --filter @engram/bench bench:generate",
+    "bench:inspect": "pnpm --filter @engram/bench bench:inspect"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

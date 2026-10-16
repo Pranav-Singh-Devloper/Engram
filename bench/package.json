@@ -8,7 +8,8 @@
     "bench:generate": "tsx dataset/generate.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "bench:inspect": "tsx runner/inspect.ts"
   },
   "dependencies": {
     "@engram/core": "workspace:*",
