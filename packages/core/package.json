@@ -13,6 +13,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "postgres": "^3.4.9"
+    "postgres": "^3.4.9",
+    "zod": "^4.6.7"
   }
 }

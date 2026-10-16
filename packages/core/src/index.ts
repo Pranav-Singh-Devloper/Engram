@@ -36,3 +36,7 @@ export {
 } from './db/namespaces.js';
 export type { EnsureNamespaceInput, NamespaceWithSelf } from './db/namespaces.js';
 export { cosine, l2Normalize } from './db/vector.js';
+
+export * from './providers/contracts.js';
+export { ProviderError, ProviderHttpError, ProviderOutputError } from './providers/provider.js';
+export type { Provider } from './providers/provider.js';
