@@ -12,6 +12,8 @@ export interface NewFactRevision {
   /** The extracted candidate, kept for rejects and audits. */
   candidate?: JSONValue;
   reason?: string | null;
+  /** When the decision was made: the engine's transaction time. Defaults to now(). */
+  createdAt?: Date;
 }
 
 export async function insertFactRevision(
@@ -21,12 +23,12 @@ export async function insertFactRevision(
   return one(
     await db<FactRevision[]>`
       insert into fact_revisions
-        (namespace_id, old_fact_id, new_fact_id, kind, resolver, candidate, reason)
+        (namespace_id, old_fact_id, new_fact_id, kind, resolver, candidate, reason, created_at)
       values (
         ${revision.namespaceId}, ${revision.oldFactId ?? null}, ${revision.newFactId ?? null},
         ${revision.kind}, ${revision.resolver},
         ${revision.candidate === undefined ? null : db.json(revision.candidate)},
-        ${revision.reason ?? null}
+        ${revision.reason ?? null}, coalesce(${revision.createdAt ?? null}::timestamptz, now())
       )
       returning *`,
   );

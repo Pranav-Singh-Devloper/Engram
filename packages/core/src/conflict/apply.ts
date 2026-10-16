@@ -97,6 +97,7 @@ export async function applyDecision(
       resolver: d.resolver,
       candidate: payload(c),
       reason: d.reason,
+      createdAt: t,
     });
 
   switch (d.kind) {
