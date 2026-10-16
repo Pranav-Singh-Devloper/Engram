@@ -8,6 +8,8 @@ describe('normalizePredicate', () => {
     ['resides_in', 'lives_in'],
     ['based in', 'lives_in'],
     ['Moved-To', 'lives_in'],
+    ['movedTo', 'lives_in'],
+    ['employedBy', 'works_at'],
     ['employed_by', 'works_at'],
     ['Job at', 'works_at'],
     ['born_on', 'birth_date'],

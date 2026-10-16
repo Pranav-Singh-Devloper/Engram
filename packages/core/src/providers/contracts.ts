@@ -87,7 +87,8 @@ export const DisambiguateInput = z.object({
   mention: EntityRef,
   /** The episode text the mention came from. */
   context: z.string(),
-  candidates: z.array(EntityChoice).min(2),
+  /** One candidate when a lone name match has a conflicting description (two Sams). */
+  candidates: z.array(EntityChoice).min(1),
 });
 export const DisambiguateOutput = z.object({
   /** One of the candidate ids, or null for a new entity. */

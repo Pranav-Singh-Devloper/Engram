@@ -256,3 +256,65 @@ describe('GeminiProvider.generate', () => {
     );
   });
 });
+
+describe('GeminiProvider.processEpisode', () => {
+  const none = {
+    kind: 'none',
+    date: null,
+    amount: null,
+    unit: null,
+    direction: null,
+    year: null,
+    month: null,
+    season: null,
+  };
+  const candidate = (validFrom: Record<string, unknown>) => ({
+    subject: { name: 'SELF', type: 'person', description: null },
+    predicate: 'lives_in',
+    objectKind: 'entity',
+    objectName: 'Berlin',
+    objectType: 'place',
+    objectDescription: null,
+    statement: 'The user lives in Berlin.',
+    validFrom,
+    validTo: none,
+    isCorrection: false,
+    confidence: 0.9,
+  });
+  const reply = (body: unknown) =>
+    json({ candidates: [{ content: { parts: [{ text: JSON.stringify(body) }] } }] });
+  const input = {
+    content: 'I moved to Berlin last month.',
+    role: 'user' as const,
+    occurredAt: new Date('2024-06-10T09:00:00Z'),
+    predicates: ['lives_in'],
+  };
+
+  it('sends the wire JSON schema and maps the reply onto the contract', async () => {
+    const hint = { ...none, kind: 'relative', amount: 1, unit: 'month', direction: 'ago' };
+    const { provider, requests } = setup(() =>
+      reply({ importance: 0.6, candidates: [candidate(hint)] }),
+    );
+    const out = await provider.processEpisode(input);
+    expect(out.candidates[0]?.validFrom).toEqual({
+      kind: 'relative',
+      amount: 1,
+      unit: 'month',
+      direction: 'ago',
+    });
+    const config = (requests[0]?.body as { generationConfig: Record<string, unknown> })
+      .generationConfig;
+    expect(config.responseJsonSchema).toBeDefined();
+  });
+
+  it('repairs a reply that only fails in the wire-to-contract mapping', async () => {
+    const replies = [
+      { importance: 0.6, candidates: [candidate({ ...none, kind: 'relative', amount: 1 })] },
+      { importance: 0.6, candidates: [candidate(none)] },
+    ];
+    const { provider, requests } = setup(() => reply(replies.shift()));
+    const out = await provider.processEpisode(input);
+    expect(out.candidates[0]?.validFrom).toEqual({ kind: 'none' });
+    expect(requests).toHaveLength(2);
+  });
+});

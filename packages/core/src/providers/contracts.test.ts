@@ -48,9 +48,8 @@ describe('provider contracts', () => {
     expect(FactCandidate.safeParse(bad).success).toBe(false);
   });
 
-  it('require at least two candidates to disambiguate', () => {
-    const choice = { id: 'a', name: 'Sam', type: 'person', description: null, aliases: [] };
-    const input = { mention: candidate.subject, context: 'Sam called', candidates: [choice] };
+  it('require at least one candidate to disambiguate', () => {
+    const input = { mention: candidate.subject, context: 'Sam called', candidates: [] };
     expect(DisambiguateInput.safeParse(input).success).toBe(false);
   });
 

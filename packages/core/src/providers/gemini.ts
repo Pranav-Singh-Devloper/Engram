@@ -1,11 +1,22 @@
 // Gemini over its REST API with plain fetch; no SDK dependency.
 // Embeddings use gemini-embedding-2, which takes task prefixes instead of a
 // taskType field and is truncated to 768 dims via outputDimensionality.
-// Structured methods are added in the phases that write their prompts.
+// Structured methods are added in the phases that write their prompts; the
+// prompts and model-facing schemas live next to the code that uses the results.
 import { z } from 'zod';
 import { EMBEDDING_DIM } from '../config/index.js';
 import { assertVector, l2Normalize } from '../db/vector.js';
-import type { EmbedPurpose, MethodOutput, StructuredMethod } from './contracts.js';
+import {
+  DISAMBIGUATE_SYSTEM,
+  PROCESS_EPISODE_SYSTEM,
+  WireDisambiguate,
+  WireProcessEpisode,
+  disambiguateUser,
+  jsonSchemaFor,
+  processEpisodeUser,
+} from '../extract/prompt.js';
+import { DisambiguateInput, ProcessEpisodeInput } from './contracts.js';
+import type { EmbedPurpose, MethodInput, MethodOutput, StructuredMethod } from './contracts.js';
 import { DEFAULT_RETRY, defaultHttpDeps, postJson } from './http.js';
 import type { HttpDeps, RetryOptions } from './http.js';
 import type { Provider } from './provider.js';
@@ -15,6 +26,9 @@ import type { StructuredRequest } from './structured.js';
 
 export const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 export const DEFAULT_EMBED_MODEL = 'gemini-embedding-2';
+
+const PROCESS_EPISODE_JSON_SCHEMA = jsonSchemaFor(WireProcessEpisode);
+const DISAMBIGUATE_JSON_SCHEMA = jsonSchemaFor(WireDisambiguate);
 
 /** batchEmbedContents accepts at most 100 requests per call. */
 const EMBED_BATCH = 100;
@@ -105,8 +119,22 @@ export class GeminiProvider implements Provider {
     return Promise.reject(new ProviderError(`GeminiProvider.${method} lands in ${phase}.`));
   }
 
-  processEpisode = () => this.notYet('processEpisode', 'P02');
-  disambiguate = () => this.notYet('disambiguate', 'P02');
+  processEpisode = (input: MethodInput<'processEpisode'>) =>
+    this.generate({
+      system: PROCESS_EPISODE_SYSTEM,
+      user: processEpisodeUser(ProcessEpisodeInput.parse(input)),
+      schema: WireProcessEpisode,
+      jsonSchema: PROCESS_EPISODE_JSON_SCHEMA,
+    });
+
+  disambiguate = (input: MethodInput<'disambiguate'>) =>
+    this.generate({
+      system: DISAMBIGUATE_SYSTEM,
+      user: disambiguateUser(DisambiguateInput.parse(input)),
+      schema: WireDisambiguate,
+      jsonSchema: DISAMBIGUATE_JSON_SCHEMA,
+    });
+
   adjudicate = () => this.notYet('adjudicate', 'P03');
   compose = () => this.notYet('compose', 'P04');
   summarize = () => this.notYet('summarize', 'P06b');

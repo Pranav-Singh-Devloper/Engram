@@ -7,7 +7,10 @@ export type GeneratePost = (body: unknown) => Promise<unknown>;
 export interface StructuredRequest<T> {
   system: string;
   user: string;
+  /** Validates (and may transform) the reply. */
   schema: z.ZodType<T>;
+  /** Sent as `responseJsonSchema`. Gemini follows it but doesn't guarantee it, so `schema` still decides. */
+  jsonSchema?: Record<string, unknown>;
   temperature?: number;
 }
 
@@ -57,7 +60,13 @@ function check<T>(
   } catch {
     return { ok: false, issues: 'the reply was not valid JSON' };
   }
-  const result = schema.safeParse(json);
+  let result: ReturnType<typeof schema.safeParse>;
+  try {
+    result = schema.safeParse(json);
+  } catch (err) {
+    // A transform that throws escapes safeParse; treat it as invalid output.
+    return { ok: false, issues: err instanceof Error ? err.message : String(err) };
+  }
   return result.success
     ? { ok: true, value: result.data }
     : { ok: false, issues: z.prettifyError(result.error) };
@@ -78,6 +87,7 @@ export async function generateStructured<T>(
     contents,
     generationConfig: {
       responseMimeType: 'application/json',
+      ...(request.jsonSchema && { responseJsonSchema: request.jsonSchema }),
       temperature: request.temperature ?? 0,
     },
   });

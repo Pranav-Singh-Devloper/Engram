@@ -1,10 +1,11 @@
 import { lookupPredicate } from '../conflict/predicates.js';
 
-/** "Resides In" → "resides_in"; diacritics dropped, punctuation collapsed. */
+/** "Resides In" or "residesIn" → "resides_in"; diacritics dropped, punctuation collapsed. */
 export function toSnakeCase(text: string): string {
   return text
     .normalize('NFKD')
     .replace(/\p{M}/gu, '')
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');
