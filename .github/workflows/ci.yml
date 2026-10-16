@@ -55,3 +55,6 @@ jobs:
       - run: pnpm test
       # The no-API-key reviewer path doubles as an end-to-end smoke test.
       - run: pnpm demo:offline
+      # 20 dev items through all four memory modes, replayed from committed
+      # recordings: the real providers, no keys, no network.
+      - run: pnpm bench --subset=smoke --offline
