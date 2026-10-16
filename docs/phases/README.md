@@ -11,7 +11,7 @@ The plan for building Engram, one file per phase. [`docs/SPEC.md`](../SPEC.md) i
 | P02 Extraction + entities | [P02-extraction-entities.md](P02-extraction-entities.md) | done | P01 | golden fixtures, the concurrency test and the two-Sams fixture pass |
 | P03 Conflict + temporal | [P03-conflict-temporal.md](P03-conflict-temporal.md) | done | P02 | the §7.4 suite (14 cases) passes; `pnpm demo:offline` works with no keys |
 | P04 Bench harness v0 | [P04-bench-harness.md](P04-bench-harness.md) | done | P03 | all four modes produce a dev report |
-| P05 Retrieval | [P05-retrieval.md](P05-retrieval.md) | outline | P04 | retrieval fixtures pass; dev targets are recorded in DECISIONS.md |
+| P05 Retrieval | [P05-retrieval.md](P05-retrieval.md) | in progress | P04 | retrieval fixtures pass; dev targets are recorded in DECISIONS.md |
 | P06a Decay + purge | [P06a-decay-purge.md](P06a-decay-purge.md) | outline | P05 | the time-travel and purge tests pass |
 | P06b Consolidation + jobs | [P06b-consolidation-jobs.md](P06b-consolidation-jobs.md) | outline | P06a | consolidation runs end-to-end on the local DB; the merge test passes |
 | P07 MCP | [P07-mcp.md](P07-mcp.md) | outline | P06b | the SDK-client integration test passes; Claude Code can remember and recall |
