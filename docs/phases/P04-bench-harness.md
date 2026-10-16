@@ -1,6 +1,6 @@
 # P04 — Bench harness v0
 
-**Status:** planned (expanded 2026-10-16)
+**Status:** done (2026-10-16)
 
 ## Goal
 Build Engram-Bench's machinery and its frozen 40-item dev split, so every later tuning decision is measured rather than guessed. All four memory modes run end to end and produce a dev report. The test split is *not* generated yet (P08).
@@ -71,12 +71,12 @@ packages/core/src/providers/gemini.ts # + compose
 - **Runner:** resumability (an existing per-item result is skipped) and quota-stop behaviour.
 
 ## Definition of done
-- [ ] `dev.json` (40 items, mixed categories) is generated, checked automatically, reviewed, and committed. The generator refuses to overwrite it.
-- [ ] The runner covers all four modes, with a fresh `bench` namespace per item and historical `occurred_at` replay.
-- [ ] Cache, resumability, pacing, backoff, and the pre-run call/token estimate.
-- [ ] Exact/contains judges are deterministic; the LLM judge runs on Groq `gpt-oss-120b`.
-- [ ] A dev report covering all four modes: accuracy per category, ad-hoc rate, duplicate-entity rate, abstention precision/recall, calls and tokens per item, latency. Retrieval recall@8 is deferred to P05, which has the relevance labels.
-- [ ] CI smoke: 20 dev items, exact/contains only, replayed from committed recordings with no network.
+- [x] `dev.json` (40 items, mixed categories) is generated, checked automatically, reviewed, and committed. The generator refuses to overwrite it.
+- [x] The runner covers all four modes, with a fresh `bench` namespace per item and historical `occurred_at` replay.
+- [x] Cache, resumability, pacing, backoff, and the pre-run call/token estimate.
+- [x] Exact/contains judges are deterministic; the LLM judge runs on Groq `gpt-oss-120b`.
+- [x] A dev report covering all four modes: accuracy per category, ad-hoc rate, duplicate-entity rate, abstention precision/recall, calls and tokens per item, latency. Retrieval recall@8 is deferred to P05, which has the relevance labels.
+- [x] CI smoke: 20 dev items, exact/contains only, replayed from committed recordings with no network.
 
 ## Planned commits
 1. `chore(bench): scaffold bench package and item schema`
@@ -103,3 +103,28 @@ packages/core/src/providers/gemini.ts # + compose
 - **Registry gaps.** The ad-hoc rate was 34.5%, then 32.4% after re-recording (occupation in four spellings). Measure it on dev; if above ~15% (SPEC §18), add `occupation` (and likely `sibling_of`) before tuning retrieval.
 - **Duplicate entities from nicknames** ("Rob" next to "Robert"). Track the duplicate-entity rate with real embeddings.
 - **Budget from flash-lite's free quotas** (ADR-005). Backoff already honours RetryInfo.
+
+## Summary
+
+Done 2026-10-16. `pnpm bench` runs the 40-item dev split through buffer, rag, full_context and engram, with judges, a response cache, pacing, resumable runs, a pre-run estimate and a markdown report. `pnpm bench --subset=smoke --offline` replays 20 items from committed recordings in CI. `pnpm bench:inspect <item>` explains an engram miss turn by turn.
+
+Results, from `bench/reports/2026-10-16-dev{,-r2,-r3}.md`:
+
+| run | buffer | rag | full_context | engram | what changed |
+|---|---|---|---|---|---|
+| 1 | 98% | 98% | 98% | 93% | first run |
+| 2 | 100% | 100% | 100% | 95% | entity-name guard, history-mention rule, one dataset turn fixed |
+| 3 | 100% | 100% | 100% | **98%** | place/org descriptions no longer split entities |
+
+The bench did its job. It found three real engine bugs, each fixed with a regression test:
+1. **Generic descriptions merged different entities**: Initech became an alias of Acme Robotics. Fixed with `namesCompatible` on the embedding rung.
+2. **A history mention moved the user back**: "before I moved to Edinburgh…". Fixed by sending it to the adjudicator, which now sees the source turn.
+3. **Description drift split a city into two entities.** The conflict check is now people-only.
+
+Honest reading: on these short histories (≤20 turns) the baselines see everything, so they score 100%. Engram's remaining miss (dev-019) is the composer answering "April" without the year. As SPEC §18 anticipated, the dev split can't show engram's advantages; that needs longer histories (P08).
+
+Deviations from the plan above:
+- **The CI smoke run replays recorded HTTP responses** through the real providers rather than using FakeProvider. To make that deterministic, providers alias database ids out of prompts (`m1`/`c1`/`f1`).
+- **The review pass hand-edited four turns** for meaning drift, recorded in `dev.json`'s `review` note. Three were found by reading; the fourth was found because all four modes missed it.
+- **Added `pnpm bench:inspect`.** It found every engine bug above.
+- **Prettier ignores generated reports and recorded fixtures.**

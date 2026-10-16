@@ -28,6 +28,11 @@ P04: dev split and runner. Without them there's nothing to tune against.
 - **Version chains:** frequent restatements create several versions of one fact, and only the current one passes the as-of filter. Retrieval shouldn't need to dedupe versions, but check that recall@8 isn't diluted.
 - **Re-tune `mergeThreshold` (0.9) on dev.** Literal paraphrases barely miss it with fake embeddings (0.89).
 
+- **From P04:** the composer should give dates with month and year (dev-019 answered "April"). Tune it on dev.
+- **Episodes' `created_at` is wall-clock.** For a correct record-time filter on episodes (§5.1), `ingest` should take the engine clock. Bench v0 recall filters on `occurred_at` as a stand-in.
+- **Replace the bench's v0 engram retrieval** (`bench/runner/modes.ts`) with core `recall()`.
+- **The ad-hoc rate on dev is 34%**, above the ~15% threshold (SPEC §18). Per §18, expand the registry (`occupation`, `sibling_of`, `partner_of`, `allergic_to`) before tuning retrieval, then re-run dev.
+
 ## Risks and verify-at-build-time
 - **Overfitting 40 items:** prefer a few coarse parameters over many fine ones, and report the variance across seeds where possible.
 - **HNSW plus a temporal pre-filter** can return too few rows under a selective filter. Check `hnsw.ef_search` and the iterative-scan options in the installed pgvector version.

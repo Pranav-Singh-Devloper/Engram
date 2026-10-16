@@ -21,6 +21,12 @@ P07, so the engine is feature-complete before anything is measured. It can overl
 - [ ] The README table shows all four modes, the LongMemEval number and judge agreement.
 - [ ] `bench.yml`: manually triggered or nightly, keys from secrets, resumable via the cache artifact.
 
+## Carried in from P04
+
+- **The test split needs longer histories.** With ≤20 turns, buffer and full_context see identical prompts and every baseline scores 100% on dev, so the test split can't separate them. Add filler sessions (small talk, unrelated tasks) so histories exceed the buffer window and rag has to search.
+- **The verbalizer prompt now forbids statements phrased as questions** (from the dev review). Keep the read-through review pass: string checks miss meaning drift.
+- **The smoke cache is 2.7 MB**, mostly embedding vectors. If it grows, store embeddings more compactly.
+
 ## Risks and verify-at-build-time
 - **Verify:** the LongMemEval repo, license, format and question types. Record the license in the README.
 - **Free quotas are the bottleneck.** `full_context` on LongMemEval-S is ~115k tokens per item, so budget from the pre-run estimate and expect a multi-day run. The cache plus resumability make that safe.

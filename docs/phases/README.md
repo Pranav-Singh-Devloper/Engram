@@ -10,7 +10,7 @@ The plan for building Engram, one file per phase. [`docs/SPEC.md`](../SPEC.md) i
 | P01 Store + providers | [P01-store-providers.md](P01-store-providers.md) | done | P00 | repository tests pass, including the pgvector round-trip and CHECK rejections |
 | P02 Extraction + entities | [P02-extraction-entities.md](P02-extraction-entities.md) | done | P01 | golden fixtures, the concurrency test and the two-Sams fixture pass |
 | P03 Conflict + temporal | [P03-conflict-temporal.md](P03-conflict-temporal.md) | done | P02 | the §7.4 suite (14 cases) passes; `pnpm demo:offline` works with no keys |
-| P04 Bench harness v0 | [P04-bench-harness.md](P04-bench-harness.md) | in progress | P03 | all four modes produce a dev report |
+| P04 Bench harness v0 | [P04-bench-harness.md](P04-bench-harness.md) | done | P03 | all four modes produce a dev report |
 | P05 Retrieval | [P05-retrieval.md](P05-retrieval.md) | outline | P04 | retrieval fixtures pass; dev targets are recorded in DECISIONS.md |
 | P06a Decay + purge | [P06a-decay-purge.md](P06a-decay-purge.md) | outline | P05 | the time-travel and purge tests pass |
 | P06b Consolidation + jobs | [P06b-consolidation-jobs.md](P06b-consolidation-jobs.md) | outline | P06a | consolidation runs end-to-end on the local DB; the merge test passes |
@@ -66,6 +66,6 @@ Verify every figure at the start of the phase that first needs it. Free quotas c
 | Docker `pgvector/pgvector` | local dev, tests, CI | P00 | none (disk only, ~400 MB) |
 | GitHub Actions | CI, bench, nightly consolidation | P00 | minutes are unlimited for public repos; schedules pause after 60 days of inactivity |
 | Gemini API (AI Studio) | embeddings, extraction, compose, adjudicate, summarize | P01 | requests per minute and per day; bench runs may span several days |
-| Groq (Llama) | bench judge | P04 | daily request and token caps; fallbacks are Mistral, then Cohere |
+| Groq (`gpt-oss-120b` judge, `qwen3.8-27b` verbalizer) | bench judge, dataset wording | P04 | 30 RPM, 1K RPD, 8K TPM; fallbacks are Mistral, then Cohere |
 | Supabase free tier | hosted DB, pg_cron | P10 (optional earlier) | 500 MB DB; pauses after inactivity |
 | Vercel Hobby | web, API, HTTP MCP | P09a | function duration and invocation limits |
