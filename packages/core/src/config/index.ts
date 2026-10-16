@@ -14,6 +14,14 @@ export const config = {
   entities: {
     /** Cosine similarity on "name (type): description" to match an existing entity. */
     matchThreshold: 0.85,
+    /**
+     * A lone name or alias match whose label is less similar than this has a
+     * conflicting description (two different Sams), so it goes to
+     * disambiguation instead of merging. Tuned on dev.
+     */
+    descriptionConflictThreshold: 0.95,
+    /** Attempts before giving up when concurrent writers keep changing the candidates. */
+    maxResolveAttempts: 3,
   },
   conflict: {
     /** Statement similarity for a merge. Tuned on dev. */

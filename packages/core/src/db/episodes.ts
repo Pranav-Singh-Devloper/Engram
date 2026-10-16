@@ -34,3 +34,20 @@ export async function getEpisode(db: Queryable, id: string): Promise<Episode | u
   const row = maybeOne(await db<EpisodeRow[]>`select * from episodes where id = ${id}`);
   return row && parseEpisode(row);
 }
+
+/**
+ * Marks extraction finished and stores the LLM-scored importance. Returns
+ * false if another run got there first.
+ */
+export async function markEpisodeProcessed(
+  db: Queryable,
+  id: string,
+  change: { at: Date; importance?: number },
+): Promise<boolean> {
+  const rows = await db`
+    update episodes
+    set processed_at = ${change.at}, importance = coalesce(${change.importance ?? null}::real, importance)
+    where id = ${id} and processed_at is null
+    returning id`;
+  return rows.length === 1;
+}
