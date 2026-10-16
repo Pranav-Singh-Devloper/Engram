@@ -73,3 +73,32 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 **Decision.** Extraction returns temporal hints (absolute, relative, named period, none) that `resolveHint` resolves against `occurred_at` in pure, tested code. A window's end resolves to the start of its period, so adjacent statements meet instead of overlapping. The same period at both ends spans it. End-only facts with no start are dropped. Entity resolution plans and disambiguates outside any transaction, then re-checks under `pg_advisory_xact_lock` and restarts if the candidates changed.
 
 **Consequences.** "From 2015 through 2018" loses 2018 at year precision; acceptable. Dropped end-only facts ("before that, Marseille") stay recoverable from episodes; supporting an unknown `valid_from` is a P03 design question. Conflict resolution (P03) should reuse the optimistic pattern.
+
+---
+
+## ADR-007 — Unknown starts as -infinity
+
+**Date:** 2026-10-16 · **Status:** Accepted (supersedes the "drop end-only facts" part of ADR-006)
+
+**Context.** "Before that, I lived in Marseille" ends at a known time with no stated start. Dropping it loses exactly the out-of-order history backfill exists for; defaulting its start to the turn invents a current fact.
+
+**Decision.** Store `valid_from = '-infinity'` with `valid_from_source = 'unknown'` (migration 0003, with a CHECK keeping the two in step). postgres.js's date type is overridden to map `-infinity` to and from the earliest JS `Date` (`UNKNOWN_START`); strings bound to timestamp columns pass through unchanged.
+
+**Consequences.** The canonical query and the rule fast-path need no special cases: an unknown start precedes every instant, and backfill places it before the earliest known row. Displays must render `UNKNOWN_START` as "unknown".
+
+---
+
+## ADR-008 — Resolution order, merge semantics and locking
+
+**Date:** 2026-10-16 · **Status:** Accepted
+
+**Context.** SPEC §7.2 listed update before the correction cue. Then "Actually I work at Acme, not Initech", said after Initech, matches the update rule and closes Initech instead of retracting it. Merges change provenance and confidence, which §5.1 doesn't allow in place. The optimistic lock pattern starved when ten writers restated one fact at once.
+
+**Decision.**
+- **Order:** for single-valued predicates the order is merge, correction cue, noise, static handling, backfill, update, adjudicate.
+- **Merges** write a new version whenever they change provenance, confidence (noisy-OR, capped at 0.99, only for new episodes) or bounds. Objects compare by entity, then by label, then by literal paraphrase.
+- **Corrections** without stated bounds inherit the retracted fact's window.
+- **Locking:** rule decisions apply under the lock; only adjudication (and entity disambiguation) leaves it, guarded by a fingerprint of the beliefs.
+- **Ad-hoc predicates** are multi-valued and dynamic.
+
+**Consequences.** Frequent restatements create version chains, which is the audit trail working as intended, and decay/consolidation must treat versions as one fact. A plain insert into an empty history writes no revision row; every other outcome writes exactly one.
