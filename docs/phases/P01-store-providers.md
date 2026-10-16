@@ -1,6 +1,6 @@
 # P01 — Store + providers
 
-**Status:** planned
+**Status:** done (2026-10-16), except the manual Gemini check, which waits on an API key
 
 ## Goal
 Create the full §5 schema and a typed repository layer over it, the provider interface with a deterministic FakeProvider and a Gemini embeddings implementation, and the fast `ingest` path. By the end, an episode can be stored and embedded, and namespaces come with their `is_self` entity.
@@ -101,10 +101,10 @@ packages/core/src/
 - `ingest.int.test.ts`: stores the episode with its embedding and `occurred_at` (default and explicit), and leaves `processed_at` null.
 
 ## Definition of done
-- [ ] Migration 0002 applies cleanly to an empty local DB and in CI.
-- [ ] All tests above pass. The pgvector round-trip and CHECK rejections are among them.
-- [ ] `GeminiProvider.embed` is verified once by hand against the real API (a small script, not a test) with the model and dimension recorded in an ADR.
-- [ ] `.env.example` lists `GEMINI_API_KEY`, `GEMINI_EMBED_MODEL`, `GEMINI_CHAT_MODEL`.
+- [x] Migration 0002 applies cleanly to an empty local DB and in CI.
+- [x] All tests above pass. The pgvector round-trip and CHECK rejections are among them.
+- [ ] `GeminiProvider.embed` is verified once by hand against the real API (`pnpm gemini:check`). The model and dimension are recorded in ADR-004; the run itself waits on a `GEMINI_API_KEY`.
+- [x] `.env.example` lists `GEMINI_API_KEY`, `GEMINI_EMBED_MODEL`, `GEMINI_CHAT_MODEL`.
 
 ## Planned commits
 1. `feat(db): add core schema with bitemporal fact columns`
@@ -129,3 +129,22 @@ packages/core/src/
   - the Gemini SDK: the official client. Alternatively use plain `fetch` against the REST API and skip the dependency; decide at phase start.
 - **HNSW on an empty table:** fine in Postgres, but the round-trip test should `set hnsw.ef_search` explicitly so results are deterministic.
 - **FTS language:** `english` is hard-coded. Note it as a limitation, not a config option.
+
+## Summary
+
+Done 2026-10-16. Migration 0002 adds the full §5 schema. Typed repositories, the provider contracts, a deterministic FakeProvider, Gemini embeddings and JSON generation, and `ingest` are in place. 107 tests pass (99 core, 8 scripts), with no network in any of them.
+
+Deviations from the plan above:
+- **The client and migrator moved into core** (`@engram/core`, with a `./migrate` subpath). `scripts/` keeps only the CLIs. Core's test setup migrates the local DB before integration tests run, so `pnpm test` after `pnpm db:up` just works.
+- **No Gemini SDK.** Plain `fetch` against the REST API (ADR-004).
+- **`gemini-embedding-2` takes task prefixes**, not a `taskType` field. The contract's embed option is `purpose: 'document' | 'query'`.
+- **Extra CHECKs** beyond what the spec spells out: importance and confidence in [0, 1], `access_score >= 0`, and `entities.type` limited to the five documented types.
+- **`insertFact` requires `recordedAt`**, so record time can only come from the engine clock (prepares P03's injected clock). A type test pins the facts module's export list to the in-place changes §5.1 allows.
+- **Embeddings round-trip as float32.** Tests compare stored vectors by cosine, except where the values are exact in float32.
+- **`ensureNamespace` refuses an existing slug of a different kind**, so a demo namespace can't silently become a user one.
+- **`recordFactAccess` only updates the access fields.** Restoring archived hits to `working` (with a `restore` revision) lands in P05/P06a.
+- **`generate()` sends only `responseMimeType`**, not a schema. P02 decides whether to also send the JSON schema to Gemini once the real prompt exists.
+
+Follow-ups:
+- **Before P02:** add `GEMINI_API_KEY` to `.env` and run `pnpm gemini:check`. It lists the flash models the key can use, which P02 needs to pick `GEMINI_CHAT_MODEL`.
+- **P04:** the judge runs on Groq, so `GeminiProvider.judge` probably never gets implemented. The bench should pass a separate judge provider.

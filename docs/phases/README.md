@@ -7,7 +7,7 @@ The plan for building Engram, one file per phase. [`docs/SPEC.md`](../SPEC.md) i
 | Phase | File | Status | Depends on | Done when |
 |---|---|---|---|---|
 | P00 Scaffold | [P00-scaffold.md](P00-scaffold.md) | done | — | typecheck, test and lint are green locally and in CI; a fresh clone boots the DB |
-| P01 Store + providers | [P01-store-providers.md](P01-store-providers.md) | planned | P00 | repository tests pass, including the pgvector round-trip and CHECK rejections |
+| P01 Store + providers | [P01-store-providers.md](P01-store-providers.md) | done | P00 | repository tests pass, including the pgvector round-trip and CHECK rejections |
 | P02 Extraction + entities | [P02-extraction-entities.md](P02-extraction-entities.md) | planned | P01 | golden fixtures, the concurrency test and the two-Sams fixture pass |
 | P03 Conflict + temporal | [P03-conflict-temporal.md](P03-conflict-temporal.md) | planned | P02 | the §7.4 suite (14 cases) passes; `pnpm demo:offline` works with no keys |
 | P04 Bench harness v0 | [P04-bench-harness.md](P04-bench-harness.md) | outline | P03 | all four modes produce a dev report |
