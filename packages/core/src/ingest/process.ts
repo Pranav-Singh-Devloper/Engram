@@ -33,7 +33,7 @@ export interface ProcessSummary {
   /** Candidates the model returned. */
   extracted: number;
   createdEntities: number;
-  /** Candidates dropped before resolution, e.g. an unusable predicate. */
+  /** Candidates dropped before resolution: an unusable predicate, or a window that can't be placed. */
   dropped: number;
   /** End bounds discarded because they weren't after the start. */
   droppedBounds: number;
@@ -74,6 +74,41 @@ function mentions(candidates: readonly FactCandidate[]): Map<string, EntityRef> 
     }
   }
   return refs;
+}
+
+interface Window {
+  validFrom: Date;
+  explicitFrom: boolean;
+  validTo: Date | null;
+  droppedBound: boolean;
+}
+
+/**
+ * Turns a candidate's hints into a validity window, or null when it can't be
+ * placed. An end resolves to the start of its period, so "from 2015 to 2018"
+ * meets "since 2018" instead of overlapping it; "in summer 2023" (the same
+ * period at both ends) spans that period.
+ */
+function resolveWindow(raw: FactCandidate, occurredAt: Date): Window | null {
+  const from = resolveHint(raw.validFrom, occurredAt, 'start');
+  const validFrom = from ?? occurredAt;
+  let validTo = resolveHint(raw.validTo, occurredAt, 'start');
+  if (!validTo || validTo > validFrom) {
+    return { validFrom, explicitFrom: from !== null, validTo, droppedBound: false };
+  }
+
+  const samePeriod =
+    raw.validTo.kind === 'named_period' &&
+    JSON.stringify(raw.validTo) === JSON.stringify(raw.validFrom);
+  if (samePeriod) {
+    validTo = resolveHint(raw.validTo, occurredAt, 'end');
+    return { validFrom, explicitFrom: true, validTo, droppedBound: false };
+  }
+  // It ended before the turn and its start is unknown ("before that I lived in
+  // Marseille"). Defaulting the start to the turn would invent a current fact.
+  if (from === null) return null;
+  // A point in time, or a bound that isn't after the start: keep the fact open.
+  return { validFrom, explicitFrom: true, validTo: null, droppedBound: true };
 }
 
 /**
@@ -139,13 +174,14 @@ export async function processEpisode(
       continue;
     }
 
-    const explicitFrom = resolveHint(raw.validFrom, episode.occurredAt, 'start');
-    const validFrom = explicitFrom ?? episode.occurredAt;
-    let validTo = resolveHint(raw.validTo, episode.occurredAt, 'end');
-    if (validTo && validTo <= validFrom) {
-      validTo = null;
-      result.droppedBounds++;
+    const window = resolveWindow(raw, episode.occurredAt);
+    if (!window) {
+      result.dropped++;
+      continue;
     }
+    const { validFrom, explicitFrom } = window;
+    if (window.droppedBound) result.droppedBounds++;
+    const validTo = window.validTo;
 
     const candidate: ResolvedCandidate = {
       namespaceId: episode.namespaceId,

@@ -1,0 +1,154 @@
+{
+  "id": "10-past-windows",
+  "covers": "closed historical windows learned after the current one",
+  "episodes": [
+    {
+      "sessionId": "s1",
+      "role": "user",
+      "content": "I've been living in Paris since 2018.",
+      "occurredAt": "2024-09-01T11:00:00Z"
+    },
+    {
+      "sessionId": "s1",
+      "role": "user",
+      "content": "Before Paris I lived in Lyon from 2015 to 2018, and before that in Marseille.",
+      "occurredAt": "2024-09-01T11:02:00Z"
+    }
+  ],
+  "recording": {
+    "promptVersion": "5584f4d1b7b2",
+    "model": "gemini-3.5-flash-lite",
+    "recordedAt": "2026-10-16T16:04:03.266Z",
+    "calls": [
+      {
+        "method": "processEpisode",
+        "input": {
+          "content": "I've been living in Paris since 2018.",
+          "role": "user",
+          "occurredAt": "2024-09-01T11:00:00.000Z",
+          "predicates": [
+            "lives_in",
+            "works_at",
+            "birth_date",
+            "is_named",
+            "likes",
+            "visited"
+          ]
+        },
+        "output": {
+          "importance": 0.8,
+          "candidates": [
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "lives_in",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Paris",
+                  "type": "place",
+                  "description": "the city of Paris"
+                }
+              },
+              "statement": "The user lives in Paris.",
+              "validFrom": {
+                "kind": "named_period",
+                "year": 2018,
+                "month": null,
+                "season": null
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            }
+          ]
+        }
+      },
+      {
+        "method": "processEpisode",
+        "input": {
+          "content": "Before Paris I lived in Lyon from 2015 to 2018, and before that in Marseille.",
+          "role": "user",
+          "occurredAt": "2024-09-01T11:02:00.000Z",
+          "predicates": [
+            "lives_in",
+            "works_at",
+            "birth_date",
+            "is_named",
+            "likes",
+            "visited"
+          ]
+        },
+        "output": {
+          "importance": 0.5,
+          "candidates": [
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "lives_in",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Lyon",
+                  "type": "place",
+                  "description": "a city in France"
+                }
+              },
+              "statement": "The user lived in Lyon from 2015 to 2018.",
+              "validFrom": {
+                "kind": "named_period",
+                "year": 2015,
+                "month": null,
+                "season": null
+              },
+              "validTo": {
+                "kind": "named_period",
+                "year": 2018,
+                "month": null,
+                "season": null
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "visited",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Marseille",
+                  "type": "place",
+                  "description": "a city in France"
+                }
+              },
+              "statement": "The user lived in Marseille before Lyon.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "named_period",
+                "year": 2015,
+                "month": null,
+                "season": null
+              },
+              "isCorrection": false,
+              "confidence": 1
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

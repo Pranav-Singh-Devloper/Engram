@@ -1,0 +1,146 @@
+{
+  "id": "06-multi-fact",
+  "covers": "several facts and entities in one turn, a named month and year",
+  "episodes": [
+    {
+      "sessionId": "s1",
+      "role": "user",
+      "content": "My partner Jordan and I visited Kyoto and Osaka in April 2023. Jordan loves ramen; I'm more into sushi.",
+      "occurredAt": "2024-05-20T20:00:00Z"
+    }
+  ],
+  "recording": {
+    "promptVersion": "5584f4d1b7b2",
+    "model": "gemini-3.5-flash-lite",
+    "recordedAt": "2026-10-16T15:59:16.723Z",
+    "calls": [
+      {
+        "method": "processEpisode",
+        "input": {
+          "content": "My partner Jordan and I visited Kyoto and Osaka in April 2023. Jordan loves ramen; I'm more into sushi.",
+          "role": "user",
+          "occurredAt": "2024-05-20T20:00:00.000Z",
+          "predicates": [
+            "lives_in",
+            "works_at",
+            "birth_date",
+            "is_named",
+            "likes",
+            "visited"
+          ]
+        },
+        "output": {
+          "importance": 0.6,
+          "candidates": [
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "visited",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Kyoto",
+                  "type": "place",
+                  "description": "a city in Japan"
+                }
+              },
+              "statement": "The user visited Kyoto in April 2023.",
+              "validFrom": {
+                "kind": "named_period",
+                "year": 2023,
+                "month": 4,
+                "season": null
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "visited",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Osaka",
+                  "type": "place",
+                  "description": "a city in Japan"
+                }
+              },
+              "statement": "The user visited Osaka in April 2023.",
+              "validFrom": {
+                "kind": "named_period",
+                "year": 2023,
+                "month": 4,
+                "season": null
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "Jordan",
+                "type": "person",
+                "description": "the user's partner"
+              },
+              "predicate": "likes",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "ramen",
+                  "type": "thing",
+                  "description": "a type of noodle dish"
+                }
+              },
+              "statement": "Jordan loves ramen.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "likes",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "sushi",
+                  "type": "thing",
+                  "description": "a type of Japanese dish"
+                }
+              },
+              "statement": "The user likes sushi.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

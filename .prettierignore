@@ -5,3 +5,4 @@ coverage/
 .next/
 bench/cache/
 docs/
+packages/core/fixtures/

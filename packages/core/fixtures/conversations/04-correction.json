@@ -1,0 +1,138 @@
+{
+  "id": "04-correction",
+  "covers": "a correction cue in a later turn",
+  "episodes": [
+    {
+      "sessionId": "s1",
+      "role": "user",
+      "content": "I work at Initech as a product manager.",
+      "occurredAt": "2024-04-01T12:00:00Z"
+    },
+    {
+      "sessionId": "s1",
+      "role": "user",
+      "content": "Actually, I work at Acme, not Initech. I mixed it up with my old job.",
+      "occurredAt": "2024-04-01T12:05:00Z"
+    }
+  ],
+  "recording": {
+    "promptVersion": "5584f4d1b7b2",
+    "model": "gemini-3.5-flash-lite",
+    "recordedAt": "2026-10-16T15:57:58.253Z",
+    "calls": [
+      {
+        "method": "processEpisode",
+        "input": {
+          "content": "I work at Initech as a product manager.",
+          "role": "user",
+          "occurredAt": "2024-04-01T12:00:00.000Z",
+          "predicates": [
+            "lives_in",
+            "works_at",
+            "birth_date",
+            "is_named",
+            "likes",
+            "visited"
+          ]
+        },
+        "output": {
+          "importance": 0.8,
+          "candidates": [
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "works_at",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Initech",
+                  "type": "org",
+                  "description": "the organization the user works for"
+                }
+              },
+              "statement": "The user works at Initech.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "occupation",
+              "object": {
+                "kind": "literal",
+                "value": "product manager"
+              },
+              "statement": "The user works as a product manager.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            }
+          ]
+        }
+      },
+      {
+        "method": "processEpisode",
+        "input": {
+          "content": "Actually, I work at Acme, not Initech. I mixed it up with my old job.",
+          "role": "user",
+          "occurredAt": "2024-04-01T12:05:00.000Z",
+          "predicates": [
+            "lives_in",
+            "works_at",
+            "birth_date",
+            "is_named",
+            "likes",
+            "visited"
+          ]
+        },
+        "output": {
+          "importance": 0.6,
+          "candidates": [
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "works_at",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Acme",
+                  "type": "org",
+                  "description": "the user's current employer"
+                }
+              },
+              "statement": "The user works at Acme.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": true,
+              "confidence": 1
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

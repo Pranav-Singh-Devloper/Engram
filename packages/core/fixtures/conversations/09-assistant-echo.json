@@ -1,0 +1,166 @@
+{
+  "id": "09-assistant-echo",
+  "covers": "a synonym predicate, an assistant echo and an implicit fact",
+  "episodes": [
+    {
+      "sessionId": "s1",
+      "role": "user",
+      "content": "I'm based in Toronto these days.",
+      "occurredAt": "2024-08-01T15:00:00Z"
+    },
+    {
+      "sessionId": "s1",
+      "role": "assistant",
+      "content": "Got it, you're living in Toronto now. Do you like it there?",
+      "occurredAt": "2024-08-01T15:00:05Z"
+    },
+    {
+      "sessionId": "s1",
+      "role": "user",
+      "content": "Love it, honestly, even the winters.",
+      "occurredAt": "2024-08-01T15:01:00Z"
+    }
+  ],
+  "recording": {
+    "promptVersion": "5584f4d1b7b2",
+    "model": "gemini-3.5-flash-lite",
+    "recordedAt": "2026-10-16T16:03:27.089Z",
+    "calls": [
+      {
+        "method": "processEpisode",
+        "input": {
+          "content": "I'm based in Toronto these days.",
+          "role": "user",
+          "occurredAt": "2024-08-01T15:00:00.000Z",
+          "predicates": [
+            "lives_in",
+            "works_at",
+            "birth_date",
+            "is_named",
+            "likes",
+            "visited"
+          ]
+        },
+        "output": {
+          "importance": 0.5,
+          "candidates": [
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "lives_in",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Toronto",
+                  "type": "place",
+                  "description": "a city in Canada"
+                }
+              },
+              "statement": "The user lives in Toronto.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 0.9
+            }
+          ]
+        }
+      },
+      {
+        "method": "processEpisode",
+        "input": {
+          "content": "Got it, you're living in Toronto now. Do you like it there?",
+          "role": "assistant",
+          "occurredAt": "2024-08-01T15:00:05.000Z",
+          "predicates": [
+            "lives_in",
+            "works_at",
+            "birth_date",
+            "is_named",
+            "likes",
+            "visited"
+          ]
+        },
+        "output": {
+          "importance": 0.5,
+          "candidates": [
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "lives_in",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Toronto",
+                  "type": "place",
+                  "description": "the city where the user lives"
+                }
+              },
+              "statement": "The user lives in Toronto.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 0.9
+            }
+          ]
+        }
+      },
+      {
+        "method": "disambiguate",
+        "input": {
+          "mention": {
+            "name": "Toronto",
+            "type": "place",
+            "description": "the city where the user lives"
+          },
+          "context": "Got it, you're living in Toronto now. Do you like it there?",
+          "candidates": [
+            {
+              "name": "Toronto",
+              "type": "place",
+              "description": "a city in Canada",
+              "aliases": []
+            }
+          ]
+        },
+        "output": {
+          "choice": 0,
+          "reason": "The mention refers to the city of Toronto, which matches the candidate."
+        }
+      },
+      {
+        "method": "processEpisode",
+        "input": {
+          "content": "Love it, honestly, even the winters.",
+          "role": "user",
+          "occurredAt": "2024-08-01T15:01:00.000Z",
+          "predicates": [
+            "lives_in",
+            "works_at",
+            "birth_date",
+            "is_named",
+            "likes",
+            "visited"
+          ]
+        },
+        "output": {
+          "importance": 0.1,
+          "candidates": []
+        }
+      }
+    ]
+  }
+}

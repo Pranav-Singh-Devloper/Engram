@@ -1,0 +1,154 @@
+{
+  "id": "01-self-intro",
+  "covers": "self references, is_named and birth_date literals, registry predicates",
+  "episodes": [
+    {
+      "sessionId": "s1",
+      "role": "user",
+      "content": "Hi! I'm Priya, I was born on 4 July 1990. I live in Lisbon and work as a data engineer at Northwind.",
+      "occurredAt": "2024-02-01T10:00:00Z"
+    }
+  ],
+  "recording": {
+    "promptVersion": "5584f4d1b7b2",
+    "model": "gemini-3.5-flash-lite",
+    "recordedAt": "2026-10-16T15:56:28.627Z",
+    "calls": [
+      {
+        "method": "processEpisode",
+        "input": {
+          "content": "Hi! I'm Priya, I was born on 4 July 1990. I live in Lisbon and work as a data engineer at Northwind.",
+          "role": "user",
+          "occurredAt": "2024-02-01T10:00:00.000Z",
+          "predicates": [
+            "lives_in",
+            "works_at",
+            "birth_date",
+            "is_named",
+            "likes",
+            "visited"
+          ]
+        },
+        "output": {
+          "importance": 0.9,
+          "candidates": [
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "is_named",
+              "object": {
+                "kind": "literal",
+                "value": "Priya"
+              },
+              "statement": "The user is named Priya.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "birth_date",
+              "object": {
+                "kind": "literal",
+                "value": "1990-07-04"
+              },
+              "statement": "The user's birth date is 1990-07-04.",
+              "validFrom": {
+                "kind": "absolute",
+                "date": "1990-07-04"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "lives_in",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Lisbon",
+                  "type": "place",
+                  "description": "a city"
+                }
+              },
+              "statement": "The user lives in Lisbon.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "works_at",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Northwind",
+                  "type": "org",
+                  "description": "an organization"
+                }
+              },
+              "statement": "The user works at Northwind.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "occupation",
+              "object": {
+                "kind": "literal",
+                "value": "data engineer"
+              },
+              "statement": "The user works as a data engineer.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

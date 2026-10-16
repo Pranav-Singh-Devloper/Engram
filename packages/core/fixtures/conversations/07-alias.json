@@ -1,0 +1,138 @@
+{
+  "id": "07-alias",
+  "covers": "a later nickname for an existing entity",
+  "episodes": [
+    {
+      "sessionId": "s1",
+      "role": "user",
+      "content": "My brother Robert just got a job at a hospital in Leeds.",
+      "occurredAt": "2024-01-15T19:00:00Z"
+    },
+    {
+      "sessionId": "s2",
+      "role": "user",
+      "content": "Rob called me today, he's loving the new job.",
+      "occurredAt": "2024-02-20T19:00:00Z"
+    }
+  ],
+  "recording": {
+    "promptVersion": "5584f4d1b7b2",
+    "model": "gemini-3.5-flash-lite",
+    "recordedAt": "2026-10-16T15:59:47.124Z",
+    "calls": [
+      {
+        "method": "processEpisode",
+        "input": {
+          "content": "My brother Robert just got a job at a hospital in Leeds.",
+          "role": "user",
+          "occurredAt": "2024-01-15T19:00:00.000Z",
+          "predicates": [
+            "lives_in",
+            "works_at",
+            "birth_date",
+            "is_named",
+            "likes",
+            "visited"
+          ]
+        },
+        "output": {
+          "importance": 0.6,
+          "candidates": [
+            {
+              "subject": {
+                "name": "Robert",
+                "type": "person",
+                "description": "the user's brother"
+              },
+              "predicate": "sibling_of",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "SELF",
+                  "type": "person",
+                  "description": "the user"
+                }
+              },
+              "statement": "Robert is the sibling of the user.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "Robert",
+                "type": "person",
+                "description": "the user's brother"
+              },
+              "predicate": "works_at",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Leeds hospital",
+                  "type": "org",
+                  "description": "a hospital in Leeds"
+                }
+              },
+              "statement": "Robert works at a hospital in Leeds.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 0.9
+            }
+          ]
+        }
+      },
+      {
+        "method": "processEpisode",
+        "input": {
+          "content": "Rob called me today, he's loving the new job.",
+          "role": "user",
+          "occurredAt": "2024-02-20T19:00:00.000Z",
+          "predicates": [
+            "lives_in",
+            "works_at",
+            "birth_date",
+            "is_named",
+            "likes",
+            "visited"
+          ]
+        },
+        "output": {
+          "importance": 0.5,
+          "candidates": [
+            {
+              "subject": {
+                "name": "Rob",
+                "type": "person",
+                "description": "the user's acquaintance who has a new job"
+              },
+              "predicate": "has_job",
+              "object": {
+                "kind": "literal",
+                "value": "new job"
+              },
+              "statement": "Rob has a new job.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 0.9
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

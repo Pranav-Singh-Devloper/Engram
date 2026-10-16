@@ -1,0 +1,67 @@
+{
+  "id": "05-tool-output",
+  "covers": "tool output produces nothing; an assistant turn with general knowledge produces nothing",
+  "summaries": [
+    {
+      "status": "processed",
+      "importance": 0.1,
+      "extracted": 0,
+      "createdEntities": 0,
+      "dropped": 0,
+      "droppedBounds": 0,
+      "outcomes": {
+        "inserted": 0,
+        "merged": 0,
+        "updated": 0,
+        "backfilled": 0,
+        "corrected": 0,
+        "coexisted": 0,
+        "rejected": 0
+      }
+    },
+    {
+      "status": "skipped_tool",
+      "importance": null,
+      "extracted": 0,
+      "createdEntities": 0,
+      "dropped": 0,
+      "droppedBounds": 0,
+      "outcomes": {
+        "inserted": 0,
+        "merged": 0,
+        "updated": 0,
+        "backfilled": 0,
+        "corrected": 0,
+        "coexisted": 0,
+        "rejected": 0
+      }
+    },
+    {
+      "status": "processed",
+      "importance": 0.1,
+      "extracted": 0,
+      "createdEntities": 0,
+      "dropped": 0,
+      "droppedBounds": 0,
+      "outcomes": {
+        "inserted": 0,
+        "merged": 0,
+        "updated": 0,
+        "backfilled": 0,
+        "corrected": 0,
+        "coexisted": 0,
+        "rejected": 0
+      }
+    }
+  ],
+  "entities": [
+    {
+      "name": "User",
+      "type": "person",
+      "aliases": [],
+      "description": null,
+      "isSelf": true
+    }
+  ],
+  "facts": []
+}

@@ -1,0 +1,92 @@
+{
+  "id": "04-correction",
+  "covers": "a correction cue in a later turn",
+  "summaries": [
+    {
+      "status": "processed",
+      "importance": 0.8,
+      "extracted": 2,
+      "createdEntities": 1,
+      "dropped": 0,
+      "droppedBounds": 0,
+      "outcomes": {
+        "inserted": 2,
+        "merged": 0,
+        "updated": 0,
+        "backfilled": 0,
+        "corrected": 0,
+        "coexisted": 0,
+        "rejected": 0
+      }
+    },
+    {
+      "status": "processed",
+      "importance": 0.6,
+      "extracted": 1,
+      "createdEntities": 1,
+      "dropped": 0,
+      "droppedBounds": 0,
+      "outcomes": {
+        "inserted": 1,
+        "merged": 0,
+        "updated": 0,
+        "backfilled": 0,
+        "corrected": 0,
+        "coexisted": 0,
+        "rejected": 0
+      }
+    }
+  ],
+  "entities": [
+    {
+      "name": "User",
+      "type": "person",
+      "aliases": [],
+      "description": null,
+      "isSelf": true
+    },
+    {
+      "name": "Acme",
+      "type": "org",
+      "aliases": [],
+      "description": "the user's current employer",
+      "isSelf": false
+    },
+    {
+      "name": "Initech",
+      "type": "org",
+      "aliases": [],
+      "description": "the organization the user works for",
+      "isSelf": false
+    }
+  ],
+  "facts": [
+    {
+      "fact": "User occupation \"product manager\"",
+      "adHoc": true,
+      "statement": "The user works as a product manager.",
+      "validFrom": "2024-04-01 (episode)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "User works_at Acme",
+      "adHoc": false,
+      "statement": "The user works at Acme.",
+      "validFrom": "2024-04-01 (episode)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "User works_at Initech",
+      "adHoc": false,
+      "statement": "The user works at Initech.",
+      "validFrom": "2024-04-01 (episode)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    }
+  ]
+}

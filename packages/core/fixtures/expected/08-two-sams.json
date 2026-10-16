@@ -1,0 +1,134 @@
+{
+  "id": "08-two-sams",
+  "covers": "two people with the same name, then a bare mention",
+  "summaries": [
+    {
+      "status": "processed",
+      "importance": 0.5,
+      "extracted": 3,
+      "createdEntities": 2,
+      "dropped": 0,
+      "droppedBounds": 0,
+      "outcomes": {
+        "inserted": 3,
+        "merged": 0,
+        "updated": 0,
+        "backfilled": 0,
+        "corrected": 0,
+        "coexisted": 0,
+        "rejected": 0
+      }
+    },
+    {
+      "status": "processed",
+      "importance": 0.6,
+      "extracted": 1,
+      "createdEntities": 1,
+      "dropped": 0,
+      "droppedBounds": 0,
+      "outcomes": {
+        "inserted": 1,
+        "merged": 0,
+        "updated": 0,
+        "backfilled": 0,
+        "corrected": 0,
+        "coexisted": 0,
+        "rejected": 0
+      }
+    },
+    {
+      "status": "processed",
+      "importance": 0.8,
+      "extracted": 1,
+      "createdEntities": 0,
+      "dropped": 0,
+      "droppedBounds": 0,
+      "outcomes": {
+        "inserted": 1,
+        "merged": 0,
+        "updated": 0,
+        "backfilled": 0,
+        "corrected": 0,
+        "coexisted": 0,
+        "rejected": 0
+      }
+    }
+  ],
+  "entities": [
+    {
+      "name": "User",
+      "type": "person",
+      "aliases": [],
+      "description": null,
+      "isSelf": true
+    },
+    {
+      "name": "Lyon",
+      "type": "place",
+      "aliases": [],
+      "description": "a city",
+      "isSelf": false
+    },
+    {
+      "name": "Sam",
+      "type": "person",
+      "aliases": [],
+      "description": "the user's brother, a chef",
+      "isSelf": false
+    },
+    {
+      "name": "Sam",
+      "type": "person",
+      "aliases": [],
+      "description": "the user's manager at work",
+      "isSelf": false
+    }
+  ],
+  "facts": [
+    {
+      "fact": "Sam [the user's brother, a chef] cooked_dinner_for User",
+      "adHoc": true,
+      "statement": "Sam cooked dinner for the user.",
+      "validFrom": "2024-07-02 (explicit)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "Sam [the user's brother, a chef] lives_in Lyon",
+      "adHoc": false,
+      "statement": "Sam lives in Lyon.",
+      "validFrom": "2024-07-01 (episode)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "Sam [the user's brother, a chef] occupation \"chef\"",
+      "adHoc": true,
+      "statement": "Sam's occupation is chef.",
+      "validFrom": "2024-07-01 (episode)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "Sam [the user's brother, a chef] sibling_of User",
+      "adHoc": true,
+      "statement": "Sam is the user's brother.",
+      "validFrom": "2024-07-01 (episode)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "Sam [the user's manager at work] manager_of User",
+      "adHoc": true,
+      "statement": "Sam is the manager of the user.",
+      "validFrom": "2024-07-02 (episode)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    }
+  ]
+}

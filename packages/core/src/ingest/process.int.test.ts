@@ -222,6 +222,63 @@ describe('processEpisode', () => {
     });
   });
 
+  it('ends a window at the start of the named period, meeting the next one', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const year = (y: number) =>
+        ({ kind: 'named_period', year: y, month: null, season: null }) as const;
+      const fake = new FakeProvider().when('processEpisode', () => true, {
+        importance: 0.5,
+        candidates: [
+          candidate({ object: place('Lyon'), validFrom: year(2015), validTo: year(2018) }),
+          candidate({ object: place('Paris'), validFrom: year(2018) }),
+        ],
+      });
+      const ep = await episode(ns, fake, 'Lyon from 2015 to 2018, Paris since 2018.');
+      await processEpisode(db, fake, ep.id);
+      const rows = await facts(db, ns.namespace.id);
+      expect(rows.find((r) => r.objectName === 'Lyon')?.validTo).toEqual(
+        new Date('2018-01-01T00:00:00Z'),
+      );
+      expect(rows.find((r) => r.objectName === 'Paris')?.validFrom).toEqual(
+        new Date('2018-01-01T00:00:00Z'),
+      );
+    });
+  });
+
+  it('spans a period named at both ends', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const summer = { kind: 'named_period', year: 2023, month: null, season: 'summer' } as const;
+      const fake = new FakeProvider().when('processEpisode', () => true, {
+        importance: 0.5,
+        candidates: [candidate({ validFrom: summer, validTo: summer })],
+      });
+      const ep = await episode(ns, fake, 'I lived in Berlin in summer 2023.');
+      await processEpisode(db, fake, ep.id);
+      expect((await facts(db, ns.namespace.id))[0]).toMatchObject({
+        validFrom: new Date('2023-06-01T00:00:00Z'),
+        validTo: new Date('2023-09-01T00:00:00Z'),
+      });
+    });
+  });
+
+  it('drops a fact that ended before the turn when its start is unknown', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const fake = new FakeProvider().when('processEpisode', () => true, {
+        importance: 0.5,
+        candidates: [
+          candidate({
+            object: place('Marseille'),
+            validTo: { kind: 'named_period', year: 2015, month: null, season: null },
+          }),
+        ],
+      });
+      const ep = await episode(ns, fake, 'Before that I lived in Marseille.');
+      const result = await processEpisode(db, fake, ep.id);
+      expect(result).toMatchObject({ dropped: 1, outcomes: { inserted: 0 } });
+      expect(await facts(db, ns.namespace.id)).toHaveLength(0);
+    });
+  });
+
   it('drops a candidate whose predicate normalizes to nothing', async () => {
     await withTestNamespace(db, async (ns) => {
       const fake = new FakeProvider().when('processEpisode', () => true, {

@@ -1,0 +1,86 @@
+{
+  "id": "03-family-ad-hoc",
+  "covers": "a non-self subject and ad-hoc predicates",
+  "episodes": [
+    {
+      "sessionId": "s1",
+      "role": "user",
+      "content": "My sister Ana is allergic to peanuts, so we never cook with them when she visits.",
+      "occurredAt": "2024-03-05T18:00:00Z"
+    }
+  ],
+  "recording": {
+    "promptVersion": "5584f4d1b7b2",
+    "model": "gemini-3.5-flash-lite",
+    "recordedAt": "2026-10-16T15:57:02.922Z",
+    "calls": [
+      {
+        "method": "processEpisode",
+        "input": {
+          "content": "My sister Ana is allergic to peanuts, so we never cook with them when she visits.",
+          "role": "user",
+          "occurredAt": "2024-03-05T18:00:00.000Z",
+          "predicates": [
+            "lives_in",
+            "works_at",
+            "birth_date",
+            "is_named",
+            "likes",
+            "visited"
+          ]
+        },
+        "output": {
+          "importance": 0.5,
+          "candidates": [
+            {
+              "subject": {
+                "name": "Ana",
+                "type": "person",
+                "description": "the user's sister"
+              },
+              "predicate": "sibling_of",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "SELF",
+                  "type": "person",
+                  "description": "the user"
+                }
+              },
+              "statement": "Ana is the sister of The user.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "Ana",
+                "type": "person",
+                "description": "the user's sister"
+              },
+              "predicate": "allergic_to",
+              "object": {
+                "kind": "literal",
+                "value": "peanuts"
+              },
+              "statement": "Ana is allergic to peanuts.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

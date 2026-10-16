@@ -1,0 +1,154 @@
+{
+  "id": "02-relative-dates",
+  "covers": "relative and named-period dates resolved against occurred_at",
+  "episodes": [
+    {
+      "sessionId": "s1",
+      "role": "user",
+      "content": "I moved to Berlin last month, and since March I've been taking cello lessons.",
+      "occurredAt": "2024-06-10T09:30:00Z"
+    },
+    {
+      "sessionId": "s1",
+      "role": "user",
+      "content": "Two years ago I spent a summer in Kyoto.",
+      "occurredAt": "2024-06-10T09:35:00Z"
+    }
+  ],
+  "recording": {
+    "promptVersion": "5584f4d1b7b2",
+    "model": "gemini-3.5-flash-lite",
+    "recordedAt": "2026-10-16T15:56:53.967Z",
+    "calls": [
+      {
+        "method": "processEpisode",
+        "input": {
+          "content": "I moved to Berlin last month, and since March I've been taking cello lessons.",
+          "role": "user",
+          "occurredAt": "2024-06-10T09:30:00.000Z",
+          "predicates": [
+            "lives_in",
+            "works_at",
+            "birth_date",
+            "is_named",
+            "likes",
+            "visited"
+          ]
+        },
+        "output": {
+          "importance": 0.8,
+          "candidates": [
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "lives_in",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Berlin",
+                  "type": "place",
+                  "description": "the city where the user lives"
+                }
+              },
+              "statement": "The user lives in Berlin.",
+              "validFrom": {
+                "kind": "relative",
+                "amount": 1,
+                "unit": "month",
+                "direction": "ago"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "likes",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "cello",
+                  "type": "thing",
+                  "description": "the musical instrument the user is learning"
+                }
+              },
+              "statement": "The user is taking cello lessons.",
+              "validFrom": {
+                "kind": "named_period",
+                "year": null,
+                "month": 3,
+                "season": null
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            }
+          ]
+        }
+      },
+      {
+        "method": "processEpisode",
+        "input": {
+          "content": "Two years ago I spent a summer in Kyoto.",
+          "role": "user",
+          "occurredAt": "2024-06-10T09:35:00.000Z",
+          "predicates": [
+            "lives_in",
+            "works_at",
+            "birth_date",
+            "is_named",
+            "likes",
+            "visited"
+          ]
+        },
+        "output": {
+          "importance": 0.5,
+          "candidates": [
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "visited",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Kyoto",
+                  "type": "place",
+                  "description": "a city in Japan"
+                }
+              },
+              "statement": "The user visited Kyoto two years ago.",
+              "validFrom": {
+                "kind": "relative",
+                "amount": 2,
+                "unit": "year",
+                "direction": "ago"
+              },
+              "validTo": {
+                "kind": "relative",
+                "amount": 2,
+                "unit": "year",
+                "direction": "ago"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

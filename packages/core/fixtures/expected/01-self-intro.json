@@ -1,0 +1,93 @@
+{
+  "id": "01-self-intro",
+  "covers": "self references, is_named and birth_date literals, registry predicates",
+  "summaries": [
+    {
+      "status": "processed",
+      "importance": 0.9,
+      "extracted": 5,
+      "createdEntities": 2,
+      "dropped": 0,
+      "droppedBounds": 0,
+      "outcomes": {
+        "inserted": 5,
+        "merged": 0,
+        "updated": 0,
+        "backfilled": 0,
+        "corrected": 0,
+        "coexisted": 0,
+        "rejected": 0
+      }
+    }
+  ],
+  "entities": [
+    {
+      "name": "User",
+      "type": "person",
+      "aliases": [],
+      "description": null,
+      "isSelf": true
+    },
+    {
+      "name": "Lisbon",
+      "type": "place",
+      "aliases": [],
+      "description": "a city",
+      "isSelf": false
+    },
+    {
+      "name": "Northwind",
+      "type": "org",
+      "aliases": [],
+      "description": "an organization",
+      "isSelf": false
+    }
+  ],
+  "facts": [
+    {
+      "fact": "User birth_date \"1990-07-04\"",
+      "adHoc": false,
+      "statement": "The user's birth date is 1990-07-04.",
+      "validFrom": "1990-07-04 (explicit)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "User is_named \"Priya\"",
+      "adHoc": false,
+      "statement": "The user is named Priya.",
+      "validFrom": "2024-02-01 (episode)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "User lives_in Lisbon",
+      "adHoc": false,
+      "statement": "The user lives in Lisbon.",
+      "validFrom": "2024-02-01 (episode)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "User occupation \"data engineer\"",
+      "adHoc": true,
+      "statement": "The user works as a data engineer.",
+      "validFrom": "2024-02-01 (episode)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "User works_at Northwind",
+      "adHoc": false,
+      "statement": "The user works at Northwind.",
+      "validFrom": "2024-02-01 (episode)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    }
+  ]
+}
