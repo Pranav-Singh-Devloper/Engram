@@ -184,7 +184,7 @@ create table facts (
   last_accessed_at   timestamptz,
   -- valid time: when the fact was true in the world
   valid_from         timestamptz not null,
-  valid_from_source  text not null default 'episode' check (valid_from_source in ('explicit','episode')),
+  valid_from_source  text not null default 'episode' check (valid_from_source in ('explicit','episode','unknown')),
   valid_to           timestamptz,
   -- record time: when the system held this belief
   recorded_at        timestamptz not null default now(),
@@ -235,7 +235,9 @@ Indexes: HNSW on all three embedding columns; GIN full-text on `episodes.content
 - **Fact rows are immutable versions.** Only `invalidated_at`, `status`, `superseded_by`, `tier`, `pinned`, and the access fields are ever updated in place. Changing a fact's validity window means invalidating the old row and inserting a new version that points to it via `revises`. This is what makes record-time queries correct.
 - `invalidated_at` means exactly one thing: *the system stopped holding this row as a belief.* A fact that was true and stopped being true is **not** invalidated. Its window is closed in a new version.
 
-**Status** is a denormalized label for the UI. Queries never filter on it; they filter on time columns.
+**Unknown starts.** A fact can end at a known time with no stated start ("before that, I lived in Marseille"). It is stored with `valid_from = '-infinity'` and `valid_from_source = 'unknown'` (a CHECK keeps the two in step). The canonical query needs no special case, since `-infinity <= T` for every `T`. In application code the unknown start is the earliest representable `Date`.
+
+**Status** is a denormalized label for the UI. Queries never filter on it; they filter on time columns, and on lineage (`revises`) where versions matter.
 
 | status | meaning | `invalidated_at` |
 |---|---|---|
@@ -273,7 +275,7 @@ The write path is split into a fast step and a slow step so interactive clients 
    - Predicates are constrained to the registry enum (§7.1), with `ad_hoc` allowed as an escape hatch. Ad-hoc candidates pass through the synonym map before being flagged `predicate_ad_hoc`.
    - First-person references resolve to the namespace's `is_self` entity.
    - Relative dates ("last week", "since March") resolve against the episode's `occurred_at`, never against wall-clock now. The model returns *temporal hints* (absolute date, relative offset, or named period), never computed dates; code resolves them.
-   - A window's start resolves to the start of its period; so does its end, so "Lyon from 2015 to 2018" meets "Paris since 2018" instead of overlapping it. When both bounds name the same period ("in summer 2023"), the end is that period's end. A fact that ended before the turn with no stated start is dropped (it would otherwise become a current fact dated to the turn), and an end that isn't after the start is discarded.
+   - A window's start resolves to the start of its period; so does its end, so "Lyon from 2015 to 2018" meets "Paris since 2018" instead of overlapping it. When both bounds name the same period ("in summer 2023"), the end is that period's end. A fact that ended before the turn with no stated start gets an unknown start (§5.1) rather than one defaulted to the turn, which would invent a current fact; an end that isn't after the start is discarded.
    - Episodes with `role = 'tool'` are **not** extracted by default (`extractFromToolOutput = false`). This prevents web pages and file contents from planting facts.
 2. **Entity resolution**, under a per-namespace advisory lock so concurrent writes can't create duplicates. The lock is transaction-scoped (`pg_advisory_xact_lock`), so it is safe behind Supabase's transaction-mode pooler; session-level advisory locks are not used anywhere.
    1. Exact normalized name and type match.
@@ -342,31 +344,27 @@ Extraction is constrained to registry names, and ad-hoc predicates are normalize
 
 ### 7.2 Resolving a new candidate
 
-Let the candidate be `c` with window `[c.from, c.to)`. `c.from` defaults to the episode's `occurred_at` with `valid_from_source = 'episode'`.
+Let the candidate be `c` with window `[c.from, c.to)`. `c.from` defaults to the episode's `occurred_at` with `valid_from_source = 'episode'`. Predicates outside the registry are treated as `cardinality: 'many'`, `mutability: 'dynamic'`, so unknown relations coexist rather than wrongly superseding each other.
 
 1. Fetch current-belief facts `E` (`invalidated_at is null`) with the same `(namespace, subject, predicate)`, **including closed (superseded) ones**. They're needed for out-of-order handling.
-2. If `E` is empty → insert `c`.
-3. **Merge.** If some `e ∈ E` has an equal object (same entity, or literal/embedding similarity ≥ threshold) and an overlapping or adjacent window:
+2. If `E` is empty → insert `c` (no revision row: there is nothing to resolve).
+3. **Merge.** If some `e ∈ E` has the same object and an overlapping or adjacent window. "Same object" means the same entity; otherwise the same label (entity name or literal, so a literal "Toronto" and the entity Toronto match); otherwise, for two literals, statement-embedding similarity ≥ `mergeThreshold`. Two *different* entities never merge by embedding ("Bern" and "Berlin" read alike). On a merge:
    - Append provenance.
-   - Raise confidence **only if `c` cites episodes not already in `e.source_episode_ids`**. Re-extraction during consolidation must not double-count evidence.
-   - If `c` carries an explicit bound that `e` only had by default, write a revised version of `e` with the explicit bound.
-   - Log `merge`.
-4. **Coexist.** For `cardinality: 'many'`, insert `c`. Both stay current.
-5. **Contradiction.** For `cardinality: 'one'`, run the rule fast-path first:
-   - **Update (forward in time).** `e` is open-ended, `c.from > e.from`, and the predicate is dynamic. Log `update`. The steps, all in one transaction with a single transaction timestamp `t`:
-     1. Generate ids in the application, so rows can reference each other without placeholder writes.
-     2. Insert `c` as active, `recorded_at = t`.
-     3. Insert the closed version of `e`: a new row copying `e`'s content with `valid_to = c.from`, `status = 'superseded'`, `superseded_by = c.id`, `revises = e.id`, and `recorded_at = t`. The closed copy's record time is when the system started believing the *closed* window, so it must never be copied from `e`.
-     4. Set `e.invalidated_at = t` and `e.status = 'revised'`.
-
-     Because the closed copy's `recorded_at` and `e.invalidated_at` are the same `t`, a `knownAt` query at any instant sees exactly one of them: no gap, no overlap.
-   - **Backfill (out-of-order history).** `c` lies entirely before `e.from`, e.g. "I lived in Paris 2018–2020" learned after Berlin. Insert `c` with `valid_to = c.to ?? e.from`, `status = 'superseded'`, `superseded_by = e.id`. Leave `e` untouched. Log `backfill`.
-     - If `c`'s window overlaps an existing *closed* row in `E` (several past cities, one of them already recorded), the rule fast-path does not apply; the candidate goes to the LLM adjudicator.
-   - **Correction cue.** `c.is_correction` is true ("actually", "no, I never…"). Set `e.invalidated_at = now()` and `e.status = 'retracted'`, then insert `c`. Log `correction`.
-   - **Noise.** `c.confidence < 0.4` and `e.confidence ≥ 0.8` → reject `c`; store it in `fact_revisions.candidate`. Log `reject`.
-   - **Anything else** goes to the LLM adjudicator: same start time, overlapping explicit windows, ambiguous cues. It classifies **update**, **correction**, **coexist** (apparent conflict, e.g. two concurrent jobs; optionally flag the predicate for reclassification), or **reject**, and the same mechanics as above apply.
-6. **Static predicates** skip update and backfill. Contradictions resolve only as correction or reject.
-7. **Every outcome writes a `fact_revisions` row.** The entity timeline renders this chain; it's the demo money-shot.
+   - Raise confidence (noisy-OR, capped at 0.99) **only if `c` cites episodes not already in `e.source_episode_ids`**. Re-extraction during consolidation must not double-count evidence.
+   - If `c` carries an explicit bound that `e` only had by default, use it; an explicit end closes an open `e`, and a closed `e` only ever extends.
+   - Any of these changes writes a new version of `e` (they are content changes). Log `merge` either way.
+4. **Coexist.** For `cardinality: 'many'`, insert `c`. Both stay current. A correction cue on a multi-valued predicate goes to the adjudicator instead.
+5. **Single-valued predicates.** Checks run in this order:
+   1. **Correction cue.** `c.is_correction` ("actually", "no, I never…"). Retract the overlapping (or current) `e`: `invalidated_at = t`, `status = 'retracted'`. Insert `c`; without stated bounds, `c` takes over `e`'s window ("it was Acme all along"). Log `correction`. This comes before update, or a correction would be read as a change of job.
+   2. **Noise.** `c.confidence < 0.4` and an overlapping `e` has `confidence ≥ 0.8` → reject `c`; keep it in `fact_revisions.candidate`. Log `reject`.
+   3. **Static predicates** skip update and backfill: any remaining contradiction goes to the adjudicator, which may only answer correction or reject.
+   4. **Effective window.** An open-ended `c` that starts before known history ends where the next known row begins ("Lyon from 2015", learned after Berlin).
+   5. **Backfill.** `c` overlaps nothing in `E` and precedes some row: insert `c` with its (effective) end, `status = 'superseded'`, `superseded_by =` the next row. Leave `E` untouched. Log `backfill`. A `c` that overlaps nothing and precedes nothing is a plain insert.
+   6. **Update.** `c` overlaps only the open `e`, is itself open-ended, and starts after `e`. Insert `c`; write a closed version of `e` (`valid_to = c.from`, `superseded_by = c.id`, `revises = e.id`, `recorded_at = t`); set `e.invalidated_at = t`, `e.status = 'revised'`. Log `update`. Ids are generated in the application, so `c` exists before the copy references it.
+   7. **Anything else** goes to the LLM adjudicator: overlap with closed history, the same start as the open value, a closed window inside it. It answers **update**, **correction**, **coexist** (both true at once; it may flag the predicate for reclassification) or **reject**, and the mechanics above apply. An answer the mechanics can't apply (an update to a closed row, a disallowed choice) becomes coexist or reject, with the reason recorded.
+6. **One timestamp.** Every write in a resolution uses one transaction timestamp `t`, read from the engine's clock inside the lock. A new version's `recorded_at` equals its original's `invalidated_at`, so a `knownAt` query at any instant sees exactly one of them: no gap, no overlap.
+7. **Locking.** Classification runs under the namespace lock against fresh beliefs, and rule decisions apply immediately. Only adjudication leaves the lock: the adjudicator is asked outside any transaction, and its answer applies only if `E` is unchanged when the lock is retaken; otherwise the loop re-classifies. (Re-checking outside the lock for rule decisions starves under many concurrent restatements of one fact.)
+8. **Every resolution writes one `fact_revisions` row** (merge, coexist, update, backfill, correction, reject), with the candidate and the resolver (`rule` or `llm`). The entity timeline renders this chain; it's the demo money-shot.
 
 ### 7.3 Temporal APIs
 
