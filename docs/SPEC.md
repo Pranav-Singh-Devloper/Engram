@@ -272,14 +272,17 @@ The write path is split into a fast step and a slow step so interactive clients 
 1. **One LLM call** returns zod-validated JSON with `importance` and candidate facts: `{subject, predicate, object, statement, valid_from?, valid_to?, is_correction, confidence}`. Combining importance scoring and extraction into one call halves quota use.
    - Predicates are constrained to the registry enum (§7.1), with `ad_hoc` allowed as an escape hatch. Ad-hoc candidates pass through the synonym map before being flagged `predicate_ad_hoc`.
    - First-person references resolve to the namespace's `is_self` entity.
-   - Relative dates ("last week", "since March") resolve against the episode's `occurred_at`, never against wall-clock now.
+   - Relative dates ("last week", "since March") resolve against the episode's `occurred_at`, never against wall-clock now. The model returns *temporal hints* (absolute date, relative offset, or named period), never computed dates; code resolves them.
+   - A window's start resolves to the start of its period; so does its end, so "Lyon from 2015 to 2018" meets "Paris since 2018" instead of overlapping it. When both bounds name the same period ("in summer 2023"), the end is that period's end. A fact that ended before the turn with no stated start is dropped (it would otherwise become a current fact dated to the turn), and an end that isn't after the start is discarded.
    - Episodes with `role = 'tool'` are **not** extracted by default (`extractFromToolOutput = false`). This prevents web pages and file contents from planting facts.
-2. **Entity resolution**, inside a per-namespace advisory lock so concurrent writes can't create duplicates. The lock is transaction-scoped (`pg_advisory_xact_lock`), taken inside the processing transaction, so it is safe behind Supabase's transaction-mode pooler; session-level advisory locks are not used anywhere.
+2. **Entity resolution**, under a per-namespace advisory lock so concurrent writes can't create duplicates. The lock is transaction-scoped (`pg_advisory_xact_lock`), so it is safe behind Supabase's transaction-mode pooler; session-level advisory locks are not used anywhere.
    1. Exact normalized name and type match.
    2. Alias match.
    3. Embedding similarity on `"name (type): description"` ≥ 0.85.
    - If multiple candidates pass (two different Sams), an LLM disambiguation call picks one or declares a new entity.
+   - A single name or alias match also goes to disambiguation when both sides have descriptions and their labels are less similar than `descriptionConflictThreshold` (0.95, tuned on dev). Otherwise "Sam from work, my manager" would merge into an existing "Sam, my brother".
    - If none pass, create the entity. Append an alias when a new surface form maps to an existing entity.
+   - **No LLM call under the lock.** The ladder runs and disambiguation happens outside any transaction; the plan is then re-checked under the lock, and if a concurrent writer changed the candidates the flow restarts (bounded retries).
 3. **Conflict detection and resolution** per candidate (§7).
 4. Persist facts with provenance (`source_episode_ids`); embed statements; set `processed_at`.
 
