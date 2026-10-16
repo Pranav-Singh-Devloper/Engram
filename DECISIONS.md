@@ -37,3 +37,15 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 **Decision.** All Engram objects live in an `engram` schema, which isn't in the API's exposed schemas; extensions live in `extensions` on every target. `supabase/hosted/0001_revoke_api_roles.sql` revokes schema usage and object privileges from `anon` and `authenticated` (and function execute from `PUBLIC`). Clients always set `search_path = engram, extensions, public` per connection.
 
 **Consequences.** The app connects only through `DATABASE_URL`, so this costs nothing in code. Any future hosted migration that creates objects should be followed by a check that anon REST calls still fail (P10 verification).
+
+---
+
+## ADR-004 — Gemini over REST, embeddings from gemini-embedding-2 at 768 dims
+
+**Date:** 2026-10-16 · **Status:** Accepted
+
+**Context.** Engram needs embeddings and JSON generation on a free tier. As of October 2026, Google's docs list `gemini-embedding-2` (stable, free tier, 3072 native dims, normalizes truncated outputs itself, task prefixes instead of a `taskType` field) and the older text-only `gemini-embedding-001`.
+
+**Decision.** Call the REST API with `fetch` rather than the SDK: the surface we use is two endpoints, and owning the HTTP layer gives us testable backoff (429/5xx with jitter, Retry-After) and no extra dependency. Embed with `gemini-embedding-2` at `outputDimensionality: 768` using the documented prefixes (`title: none | text: …` for documents, `task: search result | query: …` for queries), and L2-normalize anyway as a cheap safeguard. Structured calls use `generateContent` with `responseMimeType: application/json`, zod validation and one repair round. The chat model is chosen in P02.
+
+**Consequences.** Vectors are stored as pgvector float32, so they round-trip by direction, not bit-for-bit. Switching to `gemini-embedding-001` would need `taskType` instead of prefixes and a re-embed of everything (an ADR). `pnpm gemini:check` verifies a real key in 2–3 requests.
