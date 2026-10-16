@@ -95,6 +95,7 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 **Context.** SPEC §7.2 listed update before the correction cue. Then "Actually I work at Acme, not Initech", said after Initech, matches the update rule and closes Initech instead of retracting it. Merges change provenance and confidence, which §5.1 doesn't allow in place. The optimistic lock pattern starved when ten writers restated one fact at once.
 
 **Decision.**
+
 - **Order:** for single-valued predicates the order is merge, correction cue, noise, static handling, backfill, update, adjudicate.
 - **Merges** write a new version whenever they change provenance, confidence (noisy-OR, capped at 0.99, only for new episodes) or bounds. Objects compare by entity, then by label, then by literal paraphrase.
 - **Corrections** without stated bounds inherit the retracted fact's window.
