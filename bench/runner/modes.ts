@@ -3,11 +3,11 @@
 //   buffer        the last N turns
 //   rag           vector search over turns only: no facts, conflicts or time
 //   full_context  the whole history
-//   engram        the full write path into a fresh namespace, then v0 recall
+//   engram        the full write path into a fresh namespace, then recall()
 // Turns are prefixed with their dates in every mode.
 import { randomUUID } from 'node:crypto';
-import { SimClock, cosine, ensureNamespace, factsAsOf, ingest, processEpisode } from '@engram/core';
-import type { Provider, Sql } from '@engram/core';
+import { SimClock, cosine, ensureNamespace, ingest, processEpisode, recall } from '@engram/core';
+import type { Provider, RecallOptions, Sql } from '@engram/core';
 import { turnTime } from '../dataset/schema.js';
 import type { BenchItem } from '../dataset/schema.js';
 
@@ -16,8 +16,6 @@ export type Mode = (typeof MODES)[number];
 
 export const BUFFER_TURNS = 20;
 export const RAG_K = 8;
-export const ENGRAM_FACTS = 8;
-export const ENGRAM_EPISODES = 4;
 
 export interface ModeAnswer {
   answer: string;
@@ -25,6 +23,8 @@ export interface ModeAnswer {
   usedMemoryIds: string[];
   /** Memories handed to the composer. */
   memories: number;
+  /** Texts of the retrieved memories (rag, engram), for recall@k. */
+  retrieved?: string[];
   /** Engram only: what the write path produced. */
   store?: { facts: number; adHoc: number; entities: number; duplicateEntities: number };
 }
@@ -67,6 +67,8 @@ async function compose(
 export interface ModeDeps {
   db: Sql;
   provider: Provider;
+  /** Overrides for engram's recall (tuning sweeps). */
+  recall?: Partial<Pick<RecallOptions, 'ranker' | 'floor' | 'k'>>;
 }
 
 export async function runMode(mode: Mode, item: BenchItem, deps: ModeDeps): Promise<ModeAnswer> {
@@ -82,16 +84,14 @@ export async function runMode(mode: Mode, item: BenchItem, deps: ModeDeps): Prom
         { purpose: 'document' },
       );
       const [q] = await deps.provider.embed([item.question], { purpose: 'query' });
-      const ranked = turns
+      const memories = turns
         .map((t, i) => ({ t, score: cosine(q ?? [], vectors[i] ?? []) }))
         .sort((a, b) => b.score - a.score)
         .slice(0, RAG_K)
-        .sort((a, b) => a.t.at.getTime() - b.t.at.getTime());
-      return compose(
-        deps.provider,
-        item,
-        ranked.map((r) => episodeMemory(r.t)),
-      );
+        .sort((a, b) => a.t.at.getTime() - b.t.at.getTime())
+        .map((r) => episodeMemory(r.t));
+      const answer = await compose(deps.provider, item, memories);
+      return { ...answer, retrieved: memories.map((m) => m.text) };
     }
     case 'engram':
       return engram(item, turns, deps);
@@ -123,45 +123,33 @@ async function engram(item: BenchItem, turns: Turn[], deps: ModeDeps): Promise<M
       await processEpisode(db, provider, episode.id, { clock });
     }
 
-    // v0 recall (P05 replaces it): rank current beliefs and episodes by
-    // similarity to the question, under the item's valid and record times.
     clock.set(item.asked_at);
-    const validAt = new Date(item.valid_at ?? item.asked_at);
-    const knownAt = new Date(item.known_at ?? item.asked_at);
-    const [q] = await provider.embed([item.question], { purpose: 'query' });
-    const facts = await factsAsOf(db, { namespaceId: namespace.id, validAt, knownAt }, clock);
-    const topFacts = facts
-      .map((f) => ({ f, score: f.embedding ? cosine(q ?? [], f.embedding) : -1 }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, ENGRAM_FACTS)
-      .map(({ f }): Memory => ({
-        id: f.id,
-        kind: 'fact',
-        text: f.statement,
-        validFrom: f.validFrom,
-        validTo: f.validTo,
-      }));
-    // Episodes' record time is their occurred_at in a replay (created_at is wall-clock; see P05).
-    const horizon = Math.min(validAt.getTime(), knownAt.getTime());
-    const episodes = await db<
-      { id: string; content: string; occurredAt: Date; embedding: string }[]
-    >`
-      select id, content, occurred_at, embedding::text as embedding from episodes
-      where namespace_id = ${namespace.id} and occurred_at <= ${new Date(horizon)}`;
-    const topEpisodes = episodes
-      .map((e) => ({ e, score: cosine(q ?? [], JSON.parse(e.embedding) as number[]) }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, ENGRAM_EPISODES)
-      .map(({ e }): Memory => ({
-        id: e.id,
-        kind: 'episode',
-        text: e.content,
-        validFrom: e.occurredAt,
-        validTo: null,
-      }));
-
-    const answer = await compose(provider, item, [...topFacts, ...topEpisodes]);
-    return { ...answer, store: await storeStats(db, namespace.id) };
+    const result = await recall(
+      db,
+      provider,
+      {
+        namespaceId: namespace.id,
+        query: item.question,
+        validAt: item.valid_at ? new Date(item.valid_at) : undefined,
+        knownAt: item.known_at ? new Date(item.known_at) : undefined,
+        trackAccess: false,
+        ...deps.recall,
+      },
+      clock,
+    );
+    const memories = result.memories.map((m): Memory => ({
+      id: m.id,
+      kind: m.kind,
+      text: m.text,
+      validFrom: m.validFrom,
+      validTo: m.validTo,
+    }));
+    const answer = await compose(provider, item, memories);
+    return {
+      ...answer,
+      retrieved: memories.map((m) => m.text),
+      store: await storeStats(db, namespace.id),
+    };
   } finally {
     await db`delete from namespaces where id = ${namespace.id}`;
   }

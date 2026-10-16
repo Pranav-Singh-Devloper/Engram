@@ -12,7 +12,7 @@ import { emptyUsage } from './cache.js';
 import { judgeAnswer } from './judge.js';
 import type { Verdict } from './judge.js';
 import { runMode } from './modes.js';
-import type { Mode, ModeAnswer } from './modes.js';
+import type { Mode, ModeAnswer, ModeDeps } from './modes.js';
 
 export interface ItemResult {
   itemId: string;
@@ -31,6 +31,7 @@ export interface ItemResult {
 export interface RunOptions {
   db: Sql;
   provider: Provider;
+  recall?: ModeDeps['recall'];
   judge?: Pick<Provider, 'judge'>;
   meter?: UsageMeter;
   dir: string;
@@ -61,7 +62,11 @@ export async function runItems(
       const started = performance.now();
       let answer: ModeAnswer;
       try {
-        answer = await runMode(mode, item, { db: options.db, provider: options.provider });
+        answer = await runMode(mode, item, {
+          db: options.db,
+          provider: options.provider,
+          recall: options.recall,
+        });
       } catch (err) {
         if (err instanceof ProviderHttpError && err.status === 429) {
           throw new QuotaStop(

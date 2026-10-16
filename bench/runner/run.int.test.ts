@@ -89,10 +89,11 @@ function fake(): FakeProvider {
 describe('memory modes', () => {
   it('engram replays the history and recalls only what held at valid_at', async () => {
     const provider = fake();
-    const answer = await runMode('engram', item, { db, provider });
+    const answer = await runMode('engram', item, { db, provider, recall: { floor: 0 } });
     expect(answer.answer).toContain('Krakow');
     expect(answer.answer).not.toContain('Osaka');
     expect(answer.store).toMatchObject({ entities: 2, duplicateEntities: 0 });
+    // Fake embeddings are bag-of-words, so the real-model floor is lifted.
     // The namespace is cleaned up afterwards.
     expect(await db`select 1 from namespaces where slug like ${'bench-dev-test-1-%'}`).toHaveLength(
       0,
@@ -115,14 +116,28 @@ describe('runItems', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'engram-run-'));
     dirs.push(dir);
     const provider = fake();
-    expect(await runItems([item], ['full_context', 'engram'], { db, provider, dir })).toBe(2);
+    expect(
+      await runItems([item], ['full_context', 'engram'], {
+        db,
+        provider,
+        dir,
+        recall: { floor: 0 },
+      }),
+    ).toBe(2);
     const results = loadResults(dir);
     expect(results.map((r) => [r.mode, r.verdict.correct]).sort()).toEqual([
       ['engram', true],
       ['full_context', false],
     ]);
     const composes = provider.callsTo('compose').length;
-    expect(await runItems([item], ['full_context', 'engram'], { db, provider, dir })).toBe(0);
+    expect(
+      await runItems([item], ['full_context', 'engram'], {
+        db,
+        provider,
+        dir,
+        recall: { floor: 0 },
+      }),
+    ).toBe(0);
     expect(provider.callsTo('compose')).toHaveLength(composes);
   });
 

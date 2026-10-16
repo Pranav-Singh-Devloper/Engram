@@ -81,6 +81,12 @@ async function main(): Promise<void> {
         provider: providers.gemini,
         judge: llmJudge ? providers.judge : undefined,
         meter: providers.meter,
+        recall: {
+          ...(process.env.BENCH_RANKER
+            ? { ranker: process.env.BENCH_RANKER as 'rrf' | 'linear' }
+            : {}),
+          ...(process.env.BENCH_FLOOR ? { floor: Number(process.env.BENCH_FLOOR) } : {}),
+        },
         dir: runDir,
         log: (line) => {
           console.log(line);

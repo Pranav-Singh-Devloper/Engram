@@ -1,6 +1,6 @@
 // Turns a run's per-item results into a markdown report (SPEC §13.5).
 import { CATEGORIES } from '../dataset/schema.js';
-import { isAbstention } from './judge.js';
+import { isAbstention, normalize } from './judge.js';
 import { MODES } from './modes.js';
 import type { Mode } from './modes.js';
 import type { ItemResult } from './run.js';
@@ -49,6 +49,24 @@ export function renderReport(results: readonly ItemResult[], meta: ReportMeta): 
     '',
   );
 
+  const retrievalModes = modes.filter((m) => of(m).some((r) => r.answer.retrieved));
+  if (retrievalModes.length > 0) {
+    lines.push('## Retrieval recall@8', '');
+    lines.push(
+      'Share of answerable items where a retrieved memory contains the expected answer (automatic labels; a paraphrased answer counts as a miss).',
+      '',
+    );
+    lines.push('| mode | recall@8 | n |', '|---|---|---|');
+    for (const m of retrievalModes) {
+      const answerable = of(m).filter((r) => r.category !== 'abstention' && r.answer.retrieved);
+      const hits = answerable.filter((r) =>
+        (r.answer.retrieved ?? []).some((t) => normalize(t).includes(normalize(r.expected))),
+      );
+      lines.push(`| ${m} | ${pct(hits.length, answerable.length)} | ${answerable.length} |`);
+    }
+    lines.push('');
+  }
+
   lines.push('## Abstention and cost', '');
   lines.push(
     '| mode | abstention precision | abstention recall | real calls / item | cached / item | prompt tokens / item | latency p50 | latency p95 |',
@@ -93,7 +111,7 @@ export function renderReport(results: readonly ItemResult[], meta: ReportMeta): 
         sum((r) => r.answer.store?.entities ?? 0),
       )} of entities share a name with another.`,
     );
-    lines.push('- Retrieval recall@8: not measured until P05 adds relevance labels.', '');
+    lines.push('');
   }
 
   lines.push('## Misses', '');
