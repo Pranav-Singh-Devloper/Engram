@@ -10,9 +10,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "5584f4d1b7b2",
+    "promptVersion": "64e7fa21aa8d",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T15:59:16.723Z",
+    "recordedAt": "2026-10-16T16:27:37.461Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -30,13 +30,38 @@
           ]
         },
         "output": {
-          "importance": 0.6,
+          "importance": 0.7,
           "candidates": [
             {
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "the user"
+                "description": "The user"
+              },
+              "predicate": "partner_of",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Jordan",
+                  "type": "person",
+                  "description": "The user's partner"
+                }
+              },
+              "statement": "The user has a partner named Jordan.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "The user"
               },
               "predicate": "visited",
               "object": {
@@ -44,7 +69,7 @@
                 "entity": {
                   "name": "Kyoto",
                   "type": "place",
-                  "description": "a city in Japan"
+                  "description": "A city in Japan"
                 }
               },
               "statement": "The user visited Kyoto in April 2023.",
@@ -64,7 +89,7 @@
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "the user"
+                "description": "The user"
               },
               "predicate": "visited",
               "object": {
@@ -72,7 +97,7 @@
                 "entity": {
                   "name": "Osaka",
                   "type": "place",
-                  "description": "a city in Japan"
+                  "description": "A city in Japan"
                 }
               },
               "statement": "The user visited Osaka in April 2023.",
@@ -92,16 +117,12 @@
               "subject": {
                 "name": "Jordan",
                 "type": "person",
-                "description": "the user's partner"
+                "description": "The user's partner"
               },
               "predicate": "likes",
               "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "ramen",
-                  "type": "thing",
-                  "description": "a type of noodle dish"
-                }
+                "kind": "literal",
+                "value": "ramen"
               },
               "statement": "Jordan loves ramen.",
               "validFrom": {
@@ -117,16 +138,12 @@
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "the user"
+                "description": "The user"
               },
               "predicate": "likes",
               "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "sushi",
-                  "type": "thing",
-                  "description": "a type of Japanese dish"
-                }
+                "kind": "literal",
+                "value": "sushi"
               },
               "statement": "The user likes sushi.",
               "validFrom": {

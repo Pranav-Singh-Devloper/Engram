@@ -16,9 +16,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "5584f4d1b7b2",
+    "promptVersion": "64e7fa21aa8d",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T15:57:58.253Z",
+    "recordedAt": "2026-10-16T16:27:18.959Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -36,7 +36,7 @@
           ]
         },
         "output": {
-          "importance": 0.8,
+          "importance": 0.5,
           "candidates": [
             {
               "subject": {
@@ -69,7 +69,7 @@
                 "type": "person",
                 "description": "the user"
               },
-              "predicate": "occupation",
+              "predicate": "job_title",
               "object": {
                 "kind": "literal",
                 "value": "product manager"

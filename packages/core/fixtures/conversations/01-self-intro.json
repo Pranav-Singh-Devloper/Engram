@@ -10,9 +10,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "5584f4d1b7b2",
+    "promptVersion": "64e7fa21aa8d",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T15:56:28.627Z",
+    "recordedAt": "2026-10-16T16:25:50.560Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -36,7 +36,7 @@
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "the user"
+                "description": "the user, Priya"
               },
               "predicate": "is_named",
               "object": {
@@ -57,14 +57,14 @@
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "the user"
+                "description": "the user, Priya"
               },
               "predicate": "birth_date",
               "object": {
                 "kind": "literal",
                 "value": "1990-07-04"
               },
-              "statement": "The user's birth date is 1990-07-04.",
+              "statement": "The user was born on 1990-07-04.",
               "validFrom": {
                 "kind": "absolute",
                 "date": "1990-07-04"
@@ -79,7 +79,7 @@
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "the user"
+                "description": "the user, Priya"
               },
               "predicate": "lives_in",
               "object": {
@@ -87,7 +87,7 @@
                 "entity": {
                   "name": "Lisbon",
                   "type": "place",
-                  "description": "a city"
+                  "description": "the city where the user lives"
                 }
               },
               "statement": "The user lives in Lisbon.",
@@ -104,7 +104,7 @@
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "the user"
+                "description": "the user, Priya"
               },
               "predicate": "works_at",
               "object": {
@@ -112,7 +112,7 @@
                 "entity": {
                   "name": "Northwind",
                   "type": "org",
-                  "description": "an organization"
+                  "description": "the organization where the user works"
                 }
               },
               "statement": "The user works at Northwind.",
@@ -129,9 +129,9 @@
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "the user"
+                "description": "the user, Priya"
               },
-              "predicate": "occupation",
+              "predicate": "has_occupation",
               "object": {
                 "kind": "literal",
                 "value": "data engineer"

@@ -16,7 +16,7 @@ import type { Provider } from '../providers/provider.js';
 import { entityLabel, isSelfRef, resolveEntity } from '../resolve/entities.js';
 import type { ResolveContext } from '../resolve/entities.js';
 import type { Episode, ValidFromSource } from '../types/index.js';
-import { insertOnlyResolver } from './resolver.js';
+import { createConflictResolver } from '../conflict/resolver.js';
 import type { CandidateResolver, ResolutionKind, ResolvedCandidate } from './resolver.js';
 
 export interface ProcessOptions {
@@ -126,7 +126,7 @@ export async function processEpisode(
   options: ProcessOptions = {},
 ): Promise<ProcessSummary> {
   const clock = options.clock ?? systemClock;
-  const resolver = options.resolver ?? insertOnlyResolver;
+  const resolver = options.resolver ?? createConflictResolver(provider);
   const extractTools = options.extractFromToolOutput ?? config.extraction.extractFromToolOutput;
 
   const episode = await getEpisode(db, episodeId);
@@ -165,7 +165,7 @@ export async function processEpisode(
   const resolveRef = async (ref: EntityRef) => {
     const r = await resolveEntity(db, provider, ref, labelVector.get(entityLabel(ref)) ?? [], ctx);
     if (r.created) result.createdEntities++;
-    return r.entity.id;
+    return r.entity;
   };
 
   for (const [i, raw] of extraction.candidates.entries()) {
@@ -183,13 +183,16 @@ export async function processEpisode(
     );
     if (droppedBound) result.droppedBounds++;
 
+    const subject = await resolveRef(raw.subject);
+    const object = raw.object.kind === 'entity' ? await resolveRef(raw.object.entity) : null;
     const candidate: ResolvedCandidate = {
       namespaceId: episode.namespaceId,
-      subjectId: await resolveRef(raw.subject),
+      subjectId: subject.id,
       predicate: predicate.predicate,
       predicateAdHoc: predicate.adHoc,
-      objectId: raw.object.kind === 'entity' ? await resolveRef(raw.object.entity) : null,
+      objectId: object?.id ?? null,
       objectLiteral: raw.object.kind === 'literal' ? raw.object.value : null,
+      objectName: object?.name ?? (raw.object.kind === 'literal' ? raw.object.value : ''),
       statement: raw.statement,
       embedding: vectors[labels.length + i] ?? [],
       confidence: raw.confidence,
@@ -201,7 +204,7 @@ export async function processEpisode(
       sourceEpisodeIds: [episode.id],
       raw,
     };
-    const resolution = await resolver.resolve(db, candidate, { recordedAt: clock.now() });
+    const resolution = await resolver.resolve(db, candidate, { clock });
     result.outcomes[resolution.kind]++;
   }
 

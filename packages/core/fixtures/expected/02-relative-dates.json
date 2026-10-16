@@ -37,6 +37,7 @@
       }
     }
   ],
+  "revisions": [],
   "entities": [
     {
       "name": "User",
@@ -49,14 +50,14 @@
       "name": "Berlin",
       "type": "place",
       "aliases": [],
-      "description": "the city where the user lives",
+      "description": "the city of Berlin",
       "isSelf": false
     },
     {
-      "name": "cello",
-      "type": "thing",
+      "name": "cello lessons",
+      "type": "concept",
       "aliases": [],
-      "description": "the musical instrument the user is learning",
+      "description": "lessons for playing the cello",
       "isSelf": false
     },
     {
@@ -69,9 +70,10 @@
   ],
   "facts": [
     {
-      "fact": "User likes cello",
+      "fact": "User likes cello lessons",
+      "status": "active",
       "adHoc": false,
-      "statement": "The user is taking cello lessons.",
+      "statement": "The user has been taking cello lessons.",
       "validFrom": "2024-03-01 (explicit)",
       "validTo": null,
       "confidence": 1,
@@ -79,6 +81,7 @@
     },
     {
       "fact": "User lives_in Berlin",
+      "status": "active",
       "adHoc": false,
       "statement": "The user lives in Berlin.",
       "validFrom": "2024-05-10 (explicit)",
@@ -88,8 +91,9 @@
     },
     {
       "fact": "User visited Kyoto",
+      "status": "active",
       "adHoc": false,
-      "statement": "The user visited Kyoto two years ago.",
+      "statement": "The user visited Kyoto.",
       "validFrom": "2022-06-10 (explicit)",
       "validTo": null,
       "confidence": 1,

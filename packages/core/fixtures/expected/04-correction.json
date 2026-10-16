@@ -4,7 +4,7 @@
   "summaries": [
     {
       "status": "processed",
-      "importance": 0.8,
+      "importance": 0.5,
       "extracted": 2,
       "createdEntities": 1,
       "dropped": 0,
@@ -27,15 +27,18 @@
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
-        "inserted": 1,
+        "inserted": 0,
         "merged": 0,
         "updated": 0,
         "backfilled": 0,
-        "corrected": 0,
+        "corrected": 1,
         "coexisted": 0,
         "rejected": 0
       }
     }
+  ],
+  "revisions": [
+    "correction (rule): correction cue"
   ],
   "entities": [
     {
@@ -62,7 +65,8 @@
   ],
   "facts": [
     {
-      "fact": "User occupation \"product manager\"",
+      "fact": "User job_title \"product manager\"",
+      "status": "active",
       "adHoc": true,
       "statement": "The user works as a product manager.",
       "validFrom": "2024-04-01 (episode)",
@@ -72,6 +76,7 @@
     },
     {
       "fact": "User works_at Acme",
+      "status": "active",
       "adHoc": false,
       "statement": "The user works at Acme.",
       "validFrom": "2024-04-01 (episode)",
@@ -81,6 +86,7 @@
     },
     {
       "fact": "User works_at Initech",
+      "status": "retracted (no longer believed)",
       "adHoc": false,
       "statement": "The user works at Initech.",
       "validFrom": "2024-04-01 (episode)",

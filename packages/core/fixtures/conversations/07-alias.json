@@ -16,9 +16,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "5584f4d1b7b2",
+    "promptVersion": "64e7fa21aa8d",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T15:59:47.124Z",
+    "recordedAt": "2026-10-16T16:28:00.039Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -71,12 +71,8 @@
               },
               "predicate": "works_at",
               "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "Leeds hospital",
-                  "type": "org",
-                  "description": "a hospital in Leeds"
-                }
+                "kind": "literal",
+                "value": "a hospital in Leeds"
               },
               "statement": "Robert works at a hospital in Leeds.",
               "validFrom": {
@@ -86,7 +82,7 @@
                 "kind": "none"
               },
               "isCorrection": false,
-              "confidence": 0.9
+              "confidence": 1
             }
           ]
         }
@@ -113,7 +109,7 @@
               "subject": {
                 "name": "Rob",
                 "type": "person",
-                "description": "the user's acquaintance who has a new job"
+                "description": "the user's acquaintance"
               },
               "predicate": "has_job",
               "object": {

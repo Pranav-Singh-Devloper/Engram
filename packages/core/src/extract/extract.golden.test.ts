@@ -11,7 +11,7 @@ import { processEpisode } from '../ingest/process.js';
 import type { ProcessSummary } from '../ingest/process.js';
 import { EXPECTED_DIR, loadConversations, replayProvider } from '../testing/fixtures.js';
 import { testDb, withTestNamespace } from '../testing/db.js';
-import { PROMPT_VERSION } from './prompt.js';
+import { PROMPT_VERSION } from '../providers/promptVersion.js';
 
 const db = testDb();
 const totals = { facts: 0, adHoc: 0 };
@@ -45,6 +45,8 @@ interface FactRow {
   validTo: Date | null;
   confidence: number;
   sources: number;
+  status: string;
+  believed: boolean;
 }
 
 const conversations = loadConversations();
@@ -92,23 +94,31 @@ describe('extraction golden fixtures', () => {
           select s.name as subject, f.predicate, f.predicate_ad_hoc,
                  coalesce(o.name, '"' || f.object_literal || '"') as object, f.statement,
                  f.valid_from, f.valid_from_source, f.valid_to, f.confidence,
-                 cardinality(f.source_episode_ids) as sources
+                 cardinality(f.source_episode_ids) as sources, f.status,
+                 f.invalidated_at is null as believed
           from facts f
           join labels s on s.id = f.subject_id
           left join labels o on o.id = f.object_id
           where f.namespace_id = ${namespace.id}
-          order by s.name, f.predicate, object`;
+          order by s.name, f.predicate, object, f.valid_from, f.created_at`;
 
         totals.facts += facts.length;
         totals.adHoc += facts.filter((f) => f.predicateAdHoc).length;
+
+        const revisions = await db<{ kind: string; resolver: string; reason: string | null }[]>`
+          select kind, resolver, reason from fact_revisions
+          where namespace_id = ${namespace.id} order by created_at, id`;
 
         const snapshot = {
           id: conversation.id,
           covers: conversation.covers,
           summaries,
+          revisions: revisions.map((r) => `${r.kind} (${r.resolver}): ${r.reason ?? ''}`),
           entities,
           facts: facts.map((f) => ({
             fact: `${f.subject} ${f.predicate} ${f.object}`,
+            // Every version is listed; `believed` marks current beliefs.
+            status: f.believed ? f.status : `${f.status} (no longer believed)`,
             adHoc: f.predicateAdHoc,
             statement: f.statement,
             validFrom: `${day(f.validFrom) ?? ''} (${f.validFromSource})`,

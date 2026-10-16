@@ -29,6 +29,8 @@ export const config = {
     /** Reject a candidate below this confidence when the existing fact is at or above `noiseExistingMin`. */
     noiseCandidateMax: 0.4,
     noiseExistingMin: 0.8,
+    /** Attempts before giving up when concurrent writers keep changing the beliefs. */
+    maxResolveAttempts: 3,
   },
   recall: {
     k: 8,

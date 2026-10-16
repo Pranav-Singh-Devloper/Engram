@@ -4,9 +4,9 @@
   "summaries": [
     {
       "status": "processed",
-      "importance": 0.6,
-      "extracted": 4,
-      "createdEntities": 5,
+      "importance": 0.7,
+      "extracted": 5,
+      "createdEntities": 3,
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
@@ -15,10 +15,13 @@
         "updated": 0,
         "backfilled": 0,
         "corrected": 0,
-        "coexisted": 0,
+        "coexisted": 1,
         "rejected": 0
       }
     }
+  ],
+  "revisions": [
+    "coexist (rule): multi-valued predicate"
   ],
   "entities": [
     {
@@ -32,41 +35,28 @@
       "name": "Jordan",
       "type": "person",
       "aliases": [],
-      "description": "the user's partner",
+      "description": "The user's partner",
       "isSelf": false
     },
     {
       "name": "Kyoto",
       "type": "place",
       "aliases": [],
-      "description": "a city in Japan",
+      "description": "A city in Japan",
       "isSelf": false
     },
     {
       "name": "Osaka",
       "type": "place",
       "aliases": [],
-      "description": "a city in Japan",
-      "isSelf": false
-    },
-    {
-      "name": "ramen",
-      "type": "thing",
-      "aliases": [],
-      "description": "a type of noodle dish",
-      "isSelf": false
-    },
-    {
-      "name": "sushi",
-      "type": "thing",
-      "aliases": [],
-      "description": "a type of Japanese dish",
+      "description": "A city in Japan",
       "isSelf": false
     }
   ],
   "facts": [
     {
-      "fact": "Jordan likes ramen",
+      "fact": "Jordan likes \"ramen\"",
+      "status": "active",
       "adHoc": false,
       "statement": "Jordan loves ramen.",
       "validFrom": "2024-05-20 (episode)",
@@ -75,7 +65,8 @@
       "sources": 1
     },
     {
-      "fact": "User likes sushi",
+      "fact": "User likes \"sushi\"",
+      "status": "active",
       "adHoc": false,
       "statement": "The user likes sushi.",
       "validFrom": "2024-05-20 (episode)",
@@ -84,7 +75,18 @@
       "sources": 1
     },
     {
+      "fact": "User partner_of Jordan",
+      "status": "active",
+      "adHoc": true,
+      "statement": "The user has a partner named Jordan.",
+      "validFrom": "2024-05-20 (episode)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
       "fact": "User visited Kyoto",
+      "status": "active",
       "adHoc": false,
       "statement": "The user visited Kyoto in April 2023.",
       "validFrom": "2023-04-01 (explicit)",
@@ -94,6 +96,7 @@
     },
     {
       "fact": "User visited Osaka",
+      "status": "active",
       "adHoc": false,
       "statement": "The user visited Osaka in April 2023.",
       "validFrom": "2023-04-01 (explicit)",

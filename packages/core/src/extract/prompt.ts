@@ -4,7 +4,6 @@
 // ignores `const`/`anyOf` branches. Each one transforms into the engine's
 // contract type, so a reply that can't be mapped fails validation and goes
 // through the repair round.
-import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import { getPredicate } from '../conflict/predicates.js';
 import { DisambiguateOutput, ProcessEpisodeOutput } from '../providers/contracts.js';
@@ -171,31 +170,3 @@ export function jsonSchemaFor(schema: z.ZodType): Record<string, unknown> {
   const { $schema, ...rest } = z.toJSONSchema(schema, { io: 'input' }) as Record<string, unknown>;
   return rest;
 }
-
-function version(...parts: string[]): string {
-  return createHash('sha256').update(parts.join('\n---\n')).digest('hex').slice(0, 12);
-}
-
-/**
- * Changes whenever the extraction or disambiguation prompt or schema does.
- * Recorded fixtures carry it, so stale recordings fail loudly.
- */
-export const PROMPT_VERSION = version(
-  PROCESS_EPISODE_SYSTEM,
-  JSON.stringify(jsonSchemaFor(WireProcessEpisode)),
-  DISAMBIGUATE_SYSTEM,
-  JSON.stringify(jsonSchemaFor(WireDisambiguate)),
-  // Rendered from fixed samples rather than hashing function source, which
-  // differs between transpilers.
-  processEpisodeUser({
-    content: 'sample',
-    role: 'user',
-    occurredAt: new Date('2000-01-01T00:00:00Z'),
-    predicates: ['lives_in'],
-  }),
-  disambiguateUser({
-    mention: { name: 'Sam', type: 'person', description: null },
-    context: 'sample',
-    candidates: [{ id: 'a', name: 'Sam', type: 'person', description: null, aliases: [] }],
-  }),
-);

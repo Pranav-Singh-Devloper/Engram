@@ -14,10 +14,15 @@ import { normalizeName } from '../extract/normalize.js';
 import type { Fact, ValidFromSource } from '../types/index.js';
 import type { PredicateSpec } from './predicates.js';
 
+/** A current-belief row with its object's label: the entity's name, or the literal. */
+export type Belief = Fact & { objectName: string };
+
 /** What classification needs to know about a candidate. */
 export interface CandidateView {
   objectId: string | null;
   objectLiteral: string | null;
+  /** The entity's name, or the literal. */
+  objectName: string;
   /** Statement embedding. */
   embedding: readonly number[];
   validFrom: Date;
@@ -66,20 +71,21 @@ const windowOf = (f: { validFrom: Date; validTo: Date | null }): Window => ({
 });
 
 /**
- * Same entity, or for literals the same normalized value or a statement
- * similar enough to be a paraphrase. Entity objects never match by embedding:
- * "lives in Bern" and "lives in Berlin" read alike but aren't the same place.
+ * The same object: the same entity; otherwise the same label, so a literal
+ * "Toronto" and the entity Toronto match; otherwise, for two literals, a
+ * statement similar enough to be a paraphrase. Two different entities never
+ * match by embedding: "lives in Bern" and "lives in Berlin" read alike.
  */
-export function sameObject(c: CandidateView, e: Fact, mergeThreshold: number): boolean {
-  if (c.objectId !== null || e.objectId !== null) return c.objectId === e.objectId;
+export function sameObject(c: CandidateView, e: Belief, mergeThreshold: number): boolean {
+  if (c.objectId !== null && e.objectId !== null) return c.objectId === e.objectId;
+  if (normalizeName(c.objectName) === normalizeName(e.objectName)) return true;
   if (c.objectLiteral === null || e.objectLiteral === null) return false;
-  if (normalizeName(c.objectLiteral) === normalizeName(e.objectLiteral)) return true;
   return e.embedding !== null && cosine(c.embedding, e.embedding) >= mergeThreshold;
 }
 
 export function classify(
   c: CandidateView,
-  existing: readonly Fact[],
+  existing: readonly Belief[],
   spec: PredicateSpec | undefined,
   cfg: typeof config.conflict = config.conflict,
 ): Decision {
@@ -188,7 +194,7 @@ export function fromAdjudication(
     flagPredicate: boolean;
   },
   c: CandidateView,
-  existing: readonly Fact[],
+  existing: readonly Belief[],
   allowed: readonly AdjudicationChoice[],
 ): ResolvedDecision {
   const llm = (reason: string) => ({ resolver: 'llm' as const, reason });

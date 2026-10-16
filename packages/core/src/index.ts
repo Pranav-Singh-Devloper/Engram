@@ -65,11 +65,14 @@ export {
 } from './conflict/predicates.js';
 export type { PredicateSpec } from './conflict/predicates.js';
 export { cleanName, normalizeName, normalizePredicate, toSnakeCase } from './extract/normalize.js';
-export { PROMPT_VERSION } from './extract/prompt.js';
+export { PROMPT_VERSION } from './providers/promptVersion.js';
 export { resolveHint } from './extract/temporal.js';
 export { processEpisode } from './ingest/process.js';
 export type { ProcessOptions, ProcessStatus, ProcessSummary } from './ingest/process.js';
-export { insertOnlyResolver } from './ingest/resolver.js';
+export { createConflictResolver, currentBeliefs } from './conflict/resolver.js';
+export { SimClock } from './config/clock.js';
+export { factsAsOf, asOfPredicate } from './temporal/asOf.js';
+export type { AsOf, FactsAsOfQuery } from './temporal/asOf.js';
 export type {
   CandidateResolver,
   Resolution,

@@ -4,7 +4,7 @@
   "summaries": [
     {
       "status": "processed",
-      "importance": 0.5,
+      "importance": 0.8,
       "extracted": 2,
       "createdEntities": 1,
       "dropped": 0,
@@ -20,6 +20,7 @@
       }
     }
   ],
+  "revisions": [],
   "entities": [
     {
       "name": "User",
@@ -39,6 +40,7 @@
   "facts": [
     {
       "fact": "Ana allergic_to \"peanuts\"",
+      "status": "active",
       "adHoc": true,
       "statement": "Ana is allergic to peanuts.",
       "validFrom": "2024-03-05 (episode)",
@@ -47,9 +49,10 @@
       "sources": 1
     },
     {
-      "fact": "Ana sibling_of User",
+      "fact": "User sibling_of Ana",
+      "status": "active",
       "adHoc": true,
-      "statement": "Ana is the sister of The user.",
+      "statement": "The user has a sister named Ana.",
       "validFrom": "2024-03-05 (episode)",
       "validTo": null,
       "confidence": 1,

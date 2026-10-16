@@ -16,9 +16,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "5584f4d1b7b2",
+    "promptVersion": "64e7fa21aa8d",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T16:04:03.266Z",
+    "recordedAt": "2026-10-16T16:29:40.733Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -85,7 +85,7 @@
           ]
         },
         "output": {
-          "importance": 0.5,
+          "importance": 0.6,
           "candidates": [
             {
               "subject": {
@@ -124,7 +124,7 @@
                 "type": "person",
                 "description": "the user"
               },
-              "predicate": "visited",
+              "predicate": "lives_in",
               "object": {
                 "kind": "entity",
                 "entity": {
@@ -133,7 +133,7 @@
                   "description": "a city in France"
                 }
               },
-              "statement": "The user lived in Marseille before Lyon.",
+              "statement": "The user lived in Marseille before 2015.",
               "validFrom": {
                 "kind": "none"
               },

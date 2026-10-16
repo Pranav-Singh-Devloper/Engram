@@ -317,7 +317,11 @@ describe('processEpisode', () => {
         const alices = await db`
           select 1 from entities where namespace_id = ${ns.namespace.id} and name = 'Alice'`;
         expect(alices).toHaveLength(1);
-        expect(await facts(db, ns.namespace.id)).toHaveLength(10);
+        // The ten restatements merge into one current fact citing all ten episodes.
+        const current = await db<{ sources: number }[]>`
+          select cardinality(source_episode_ids) as sources from facts
+          where namespace_id = ${ns.namespace.id} and invalidated_at is null`;
+        expect(current).toEqual([{ sources: 10 }]);
       });
     } finally {
       await wide.end();

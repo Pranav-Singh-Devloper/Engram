@@ -1,7 +1,7 @@
 // The seam between extraction and conflict resolution (SPEC §6.1 step 3).
-// P02 ships `insertOnlyResolver`; P03 replaces it with the §7.2 resolver.
+// The default implementation is `createConflictResolver` (SPEC §7.2).
+import type { Clock } from '../config/clock.js';
 import type { Sql } from '../db/client.js';
-import { insertFact } from '../db/facts.js';
 import type { FactCandidate } from '../providers/contracts.js';
 import type { ValidFromSource } from '../types/index.js';
 
@@ -13,6 +13,8 @@ export interface ResolvedCandidate {
   predicateAdHoc: boolean;
   objectId: string | null;
   objectLiteral: string | null;
+  /** The object entity's name, or the literal; used to compare objects. */
+  objectName: string;
   statement: string;
   embedding: number[];
   confidence: number;
@@ -36,14 +38,6 @@ export interface Resolution {
 }
 
 export interface CandidateResolver {
-  resolve(db: Sql, candidate: ResolvedCandidate, ctx: { recordedAt: Date }): Promise<Resolution>;
+  /** `clock` supplies record time, read inside the resolver's lock. */
+  resolve(db: Sql, candidate: ResolvedCandidate, ctx: { clock: Clock }): Promise<Resolution>;
 }
-
-/** Inserts every candidate as a new fact. Replaced by conflict resolution in P03. */
-export const insertOnlyResolver: CandidateResolver = {
-  async resolve(db, candidate, ctx) {
-    const { raw: _raw, isCorrection: _isCorrection, ...fact } = candidate;
-    const row = await insertFact(db, { ...fact, recordedAt: ctx.recordedAt });
-    return { kind: 'inserted', factId: row.id };
-  },
-};

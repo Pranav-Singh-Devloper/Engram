@@ -20,6 +20,7 @@
       }
     }
   ],
+  "revisions": [],
   "entities": [
     {
       "name": "User",
@@ -32,29 +33,41 @@
       "name": "Lisbon",
       "type": "place",
       "aliases": [],
-      "description": "a city",
+      "description": "the city where the user lives",
       "isSelf": false
     },
     {
       "name": "Northwind",
       "type": "org",
       "aliases": [],
-      "description": "an organization",
+      "description": "the organization where the user works",
       "isSelf": false
     }
   ],
   "facts": [
     {
       "fact": "User birth_date \"1990-07-04\"",
+      "status": "active",
       "adHoc": false,
-      "statement": "The user's birth date is 1990-07-04.",
+      "statement": "The user was born on 1990-07-04.",
       "validFrom": "1990-07-04 (explicit)",
       "validTo": null,
       "confidence": 1,
       "sources": 1
     },
     {
+      "fact": "User has_occupation \"data engineer\"",
+      "status": "active",
+      "adHoc": true,
+      "statement": "The user works as a data engineer.",
+      "validFrom": "2024-02-01 (episode)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
       "fact": "User is_named \"Priya\"",
+      "status": "active",
       "adHoc": false,
       "statement": "The user is named Priya.",
       "validFrom": "2024-02-01 (episode)",
@@ -64,6 +77,7 @@
     },
     {
       "fact": "User lives_in Lisbon",
+      "status": "active",
       "adHoc": false,
       "statement": "The user lives in Lisbon.",
       "validFrom": "2024-02-01 (episode)",
@@ -72,16 +86,8 @@
       "sources": 1
     },
     {
-      "fact": "User occupation \"data engineer\"",
-      "adHoc": true,
-      "statement": "The user works as a data engineer.",
-      "validFrom": "2024-02-01 (episode)",
-      "validTo": null,
-      "confidence": 1,
-      "sources": 1
-    },
-    {
       "fact": "User works_at Northwind",
+      "status": "active",
       "adHoc": false,
       "statement": "The user works at Northwind.",
       "validFrom": "2024-02-01 (episode)",

@@ -16,9 +16,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "5584f4d1b7b2",
+    "promptVersion": "64e7fa21aa8d",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T15:56:53.967Z",
+    "recordedAt": "2026-10-16T16:26:20.495Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -50,7 +50,7 @@
                 "entity": {
                   "name": "Berlin",
                   "type": "place",
-                  "description": "the city where the user lives"
+                  "description": "the city of Berlin"
                 }
               },
               "statement": "The user lives in Berlin.",
@@ -76,12 +76,12 @@
               "object": {
                 "kind": "entity",
                 "entity": {
-                  "name": "cello",
-                  "type": "thing",
-                  "description": "the musical instrument the user is learning"
+                  "name": "cello lessons",
+                  "type": "concept",
+                  "description": "lessons for playing the cello"
                 }
               },
-              "statement": "The user is taking cello lessons.",
+              "statement": "The user has been taking cello lessons.",
               "validFrom": {
                 "kind": "named_period",
                 "year": null,
@@ -130,7 +130,7 @@
                   "description": "a city in Japan"
                 }
               },
-              "statement": "The user visited Kyoto two years ago.",
+              "statement": "The user visited Kyoto.",
               "validFrom": {
                 "kind": "relative",
                 "amount": 2,

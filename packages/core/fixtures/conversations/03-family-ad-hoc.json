@@ -10,9 +10,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "5584f4d1b7b2",
+    "promptVersion": "64e7fa21aa8d",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T15:57:02.922Z",
+    "recordedAt": "2026-10-16T16:27:06.518Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -30,24 +30,24 @@
           ]
         },
         "output": {
-          "importance": 0.5,
+          "importance": 0.8,
           "candidates": [
             {
               "subject": {
-                "name": "Ana",
+                "name": "SELF",
                 "type": "person",
-                "description": "the user's sister"
+                "description": "the user"
               },
               "predicate": "sibling_of",
               "object": {
                 "kind": "entity",
                 "entity": {
-                  "name": "SELF",
+                  "name": "Ana",
                   "type": "person",
-                  "description": "the user"
+                  "description": "the user's sister"
                 }
               },
-              "statement": "Ana is the sister of The user.",
+              "statement": "The user has a sister named Ana.",
               "validFrom": {
                 "kind": "none"
               },

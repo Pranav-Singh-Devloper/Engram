@@ -34,15 +34,29 @@ export async function reviseFact(
   changes: VersionChanges,
   t: Date,
 ): Promise<Fact> {
-  const {
-    id,
-    recordedAt: _recordedAt,
-    invalidatedAt: _invalidatedAt,
-    createdAt: _createdAt,
-    revises: _revises,
-    status: _status,
-    ...content
-  } = fact;
+  // Copy columns explicitly: callers may pass rows with extra fields (beliefs carry objectName).
+  const { id } = fact;
+  const content = {
+    namespaceId: fact.namespaceId,
+    subjectId: fact.subjectId,
+    predicate: fact.predicate,
+    predicateAdHoc: fact.predicateAdHoc,
+    objectId: fact.objectId,
+    objectLiteral: fact.objectLiteral,
+    statement: fact.statement,
+    embedding: fact.embedding,
+    confidence: fact.confidence,
+    importance: fact.importance,
+    pinned: fact.pinned,
+    accessScore: fact.accessScore,
+    lastAccessedAt: fact.lastAccessedAt,
+    validFrom: fact.validFrom,
+    validFromSource: fact.validFromSource,
+    validTo: fact.validTo,
+    supersededBy: fact.supersededBy,
+    tier: fact.tier,
+    sourceEpisodeIds: fact.sourceEpisodeIds,
+  };
   const validTo = changes.validTo === undefined ? fact.validTo : changes.validTo;
   // Invalidate first: it's the check that `fact` is still current.
   await invalidateFact(db, id, { at: t, status: 'revised' });

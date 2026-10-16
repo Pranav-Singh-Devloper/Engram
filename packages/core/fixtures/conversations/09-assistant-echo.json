@@ -22,9 +22,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "5584f4d1b7b2",
+    "promptVersion": "64e7fa21aa8d",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T16:03:27.089Z",
+    "recordedAt": "2026-10-16T16:29:14.890Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -52,12 +52,8 @@
               },
               "predicate": "lives_in",
               "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "Toronto",
-                  "type": "place",
-                  "description": "a city in Canada"
-                }
+                "kind": "literal",
+                "value": "Toronto"
               },
               "statement": "The user lives in Toronto.",
               "validFrom": {
@@ -119,29 +115,6 @@
         }
       },
       {
-        "method": "disambiguate",
-        "input": {
-          "mention": {
-            "name": "Toronto",
-            "type": "place",
-            "description": "the city where the user lives"
-          },
-          "context": "Got it, you're living in Toronto now. Do you like it there?",
-          "candidates": [
-            {
-              "name": "Toronto",
-              "type": "place",
-              "description": "a city in Canada",
-              "aliases": []
-            }
-          ]
-        },
-        "output": {
-          "choice": 0,
-          "reason": "The mention refers to the city of Toronto, which matches the candidate."
-        }
-      },
-      {
         "method": "processEpisode",
         "input": {
           "content": "Love it, honestly, even the winters.",
@@ -157,8 +130,30 @@
           ]
         },
         "output": {
-          "importance": 0.1,
-          "candidates": []
+          "importance": 0.3,
+          "candidates": [
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "likes",
+              "object": {
+                "kind": "literal",
+                "value": "winters"
+              },
+              "statement": "The user likes winters.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 0.9
+            }
+          ]
         }
       }
     ]

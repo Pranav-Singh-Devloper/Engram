@@ -2,12 +2,13 @@
 // then alias, then label-embedding similarity. Several matches, or a lone
 // name match whose description conflicts, go to LLM disambiguation.
 //
-// No LLM call happens under the lock. The plan is computed and disambiguated
-// outside any transaction, then re-checked under the namespace lock; if
-// another writer changed the candidates in between, the flow starts over.
+// No LLM call happens under the lock. The ladder runs under the namespace
+// lock and a clear match or a create applies at once. An ambiguous plan
+// releases the lock, asks the disambiguator, and applies its answer only if
+// the candidates are unchanged when the lock is retaken.
 import { config } from '../config/index.js';
 import { transaction } from '../db/client.js';
-import type { Sql } from '../db/client.js';
+import type { Sql, TransactionSql } from '../db/client.js';
 import {
   addEntityAlias,
   fillEntityDescription,
@@ -112,13 +113,10 @@ type Decision = { kind: 'use'; entity: Entity; via: ResolvedVia } | { kind: 'cre
 
 async function decide(
   provider: Pick<Provider, 'disambiguate'>,
-  p: Plan,
+  p: Extract<Plan, { kind: 'ambiguous' }>,
   mention: EntityRef,
   ctx: ResolveContext,
 ): Promise<Decision> {
-  if (p.kind === 'create') return { kind: 'create' };
-  if (p.kind === 'match') return { kind: 'use', entity: p.entity, via: p.via };
-
   const out = await provider.disambiguate({
     mention,
     context: ctx.context,
@@ -154,35 +152,54 @@ export async function resolveEntity(
 ): Promise<EntityResolution> {
   if (isSelfRef(mention)) return { entity: ctx.selfEntity, created: false, via: 'self' };
 
-  for (let attempt = 0; attempt < config.entities.maxResolveAttempts; attempt++) {
-    const before = await plan(db, ctx.namespaceId, mention, embedding);
-    const decision = await decide(provider, before, mention, ctx);
+  const apply = async (tx: TransactionSql, decision: Decision): Promise<EntityResolution> => {
+    if (decision.kind === 'create') {
+      const entity = await insertEntity(tx, {
+        namespaceId: ctx.namespaceId,
+        name: cleanName(mention.name),
+        type: mention.type,
+        description: mention.description,
+        embedding,
+      });
+      return { entity, created: true, via: 'new' };
+    }
+    const { entity } = decision;
+    const sameName = normalizeName(mention.name) === normalizeName(entity.name);
+    if (!sameName) await addEntityAlias(tx, entity.id, cleanName(mention.name));
+    if (sameName && !entity.description && mention.description) {
+      await fillEntityDescription(tx, entity.id, mention.description, embedding);
+    }
+    return { entity, created: false, via: decision.via };
+  };
 
+  // A disambiguation is only valid for the candidates it was asked about.
+  let disambiguated: { fingerprint: string; decision: Decision } | undefined;
+
+  for (let attempt = 0; attempt < config.entities.maxResolveAttempts; attempt++) {
     const result = await transaction(db, async (tx) => {
       await lockNamespace(tx, ctx.namespaceId);
       const now = await plan(tx, ctx.namespaceId, mention, embedding);
-      if (fingerprint(now) !== fingerprint(before)) return undefined;
-
-      if (decision.kind === 'create') {
-        const entity = await insertEntity(tx, {
-          namespaceId: ctx.namespaceId,
-          name: cleanName(mention.name),
-          type: mention.type,
-          description: mention.description,
-          embedding,
-        });
-        return { entity, created: true, via: 'new' as const };
+      let decision: Decision;
+      if (now.kind !== 'ambiguous') {
+        // No LLM needed: apply under the lock straight away.
+        decision =
+          now.kind === 'create'
+            ? { kind: 'create' }
+            : { kind: 'use', entity: now.entity, via: now.via };
+      } else if (disambiguated?.fingerprint === fingerprint(now)) {
+        decision = disambiguated.decision;
+      } else {
+        return { ambiguous: now };
       }
-
-      const { entity } = decision;
-      const sameName = normalizeName(mention.name) === normalizeName(entity.name);
-      if (!sameName) await addEntityAlias(tx, entity.id, cleanName(mention.name));
-      if (sameName && !entity.description && mention.description) {
-        await fillEntityDescription(tx, entity.id, mention.description, embedding);
-      }
-      return { entity, created: false, via: decision.via };
+      return apply(tx, decision);
     });
-    if (result) return result;
+    if (!('ambiguous' in result)) return result;
+
+    // The LLM is asked outside any transaction, then the loop re-checks.
+    disambiguated = {
+      fingerprint: fingerprint(result.ambiguous),
+      decision: await decide(provider, result.ambiguous, mention, ctx),
+    };
   }
   throw new Error(
     `Entity resolution for "${mention.name}" didn't settle after ${config.entities.maxResolveAttempts} attempts.`,

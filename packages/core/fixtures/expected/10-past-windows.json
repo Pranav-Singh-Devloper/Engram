@@ -21,21 +21,25 @@
     },
     {
       "status": "processed",
-      "importance": 0.5,
+      "importance": 0.6,
       "extracted": 2,
       "createdEntities": 2,
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
-        "inserted": 2,
+        "inserted": 0,
         "merged": 0,
         "updated": 0,
-        "backfilled": 0,
+        "backfilled": 2,
         "corrected": 0,
         "coexisted": 0,
         "rejected": 0
       }
     }
+  ],
+  "revisions": [
+    "backfill (rule): entirely before known history",
+    "backfill (rule): entirely before known history"
   ],
   "entities": [
     {
@@ -70,6 +74,7 @@
   "facts": [
     {
       "fact": "User lives_in Lyon",
+      "status": "superseded",
       "adHoc": false,
       "statement": "The user lived in Lyon from 2015 to 2018.",
       "validFrom": "2015-01-01 (explicit)",
@@ -78,20 +83,22 @@
       "sources": 1
     },
     {
-      "fact": "User lives_in Paris",
+      "fact": "User lives_in Marseille",
+      "status": "superseded",
       "adHoc": false,
-      "statement": "The user lives in Paris.",
-      "validFrom": "2018-01-01 (explicit)",
-      "validTo": null,
+      "statement": "The user lived in Marseille before 2015.",
+      "validFrom": "unknown (unknown)",
+      "validTo": "2015-01-01",
       "confidence": 1,
       "sources": 1
     },
     {
-      "fact": "User visited Marseille",
+      "fact": "User lives_in Paris",
+      "status": "active",
       "adHoc": false,
-      "statement": "The user lived in Marseille before Lyon.",
-      "validFrom": "unknown (unknown)",
-      "validTo": "2015-01-01",
+      "statement": "The user lives in Paris.",
+      "validFrom": "2018-01-01 (explicit)",
+      "validTo": null,
       "confidence": 1,
       "sources": 1
     }

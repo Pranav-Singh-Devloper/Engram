@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { PROMPT_VERSION, WireProcessEpisode, jsonSchemaFor, processEpisodeUser } from './prompt.js';
+import { PROMPT_VERSION } from '../providers/promptVersion.js';
+import { WireProcessEpisode, jsonSchemaFor, processEpisodeUser } from './prompt.js';
 
 const none = {
   kind: 'none',

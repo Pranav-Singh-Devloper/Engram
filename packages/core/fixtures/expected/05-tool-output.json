@@ -54,6 +54,7 @@
       }
     }
   ],
+  "revisions": [],
   "entities": [
     {
       "name": "User",

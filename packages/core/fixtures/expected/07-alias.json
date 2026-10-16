@@ -6,7 +6,7 @@
       "status": "processed",
       "importance": 0.6,
       "extracted": 2,
-      "createdEntities": 2,
+      "createdEntities": 1,
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
@@ -37,6 +37,7 @@
       }
     }
   ],
+  "revisions": [],
   "entities": [
     {
       "name": "User",
@@ -46,17 +47,10 @@
       "isSelf": true
     },
     {
-      "name": "Leeds hospital",
-      "type": "org",
-      "aliases": [],
-      "description": "a hospital in Leeds",
-      "isSelf": false
-    },
-    {
       "name": "Rob",
       "type": "person",
       "aliases": [],
-      "description": "the user's acquaintance who has a new job",
+      "description": "the user's acquaintance",
       "isSelf": false
     },
     {
@@ -70,6 +64,7 @@
   "facts": [
     {
       "fact": "Rob has_job \"new job\"",
+      "status": "active",
       "adHoc": true,
       "statement": "Rob has a new job.",
       "validFrom": "2024-02-20 (episode)",
@@ -79,6 +74,7 @@
     },
     {
       "fact": "Robert sibling_of User",
+      "status": "active",
       "adHoc": true,
       "statement": "Robert is the sibling of the user.",
       "validFrom": "2024-01-15 (episode)",
@@ -87,12 +83,13 @@
       "sources": 1
     },
     {
-      "fact": "Robert works_at Leeds hospital",
+      "fact": "Robert works_at \"a hospital in Leeds\"",
+      "status": "active",
       "adHoc": false,
       "statement": "Robert works at a hospital in Leeds.",
       "validFrom": "2024-01-15 (episode)",
       "validTo": null,
-      "confidence": 0.9,
+      "confidence": 1,
       "sources": 1
     }
   ]

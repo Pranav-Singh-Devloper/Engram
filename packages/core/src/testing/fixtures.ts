@@ -23,10 +23,15 @@ export interface FixtureEpisode {
   occurredAt: string;
 }
 
-/** Disambiguation is stored by candidate position: entity ids differ on every run. */
+/** Ids differ on every run, so choices among candidates or facts are stored by position. */
 export type RecordedCall =
   | { method: 'processEpisode'; input: unknown; output: MethodOutput<'processEpisode'> }
-  | { method: 'disambiguate'; input: unknown; output: { choice: number | null; reason: string } };
+  | { method: 'disambiguate'; input: unknown; output: { choice: number | null; reason: string } }
+  | {
+      method: 'adjudicate';
+      input: unknown;
+      output: Omit<MethodOutput<'adjudicate'>, 'targetFactId'> & { target: number | null };
+    };
 
 export interface Recording {
   promptVersion: string;
@@ -63,12 +68,14 @@ export function saveConversation(conversation: FixtureConversation): void {
 /** A canonical form of a method input: parsed (so key order follows the schema), ids dropped. */
 function canonical<M extends StructuredMethod>(method: M, input: MethodInput<M>): string {
   const parsed = CONTRACTS[method].input.parse(input) as Record<string, unknown>;
+  const withoutIds = (items: { id: string }[]) => items.map(({ id: _id, ...rest }) => rest);
   if (method === 'disambiguate') {
     const { candidates } = parsed as { candidates: { id: string }[] };
-    return JSON.stringify({
-      ...parsed,
-      candidates: candidates.map(({ id: _id, ...rest }) => rest),
-    });
+    return JSON.stringify({ ...parsed, candidates: withoutIds(candidates) });
+  }
+  if (method === 'adjudicate') {
+    const { existing } = parsed as { existing: { id: string }[] };
+    return JSON.stringify({ ...parsed, existing: withoutIds(existing) });
   }
   return JSON.stringify(parsed);
 }
@@ -97,7 +104,17 @@ export function recordingProvider(real: Provider, calls: RecordedCall[]): Provid
       });
       return output;
     },
-    adjudicate: (input) => real.adjudicate(input),
+    adjudicate: async (input) => {
+      const output = await real.adjudicate(input);
+      const { targetFactId, ...rest } = output;
+      const index = input.existing.findIndex((e) => e.id === targetFactId);
+      calls.push({
+        method: 'adjudicate',
+        input: JSON.parse(canonical('adjudicate', input)),
+        output: { ...rest, target: index === -1 ? null : index },
+      });
+      return output;
+    },
     summarize: (input) => real.summarize(input),
     compose: (input) => real.compose(input),
     judge: (input) => real.judge(input),
@@ -114,6 +131,16 @@ export function replayProvider(recording: Recording): FakeProvider {
         'processEpisode',
         (input) => canonical('processEpisode', input) === key,
         call.output,
+      );
+    } else if (call.method === 'adjudicate') {
+      const { target, ...rest } = call.output;
+      fake.when(
+        'adjudicate',
+        (input) => canonical('adjudicate', input) === key,
+        (input) => ({
+          ...rest,
+          targetFactId: target === null ? null : (input.existing[target]?.id ?? null),
+        }),
       );
     } else {
       const { choice, reason } = call.output;

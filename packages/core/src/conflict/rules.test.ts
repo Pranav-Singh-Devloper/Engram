@@ -3,11 +3,10 @@
 import { describe, expect, it } from 'vitest';
 import { UNKNOWN_START } from '../db/client.js';
 import { fakeEmbedding } from '../providers/fake.js';
-import type { Fact } from '../types/index.js';
 import { getPredicate } from './predicates.js';
 import type { PredicateSpec } from './predicates.js';
 import { classify, fromAdjudication } from './rules.js';
-import type { CandidateView } from './rules.js';
+import type { Belief, CandidateView } from './rules.js';
 
 const y = (year: number, month = 1) => new Date(Date.UTC(year, month - 1, 1));
 const livesIn = getPredicate('lives_in');
@@ -15,7 +14,7 @@ const birthDate = getPredicate('birth_date');
 const likes = getPredicate('likes');
 
 let n = 0;
-function fact(over: Partial<Fact> & { object: string }): Fact {
+function fact(over: Partial<Belief> & { object: string }): Belief {
   const { object, ...rest } = over;
   const statement = `The user lives in ${object}.`;
   return {
@@ -26,6 +25,7 @@ function fact(over: Partial<Fact> & { object: string }): Fact {
     predicateAdHoc: false,
     objectId: `entity-${object}`,
     objectLiteral: null,
+    objectName: object,
     statement,
     embedding: fakeEmbedding(statement),
     confidence: 0.9,
@@ -53,6 +53,7 @@ function cand(over: Partial<CandidateView> & { object: string }): CandidateView 
   return {
     objectId: `entity-${object}`,
     objectLiteral: null,
+    objectName: object,
     embedding: fakeEmbedding(`The user lives in ${object}.`),
     validFrom: y(2024, 6),
     validFromSource: 'episode',
@@ -63,7 +64,7 @@ function cand(over: Partial<CandidateView> & { object: string }): CandidateView 
   };
 }
 
-function kind(c: CandidateView, existing: Fact[], spec: PredicateSpec | undefined = livesIn) {
+function kind(c: CandidateView, existing: Belief[], spec: PredicateSpec | undefined = livesIn) {
   return classify(c, existing, spec).kind;
 }
 
@@ -83,6 +84,11 @@ describe('classify', () => {
     expect(kind(cand({ object: 'Lyon', validFrom: y(2018), validTo: y(2019) }), [lyon])).toBe(
       'merge',
     );
+  });
+
+  it('merges a literal with an entity of the same name', () => {
+    const literal = fact({ object: 'Toronto', objectId: null, objectLiteral: 'Toronto' });
+    expect(kind(cand({ object: 'toronto' }), [literal])).toBe('merge');
   });
 
   it('merges literals by normalized value or paraphrase, but never entities by embedding', () => {

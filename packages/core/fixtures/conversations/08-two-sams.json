@@ -22,9 +22,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "5584f4d1b7b2",
+    "promptVersion": "64e7fa21aa8d",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T16:01:19.524Z",
+    "recordedAt": "2026-10-16T16:28:56.030Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -42,7 +42,7 @@
           ]
         },
         "output": {
-          "importance": 0.5,
+          "importance": 0.6,
           "candidates": [
             {
               "subject": {
@@ -50,16 +50,12 @@
                 "type": "person",
                 "description": "the user's brother, a chef"
               },
-              "predicate": "sibling_of",
+              "predicate": "is_named",
               "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "SELF",
-                  "type": "person",
-                  "description": "the user"
-                }
+                "kind": "literal",
+                "value": "Sam"
               },
-              "statement": "Sam is the user's brother.",
+              "statement": "The user has a brother named Sam.",
               "validFrom": {
                 "kind": "none"
               },
@@ -75,12 +71,37 @@
                 "type": "person",
                 "description": "the user's brother, a chef"
               },
-              "predicate": "occupation",
+              "predicate": "sibling_of",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "SELF",
+                  "type": "person",
+                  "description": "the user"
+                }
+              },
+              "statement": "Sam is the sibling of the user.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "Sam",
+                "type": "person",
+                "description": "the user's brother, a chef"
+              },
+              "predicate": "profession",
               "object": {
                 "kind": "literal",
                 "value": "chef"
               },
-              "statement": "Sam's occupation is chef.",
+              "statement": "Sam works as a chef.",
               "validFrom": {
                 "kind": "none"
               },
@@ -102,7 +123,7 @@
                 "entity": {
                   "name": "Lyon",
                   "type": "place",
-                  "description": "a city"
+                  "description": "the city of Lyon"
                 }
               },
               "statement": "Sam lives in Lyon.",
@@ -262,7 +283,7 @@
         },
         "output": {
           "choice": 0,
-          "reason": "The mention refers to Sam the chef who cooked dinner for the user's birthday."
+          "reason": "The candidate is Sam the chef who cooked dinner, matching the mention description."
         }
       }
     ]

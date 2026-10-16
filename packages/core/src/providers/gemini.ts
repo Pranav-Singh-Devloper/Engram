@@ -15,7 +15,8 @@ import {
   jsonSchemaFor,
   processEpisodeUser,
 } from '../extract/prompt.js';
-import { DisambiguateInput, ProcessEpisodeInput } from './contracts.js';
+import { ADJUDICATE_SYSTEM, WireAdjudicate, adjudicateUser } from '../conflict/prompt.js';
+import { AdjudicateInput, DisambiguateInput, ProcessEpisodeInput } from './contracts.js';
 import type { EmbedPurpose, MethodInput, MethodOutput, StructuredMethod } from './contracts.js';
 import { DEFAULT_RETRY, defaultHttpDeps, postJson } from './http.js';
 import type { HttpDeps, RetryOptions } from './http.js';
@@ -29,6 +30,7 @@ export const DEFAULT_EMBED_MODEL = 'gemini-embedding-2';
 
 const PROCESS_EPISODE_JSON_SCHEMA = jsonSchemaFor(WireProcessEpisode);
 const DISAMBIGUATE_JSON_SCHEMA = jsonSchemaFor(WireDisambiguate);
+const ADJUDICATE_JSON_SCHEMA = jsonSchemaFor(WireAdjudicate);
 
 /** batchEmbedContents accepts at most 100 requests per call. */
 const EMBED_BATCH = 100;
@@ -127,6 +129,14 @@ export class GeminiProvider implements Provider {
       jsonSchema: PROCESS_EPISODE_JSON_SCHEMA,
     });
 
+  adjudicate = (input: MethodInput<'adjudicate'>) =>
+    this.generate({
+      system: ADJUDICATE_SYSTEM,
+      user: adjudicateUser(AdjudicateInput.parse(input)),
+      schema: WireAdjudicate,
+      jsonSchema: ADJUDICATE_JSON_SCHEMA,
+    });
+
   disambiguate = (input: MethodInput<'disambiguate'>) =>
     this.generate({
       system: DISAMBIGUATE_SYSTEM,
@@ -135,7 +145,6 @@ export class GeminiProvider implements Provider {
       jsonSchema: DISAMBIGUATE_JSON_SCHEMA,
     });
 
-  adjudicate = () => this.notYet('adjudicate', 'P03');
   compose = () => this.notYet('compose', 'P04');
   summarize = () => this.notYet('summarize', 'P06b');
   judge = () => this.notYet('judge', 'P04');
