@@ -1,0 +1,23 @@
+name: engram
+
+services:
+  db:
+    # Keep this tag in sync with .github/workflows/ci.yml. pg17 matches
+    # the Postgres major of new Supabase projects.
+    image: pgvector/pgvector:0.8.7-pg17
+    environment:
+      POSTGRES_USER: engram
+      POSTGRES_PASSWORD: engram
+      POSTGRES_DB: engram
+    ports:
+      - '${ENGRAM_DB_PORT:-54329}:5432'
+    volumes:
+      - engram-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U engram -d engram']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  engram-db:
