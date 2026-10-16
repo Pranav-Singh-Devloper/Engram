@@ -22,7 +22,7 @@ P04: dev split and runner. Without them there's nothing to tune against.
 - [ ] Retrieval fixture tests pass (unit, FakeProvider).
 - [ ] Dev recall@8 and accuracy targets are recorded in DECISIONS.md. P03's merge threshold is re-tuned here.
 
-## Carried in from P03
+## Carried in from P03 and P04
 
 - **Use `asOfPredicate`** (`temporal/asOf.ts`) for every candidate list. It's the only place the canonical filter is written.
 - **Version chains:** frequent restatements create several versions of one fact, and only the current one passes the as-of filter. Retrieval shouldn't need to dedupe versions, but check that recall@8 isn't diluted.
