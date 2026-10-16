@@ -2,3 +2,9 @@ packages:
   - packages/*
   - apps/*
   - bench
+  - scripts
+
+# Dependency install scripts are opt-in. esbuild (via tsx and vite) ships
+# prebuilt binaries as optional dependencies; its postinstall is not needed.
+allowBuilds:
+  esbuild: false
