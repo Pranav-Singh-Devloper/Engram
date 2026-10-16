@@ -81,3 +81,5 @@ export type {
 } from './ingest/resolver.js';
 export { entityLabel, resolveEntity } from './resolve/entities.js';
 export type { EntityResolution, ResolveContext, ResolvedVia } from './resolve/entities.js';
+export { history } from './temporal/history.js';
+export type { HistoryEntry, HistoryOptions } from './temporal/history.js';

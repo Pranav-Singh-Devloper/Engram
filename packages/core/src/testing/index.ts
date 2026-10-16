@@ -10,3 +10,5 @@ export {
   saveConversation,
 } from './fixtures.js';
 export type { FixtureConversation, FixtureEpisode, RecordedCall, Recording } from './fixtures.js';
+export { Scenario, aboutSelf, hint } from './scenario.js';
+export type { Turn, TurnResult } from './scenario.js';
