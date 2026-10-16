@@ -24,6 +24,7 @@ import {
   ProcessEpisodeInput,
 } from './contracts.js';
 import type { EmbedPurpose, MethodInput, MethodOutput, StructuredMethod } from './contracts.js';
+import { aliasIds } from './aliases.js';
 import { DEFAULT_RETRY, defaultHttpDeps, postJson } from './http.js';
 import type { HttpDeps, RetryOptions } from './http.js';
 import type { Provider } from './provider.js';
@@ -136,31 +137,61 @@ export class GeminiProvider implements Provider {
       jsonSchema: PROCESS_EPISODE_JSON_SCHEMA,
     });
 
-  adjudicate = (input: MethodInput<'adjudicate'>) =>
-    this.generate({
+  adjudicate = async (input: MethodInput<'adjudicate'>) => {
+    const parsed = AdjudicateInput.parse(input);
+    const ids = aliasIds(
+      parsed.existing.map((e) => e.id),
+      'f',
+    );
+    const out = await this.generate({
       system: ADJUDICATE_SYSTEM,
-      user: adjudicateUser(AdjudicateInput.parse(input)),
+      user: adjudicateUser({
+        ...parsed,
+        existing: parsed.existing.map((e) => ({ ...e, id: ids.label(e.id) })),
+      }),
       schema: WireAdjudicate,
       jsonSchema: ADJUDICATE_JSON_SCHEMA,
     });
+    return {
+      ...out,
+      targetFactId: out.targetFactId === null ? null : ids.resolve(out.targetFactId),
+    };
+  };
 
-  disambiguate = (input: MethodInput<'disambiguate'>) =>
-    this.generate({
+  disambiguate = async (input: MethodInput<'disambiguate'>) => {
+    const parsed = DisambiguateInput.parse(input);
+    const ids = aliasIds(
+      parsed.candidates.map((c) => c.id),
+      'c',
+    );
+    const out = await this.generate({
       system: DISAMBIGUATE_SYSTEM,
-      user: disambiguateUser(DisambiguateInput.parse(input)),
+      user: disambiguateUser({
+        ...parsed,
+        candidates: parsed.candidates.map((c) => ({ ...c, id: ids.label(c.id) })),
+      }),
       schema: WireDisambiguate,
       jsonSchema: DISAMBIGUATE_JSON_SCHEMA,
     });
+    return { ...out, entityId: out.entityId === null ? null : ids.resolve(out.entityId) };
+  };
 
   compose = async (input: MethodInput<'compose'>) => {
     const parsed = ComposeInput.parse(input);
+    const ids = aliasIds(
+      parsed.memories.map((m) => m.id),
+      'm',
+    );
     const out = await this.generate({
       system: COMPOSE_SYSTEM,
-      user: composeUser(parsed),
+      user: composeUser({
+        ...parsed,
+        memories: parsed.memories.map((m) => ({ ...m, id: ids.label(m.id) })),
+      }),
       schema: WireCompose,
       jsonSchema: COMPOSE_JSON_SCHEMA,
     });
-    return normalizeCompose(out, parsed);
+    return normalizeCompose({ ...out, usedMemoryIds: out.usedMemoryIds.map(ids.resolve) }, parsed);
   };
   summarize = () => this.notYet('summarize', 'P06b');
   /** The bench judge runs on a different model family (GroqProvider). */

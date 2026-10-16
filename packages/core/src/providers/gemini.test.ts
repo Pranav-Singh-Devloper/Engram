@@ -318,3 +318,82 @@ describe('GeminiProvider.processEpisode', () => {
     expect(requests).toHaveLength(2);
   });
 });
+
+describe('ids never reach the prompt', () => {
+  const reply = (body: unknown) =>
+    json({ candidates: [{ content: { parts: [{ text: JSON.stringify(body) }] } }] });
+  const uuid = (n: number) => `00000000-0000-4000-8000-00000000000${n}`;
+
+  it('compose labels memories m1… and maps used ids back', async () => {
+    const { provider, requests } = setup(() =>
+      reply({ answer: 'Osaka.', supported: true, usedMemoryIds: ['m2'] }),
+    );
+    const out = await provider.compose({
+      question: 'Where?',
+      now: new Date('2024-09-01T00:00:00Z'),
+      memories: [
+        {
+          id: uuid(1),
+          kind: 'fact',
+          text: 'Krakow',
+          validFrom: new Date('2024-01-01T00:00:00Z'),
+          validTo: null,
+        },
+        {
+          id: uuid(2),
+          kind: 'fact',
+          text: 'Osaka',
+          validFrom: new Date('2024-05-01T00:00:00Z'),
+          validTo: null,
+        },
+      ],
+    });
+    expect(out.usedMemoryIds).toEqual([uuid(2)]);
+    expect(JSON.stringify(requests[0]?.body)).not.toContain(uuid(1));
+    expect(JSON.stringify(requests[0]?.body)).toContain('[m1]');
+  });
+
+  it('disambiguate and adjudicate do the same with candidates and facts', async () => {
+    const d = setup(() => reply({ entityId: 'c2', reason: 'the chef' }));
+    const chosen = await d.provider.disambiguate({
+      mention: { name: 'Sam', type: 'person', description: null },
+      context: 'Sam cooked.',
+      candidates: [1, 2].map((n) => ({
+        id: uuid(n),
+        name: 'Sam',
+        type: 'person' as const,
+        description: null,
+        aliases: [],
+      })),
+    });
+    expect(chosen.entityId).toBe(uuid(2));
+    expect(JSON.stringify(d.requests[0]?.body)).not.toContain(uuid(1));
+
+    const a = setup(() =>
+      reply({ decision: 'update', targetFactId: 'f1', reason: 'moved', flagPredicate: false }),
+    );
+    const decided = await a.provider.adjudicate({
+      predicate: 'lives_in',
+      cardinality: 'one',
+      mutability: 'dynamic',
+      candidate: {
+        statement: 's',
+        validFrom: new Date('2024-05-01T00:00:00Z'),
+        validTo: null,
+        confidence: 0.9,
+        isCorrection: false,
+      },
+      existing: [
+        {
+          id: uuid(3),
+          statement: 's',
+          validFrom: new Date('2024-01-01T00:00:00Z'),
+          validTo: null,
+          confidence: 0.9,
+        },
+      ],
+    });
+    expect(decided.targetFactId).toBe(uuid(3));
+    expect(JSON.stringify(a.requests[0]?.body)).not.toContain(uuid(3));
+  });
+});
