@@ -23,7 +23,7 @@ P03: the full write path and as-of queries. Uses the P02 recorded-fixture mechan
 - [ ] CI smoke: a 20-item dev subset with exact/contains judges only, FakeProvider plus recorded fixtures, no network.
 
 ## Risks and verify-at-build-time
-- **Verify:** Groq free-tier models and limits (fallbacks: Mistral, then Cohere), and Gemini RPM/RPD. Write the expected wall-clock time of a full dev run into the report.
+- **Verify:** Groq free-tier models and limits (fallbacks: Mistral, then Cohere), and Gemini RPM/RPD. On 2026-10-16 the Groq key listed no Llama chat models, only `openai/gpt-oss-120b`, `openai/gpt-oss-20b` and `qwen/qwen3.8-27b`. Any of these is a different family from Gemini; pick one, and update SPEC §14's "Llama family" wording. Write the expected wall-clock time of a full dev run into the report.
 - **Who writes the dataset?** If an LLM generates the scenarios, use a different model or prompt context than extraction, and never show it the registry. The human review pass catches the rest.
 - **`engram` mode before P05** uses naive retrieval. The v0 numbers are a baseline, not a claim.
 - **Cache key correctness:** include the model id, the full prompt, the schema version and the temperature. A stale cache hit silently invalidates a run.

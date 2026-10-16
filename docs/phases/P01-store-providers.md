@@ -1,6 +1,6 @@
 # P01 — Store + providers
 
-**Status:** done (2026-10-16), except the manual Gemini check, which waits on an API key
+**Status:** done (2026-10-16)
 
 ## Goal
 Create the full §5 schema and a typed repository layer over it, the provider interface with a deterministic FakeProvider and a Gemini embeddings implementation, and the fast `ingest` path. By the end, an episode can be stored and embedded, and namespaces come with their `is_self` entity.
@@ -103,7 +103,7 @@ packages/core/src/
 ## Definition of done
 - [x] Migration 0002 applies cleanly to an empty local DB and in CI.
 - [x] All tests above pass. The pgvector round-trip and CHECK rejections are among them.
-- [ ] `GeminiProvider.embed` is verified once by hand against the real API (`pnpm gemini:check`). The model and dimension are recorded in ADR-004; the run itself waits on a `GEMINI_API_KEY`.
+- [x] `GeminiProvider.embed` is verified once by hand against the real API (`pnpm gemini:check`), with the model and dimension recorded in ADR-004. Run 2026-10-16: 768 dims, unit norm, cos(query, related) 0.841 vs cos(query, unrelated) 0.597; JSON generation returned `{city: "Berlin"}` on `gemini-3.5-flash-lite`.
 - [x] `.env.example` lists `GEMINI_API_KEY`, `GEMINI_EMBED_MODEL`, `GEMINI_CHAT_MODEL`.
 
 ## Planned commits
@@ -146,5 +146,5 @@ Deviations from the plan above:
 - **`generate()` sends only `responseMimeType`**, not a schema. P02 decides whether to also send the JSON schema to Gemini once the real prompt exists.
 
 Follow-ups:
-- **Before P02:** add `GEMINI_API_KEY` to `.env` and run `pnpm gemini:check`. It lists the flash models the key can use, which P02 needs to pick `GEMINI_CHAT_MODEL`.
+- **P02 picks `GEMINI_CHAT_MODEL`.** On 2026-10-16 the key could use gemini-2.5-flash(-lite), 3-flash-preview, 3.1-flash-lite, 3.5-flash(-lite), 3.6-flash, 3.7-flash and 3.8-flash. Check the free-tier RPD for the front-runners in AI Studio before choosing.
 - **P04:** the judge runs on Groq, so `GeminiProvider.judge` probably never gets implemented. The bench should pass a separate judge provider.
