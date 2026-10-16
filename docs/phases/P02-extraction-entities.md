@@ -1,6 +1,6 @@
 # P02 — Extraction + entities
 
-**Status:** planned
+**Status:** done (2026-10-16)
 
 ## Goal
 Build the slow half of the write path. `process(episodeId)` makes one LLM call for importance plus candidate facts, then normalizes predicates, resolves dates against the episode, and resolves every subject and object to a canonical entity without creating duplicates under concurrency. Facts are persisted with provenance. Conflict resolution sits behind a seam that P03 fills in.
@@ -110,11 +110,11 @@ scripts/record-fixtures.ts       # pnpm fixtures:record (manual, real Gemini, wr
 - `process.int.test.ts`: idempotent when re-run; provenance holds the episode id; `processed_at` is set; importance is stored.
 
 ## Definition of done
-- [ ] All golden tests pass over the ~10 recorded fixture conversations.
-- [ ] The concurrency test proves no duplicate entities, including the disambiguation-retry path.
-- [ ] The two-Sams fixture resolves correctly.
-- [ ] The ad-hoc predicate rate over the fixtures is printed by the golden test (a baseline for §18 drift).
-- [ ] An ADR records the temporal-hint design and the no-LLM-under-lock rule.
+- [x] All golden tests pass over the ~10 recorded fixture conversations.
+- [x] The concurrency test proves no duplicate entities, including the disambiguation-retry path.
+- [x] The two-Sams fixture resolves correctly.
+- [x] The ad-hoc predicate rate over the fixtures is printed by the golden test (a baseline for §18 drift).
+- [x] An ADR records the temporal-hint design and the no-LLM-under-lock rule.
 
 ## Planned commits
 1. `feat(core): add predicate registry and synonym normalization`
@@ -134,3 +134,27 @@ scripts/record-fixtures.ts       # pnpm fixtures:record (manual, real Gemini, wr
 - **Extraction recall on implicit facts** ("enjoying the Berlin winters") will be weak. Measure it in P04 rather than over-engineering the prompt now.
 - **Two-Sams is the main silent-error risk** (§18). The duplicate-entity and mis-merge metrics come in P04.
 - **`hashtextextended` lock key collisions** across namespaces are harmless (extra serialization only), but note it.
+
+## Summary
+
+Done 2026-10-16. `processEpisode(db, provider, episodeId)` runs one zod-validated extraction call, normalizes predicates, resolves temporal hints, resolves every entity mention under the namespace lock (disambiguating where needed) and stores facts with provenance through the `CandidateResolver` seam. 187 tests pass. The 10 golden fixtures replay 22 real `gemini-3.5-flash-lite` calls.
+
+What the real model did on the fixtures:
+- **Correct:** relative and named-period dates, a clean correction, two separate Sams with "cooked dinner" routed to the brother by a real disambiguation call, and nothing extracted from tool output (including a planted injection).
+- **Ad-hoc rate is 34.5%** (10 of 29). The fixtures deliberately include off-registry relations, but `occupation` and `sibling_of` recur.
+- **"Rob" became a second entity** next to "Robert". Cross-turn nicknames don't match by name or label, so this is a real duplicate-entity case.
+- **An assistant echo** ("you're living in Toronto now") produced a duplicate `lives_in` row, which P03's merge must absorb.
+
+Deviations from the plan above:
+- **Chat model is `gemini-3.5-flash-lite`** (ADR-005). The larger flash models hit 503 and a 5-requests-per-minute free quota during the A/B.
+- **Gemini gets flat wire schemas.** It ignores `const`/`anyOf` in a JSON Schema, so code maps the flat shape onto the contracts. A zod gotcha surfaced: a throw inside `.transform()` escapes `safeParse`, so transforms report issues through the context instead.
+- **Backoff fix:** Gemini's 429 carries its wait in the body (`RetryInfo`), not a header.
+- **Disambiguation on a lone match.** It also runs when a single name or alias match has a conflicting description (`descriptionConflictThreshold` 0.95). Without it the second Sam merges into the first. The disambiguation contract now accepts one candidate.
+- **Window rules** (ADR-006, SPEC §6.1):
+  - ends resolve to the start of their period;
+  - the same period at both ends spans it;
+  - end-only facts with no start are dropped;
+  - an end that isn't after the start is discarded.
+- **The registry already carries cardinality and mutability** (plain §7.1 data).
+- **Fixtures use fake embeddings** on both the record and replay sides, so replays take exactly the recorded path. Real-embedding entity behavior is measured in P04.
+- **Commits:** the ladder and disambiguation shipped as one module, with a separate test commit. The window-rule change rode along with the fixture commit, where the evidence for it came from.

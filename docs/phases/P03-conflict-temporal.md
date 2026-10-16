@@ -130,6 +130,14 @@ Also:
 ## Free-tier notes
 - Nothing here hits the network. The adjudicator's real prompt is checked once by hand with 3–5 calls and recorded as fixtures, the same way as in P02.
 
+## Carried in from P02
+
+- **Unknown `valid_from`.** P02 drops facts that ended before the turn with no stated start ("before that, I lived in Marseille"). Decide whether to support an unknown start (e.g. `-infinity` plus a `valid_from_source = 'unknown'` migration), since backfill is exactly where these facts matter.
+- **Assistant echoes** create a second row for the same fact from a different episode. Merge must absorb it, appending provenance and raising confidence only for new episodes. Fixture 09 shows the case.
+- **Fixture 04** (Initech, then "Actually, I work at Acme, not Initech") is the real-model correction case. Once the resolver lands, its golden snapshot should show Initech retracted.
+- **Reuse the optimistic pattern** from `resolve/entities.ts`: plan and adjudicate outside the transaction, then re-check under `lockNamespace`.
+- **`ResolvedCandidate.raw`** carries the model's candidate for `fact_revisions.candidate`.
+
 ## Risks and verify-at-build-time
 - **Overlapping explicit windows** from different sources ("2018–2020" vs "2019–2021") go to the adjudicator. Watch the adjudication rate on dev in P04. If it's high, add rules there, not here.
 - **Clock skew between the app and the DB** no longer matters, because record time comes from the app clock. Document that a multi-instance deploy relies on reasonably synced clocks.
