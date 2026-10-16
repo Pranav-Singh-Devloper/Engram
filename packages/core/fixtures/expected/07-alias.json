@@ -6,7 +6,7 @@
       "status": "processed",
       "importance": 0.6,
       "extracted": 2,
-      "createdEntities": 1,
+      "createdEntities": 2,
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
@@ -47,10 +47,17 @@
       "isSelf": true
     },
     {
+      "name": "Leeds",
+      "type": "place",
+      "aliases": [],
+      "description": "a city in the UK",
+      "isSelf": false
+    },
+    {
       "name": "Rob",
       "type": "person",
       "aliases": [],
-      "description": "the user's acquaintance",
+      "description": "an acquaintance or friend of the user",
       "isSelf": false
     },
     {
@@ -73,20 +80,20 @@
       "sources": 1
     },
     {
-      "fact": "Robert sibling_of User",
+      "fact": "Robert lives_in Leeds",
       "status": "active",
-      "adHoc": true,
-      "statement": "Robert is the sibling of the user.",
+      "adHoc": false,
+      "statement": "Robert lives in Leeds.",
       "validFrom": "2024-01-15 (episode)",
       "validTo": null,
       "confidence": 1,
       "sources": 1
     },
     {
-      "fact": "Robert works_at \"a hospital in Leeds\"",
+      "fact": "Robert sibling_of User",
       "status": "active",
-      "adHoc": false,
-      "statement": "Robert works at a hospital in Leeds.",
+      "adHoc": true,
+      "statement": "Robert is the sibling of the user.",
       "validFrom": "2024-01-15 (episode)",
       "validTo": null,
       "confidence": 1,

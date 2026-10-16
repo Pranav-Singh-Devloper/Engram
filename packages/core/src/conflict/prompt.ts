@@ -17,6 +17,8 @@ decision:
 - "coexist": both are true at the same time, as with two jobs. Set flagPredicate to true when the predicate looks like it should allow several values at once.
 - "reject": the candidate is noise, or less credible than what is stored. targetFactId may name the fact it conflicts with.
 
+When the turn only mentions an earlier value while telling history ("before I moved to Paris…"), the candidate adds nothing new: "reject". When it says the person is back somewhere ("I'm back in Paris"), that is an "update".
+
 For a static predicate (mutability "static", such as a birth date) only "correction" and "reject" are valid. targetFactId is an id from the existing facts, or null. reason is one short sentence.`;
 
 const date = (d: Date | null) =>
@@ -49,5 +51,6 @@ export function adjudicateUser(input: MethodInput<'adjudicate'>): string {
       isCorrection: c.isCorrection,
     })}`,
     `Existing facts:\n${existing}`,
+    `<turn>\n${input.context}\n</turn>`,
   ].join('\n\n');
 }

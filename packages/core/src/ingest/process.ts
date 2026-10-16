@@ -203,6 +203,7 @@ export async function processEpisode(
       isCorrection: raw.isCorrection,
       sourceEpisodeIds: [episode.id],
       raw,
+      context: episode.content,
     };
     const resolution = await resolver.resolve(db, candidate, { clock });
     result.outcomes[resolution.kind]++;

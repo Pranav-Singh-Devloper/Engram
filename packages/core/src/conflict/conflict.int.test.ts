@@ -288,6 +288,7 @@ describe('SPEC §7.4 required cases', () => {
         isCorrection: false,
         sourceEpisodeIds: fact.sourceEpisodeIds,
         raw: aboutSelf('lives_in', 'Paris'),
+        context: 'I live in Paris.',
       };
       const before = await getFact(db, fact.id);
       const resolution = await createConflictResolver(s.fake).resolve(db, again, {
@@ -371,6 +372,32 @@ describe('SPEC §7.4 required cases', () => {
       const revisions = await listFactRevisions(db, s.ns.namespace.id);
       expect(revisions.at(-1)).toMatchObject({ kind: 'coexist', resolver: 'llm' });
       expect(revisions.at(-1)?.reason).toContain('predicate flagged');
+    });
+  });
+
+  it('a history mention of an earlier value does not move the user back', async () => {
+    await run(async (s) => {
+      await s.tell(paris);
+      await s.tell(berlin);
+      s.fake.when('adjudicate', (input) => input.context.includes('Before I moved to Paris'), {
+        decision: 'reject',
+        targetFactId: null,
+        reason: 'only mentions Paris while telling history',
+        flagPredicate: false,
+      });
+      await s.tell({
+        at: '2024-08-01T09:00:00Z',
+        content: 'Before I moved to Paris I lived in Lyon from 2015 to 2018.',
+        candidates: [
+          aboutSelf('lives_in', 'Lyon', { from: hint.year(2015), to: hint.year(2018) }),
+          aboutSelf('lives_in', 'Paris'),
+        ],
+      });
+      s.clock.set(NOW);
+      expect(await s.values('lives_in')).toEqual(['Berlin']);
+      expect(await s.values('lives_in', { validAt: '2016-01-01' })).toEqual(['Lyon']);
+      const [asked] = s.fake.callsTo('adjudicate') as { context: string; existing: unknown[] }[];
+      expect(asked?.context).toContain('Before I moved to Paris');
     });
   });
 

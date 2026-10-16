@@ -56,16 +56,6 @@
       "sources": 1
     },
     {
-      "fact": "User has_occupation \"data engineer\"",
-      "status": "active",
-      "adHoc": true,
-      "statement": "The user works as a data engineer.",
-      "validFrom": "2024-02-01 (episode)",
-      "validTo": null,
-      "confidence": 1,
-      "sources": 1
-    },
-    {
       "fact": "User is_named \"Priya\"",
       "status": "active",
       "adHoc": false,
@@ -80,6 +70,16 @@
       "status": "active",
       "adHoc": false,
       "statement": "The user lives in Lisbon.",
+      "validFrom": "2024-02-01 (episode)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "User occupation \"data engineer\"",
+      "status": "active",
+      "adHoc": true,
+      "statement": "The user works as a data engineer.",
       "validFrom": "2024-02-01 (episode)",
       "validTo": null,
       "confidence": 1,

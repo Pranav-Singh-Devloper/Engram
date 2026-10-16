@@ -4,7 +4,7 @@
   "summaries": [
     {
       "status": "processed",
-      "importance": 0.8,
+      "importance": 0.5,
       "extracted": 2,
       "createdEntities": 1,
       "dropped": 0,
@@ -49,10 +49,10 @@
       "sources": 1
     },
     {
-      "fact": "User sibling_of Ana",
+      "fact": "Ana sibling_of User",
       "status": "active",
       "adHoc": true,
-      "statement": "The user has a sister named Ana.",
+      "statement": "Ana is the user's sister.",
       "validFrom": "2024-03-05 (episode)",
       "validTo": null,
       "confidence": 1,

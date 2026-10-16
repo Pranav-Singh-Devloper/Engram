@@ -105,6 +105,8 @@ const FactSummary = z.object({
 });
 export const AdjudicateInput = z.object({
   predicate: z.string(),
+  /** The turn the candidate came from, so the adjudicator can tell history from news. */
+  context: z.string(),
   cardinality: z.enum(['one', 'many']),
   mutability: z.enum(['static', 'dynamic']),
   candidate: FactSummary.omit({ id: true }).extend({ isCorrection: z.boolean() }),

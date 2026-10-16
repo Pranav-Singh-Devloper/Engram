@@ -22,9 +22,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "64e7fa21aa8d",
+    "promptVersion": "25f6695a1099",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T16:29:14.890Z",
+    "recordedAt": "2026-10-16T17:55:02.023Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -52,8 +52,12 @@
               },
               "predicate": "lives_in",
               "object": {
-                "kind": "literal",
-                "value": "Toronto"
+                "kind": "entity",
+                "entity": {
+                  "name": "Toronto",
+                  "type": "place",
+                  "description": "a city in Canada"
+                }
               },
               "statement": "The user lives in Toronto.",
               "validFrom": {
@@ -63,7 +67,7 @@
                 "kind": "none"
               },
               "isCorrection": false,
-              "confidence": 0.9
+              "confidence": 0.95
             }
           ]
         }
@@ -115,6 +119,29 @@
         }
       },
       {
+        "method": "disambiguate",
+        "input": {
+          "mention": {
+            "name": "Toronto",
+            "type": "place",
+            "description": "the city where the user lives"
+          },
+          "context": "Got it, you're living in Toronto now. Do you like it there?",
+          "candidates": [
+            {
+              "name": "Toronto",
+              "type": "place",
+              "description": "a city in Canada",
+              "aliases": []
+            }
+          ]
+        },
+        "output": {
+          "choice": 0,
+          "reason": "The mention refers to Toronto, the city in Canada where the user lives."
+        }
+      },
+      {
         "method": "processEpisode",
         "input": {
           "content": "Love it, honestly, even the winters.",
@@ -130,30 +157,8 @@
           ]
         },
         "output": {
-          "importance": 0.3,
-          "candidates": [
-            {
-              "subject": {
-                "name": "SELF",
-                "type": "person",
-                "description": "the user"
-              },
-              "predicate": "likes",
-              "object": {
-                "kind": "literal",
-                "value": "winters"
-              },
-              "statement": "The user likes winters.",
-              "validFrom": {
-                "kind": "none"
-              },
-              "validTo": {
-                "kind": "none"
-              },
-              "isCorrection": false,
-              "confidence": 0.9
-            }
-          ]
+          "importance": 0.1,
+          "candidates": []
         }
       }
     ]

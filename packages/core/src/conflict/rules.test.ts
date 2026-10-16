@@ -169,6 +169,20 @@ describe('classify', () => {
     ).toBe('update');
   });
 
+  it('adjudicates a past value restated without a time instead of moving back', () => {
+    const edinburgh = fact({ object: 'Edinburgh', validFrom: y(2024, 2), validTo: y(2024, 5) });
+    const melbourne = fact({ object: 'Melbourne', validFrom: y(2024, 5) });
+    const d = classify(
+      cand({ object: 'Edinburgh', validFrom: y(2024, 7) }),
+      [edinburgh, melbourne],
+      livesIn,
+    );
+    expect(d).toMatchObject({ kind: 'adjudicate', reason: 'restates a past value without a time' });
+    // With a stated time it's an ordinary move back.
+    const back = cand({ object: 'Edinburgh', validFrom: y(2024, 7), validFromSource: 'explicit' });
+    expect(classify(back, [edinburgh, melbourne], livesIn).kind).toBe('update');
+  });
+
   it('backfills closed history that precedes the open value', () => {
     const berlin = fact({ object: 'Berlin', validFrom: y(2020) });
     const d = classify(

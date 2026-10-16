@@ -42,6 +42,7 @@ export const PROMPT_VERSION = version(
   JSON.stringify(jsonSchemaFor(WireAdjudicate)),
   adjudicateUser({
     predicate: 'lives_in',
+    context: 'sample',
     cardinality: 'one',
     mutability: 'dynamic',
     candidate: {

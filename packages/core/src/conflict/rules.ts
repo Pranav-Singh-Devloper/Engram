@@ -165,6 +165,17 @@ export function classify(
     return { kind: 'insert', ...rule('no overlapping belief') };
   }
 
+  // A past value restated with no time ("before I moved to Edinburgh…") isn't
+  // a move back; the adjudicator reads the turn and decides.
+  const pastTwin = existing.find((e) => e.validTo !== null && sameObject(c, e, cfg.mergeThreshold));
+  if (pastTwin && c.validFromSource === 'episode') {
+    return {
+      kind: 'adjudicate',
+      reason: 'restates a past value without a time',
+      allowed: ALL_CHOICES,
+    };
+  }
+
   const [only] = conflicting;
   if (
     only !== undefined &&

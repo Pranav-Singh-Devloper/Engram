@@ -10,9 +10,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "64e7fa21aa8d",
+    "promptVersion": "25f6695a1099",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T16:25:50.560Z",
+    "recordedAt": "2026-10-16T17:52:22.808Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -131,7 +131,7 @@
                 "type": "person",
                 "description": "the user, Priya"
               },
-              "predicate": "has_occupation",
+              "predicate": "occupation",
               "object": {
                 "kind": "literal",
                 "value": "data engineer"

@@ -6,7 +6,7 @@
       "status": "processed",
       "importance": 0.8,
       "extracted": 2,
-      "createdEntities": 2,
+      "createdEntities": 0,
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
@@ -21,7 +21,7 @@
     },
     {
       "status": "processed",
-      "importance": 0.5,
+      "importance": 0.6,
       "extracted": 1,
       "createdEntities": 1,
       "dropped": 0,
@@ -47,20 +47,6 @@
       "isSelf": true
     },
     {
-      "name": "Berlin",
-      "type": "place",
-      "aliases": [],
-      "description": "the city of Berlin",
-      "isSelf": false
-    },
-    {
-      "name": "cello lessons",
-      "type": "concept",
-      "aliases": [],
-      "description": "lessons for playing the cello",
-      "isSelf": false
-    },
-    {
       "name": "Kyoto",
       "type": "place",
       "aliases": [],
@@ -70,17 +56,17 @@
   ],
   "facts": [
     {
-      "fact": "User likes cello lessons",
+      "fact": "User likes \"cello lessons\"",
       "status": "active",
       "adHoc": false,
-      "statement": "The user has been taking cello lessons.",
+      "statement": "The user takes cello lessons.",
       "validFrom": "2024-03-01 (explicit)",
       "validTo": null,
       "confidence": 1,
       "sources": 1
     },
     {
-      "fact": "User lives_in Berlin",
+      "fact": "User lives_in \"Berlin\"",
       "status": "active",
       "adHoc": false,
       "statement": "The user lives in Berlin.",

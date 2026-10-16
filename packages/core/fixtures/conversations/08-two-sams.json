@@ -22,9 +22,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "64e7fa21aa8d",
+    "promptVersion": "25f6695a1099",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T16:28:56.030Z",
+    "recordedAt": "2026-10-16T17:54:38.062Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -44,27 +44,6 @@
         "output": {
           "importance": 0.6,
           "candidates": [
-            {
-              "subject": {
-                "name": "Sam",
-                "type": "person",
-                "description": "the user's brother, a chef"
-              },
-              "predicate": "is_named",
-              "object": {
-                "kind": "literal",
-                "value": "Sam"
-              },
-              "statement": "The user has a brother named Sam.",
-              "validFrom": {
-                "kind": "none"
-              },
-              "validTo": {
-                "kind": "none"
-              },
-              "isCorrection": false,
-              "confidence": 1
-            },
             {
               "subject": {
                 "name": "Sam",
@@ -101,7 +80,7 @@
                 "kind": "literal",
                 "value": "chef"
               },
-              "statement": "Sam works as a chef.",
+              "statement": "Sam's profession is chef.",
               "validFrom": {
                 "kind": "none"
               },
@@ -119,12 +98,8 @@
               },
               "predicate": "lives_in",
               "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "Lyon",
-                  "type": "place",
-                  "description": "the city of Lyon"
-                }
+                "kind": "literal",
+                "value": "Lyon"
               },
               "statement": "Sam lives in Lyon.",
               "validFrom": {
@@ -172,7 +147,7 @@
                   "description": "the user"
                 }
               },
-              "statement": "Sam is the manager of the user.",
+              "statement": "Sam is the manager of The user.",
               "validFrom": {
                 "kind": "none"
               },
@@ -180,7 +155,7 @@
                 "kind": "none"
               },
               "isCorrection": false,
-              "confidence": 1
+              "confidence": 0.95
             }
           ]
         }
@@ -241,7 +216,7 @@
                   "description": "the user"
                 }
               },
-              "statement": "Sam cooked dinner for the user.",
+              "statement": "Sam cooked a birthday dinner for the user.",
               "validFrom": {
                 "kind": "relative",
                 "amount": 1,
@@ -283,7 +258,7 @@
         },
         "output": {
           "choice": 0,
-          "reason": "The candidate is Sam the chef who cooked dinner, matching the mention description."
+          "reason": "Sam is a chef and cooked dinner for the user's birthday, matching candidate c1."
         }
       }
     ]

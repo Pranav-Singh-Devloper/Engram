@@ -10,9 +10,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "64e7fa21aa8d",
+    "promptVersion": "25f6695a1099",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T16:27:37.461Z",
+    "recordedAt": "2026-10-16T17:53:32.890Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -30,38 +30,13 @@
           ]
         },
         "output": {
-          "importance": 0.7,
+          "importance": 0.6,
           "candidates": [
             {
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "The user"
-              },
-              "predicate": "partner_of",
-              "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "Jordan",
-                  "type": "person",
-                  "description": "The user's partner"
-                }
-              },
-              "statement": "The user has a partner named Jordan.",
-              "validFrom": {
-                "kind": "none"
-              },
-              "validTo": {
-                "kind": "none"
-              },
-              "isCorrection": false,
-              "confidence": 1
-            },
-            {
-              "subject": {
-                "name": "SELF",
-                "type": "person",
-                "description": "The user"
+                "description": "the user"
               },
               "predicate": "visited",
               "object": {
@@ -69,10 +44,10 @@
                 "entity": {
                   "name": "Kyoto",
                   "type": "place",
-                  "description": "A city in Japan"
+                  "description": "a city in Japan"
                 }
               },
-              "statement": "The user visited Kyoto in April 2023.",
+              "statement": "The user visited Kyoto.",
               "validFrom": {
                 "kind": "named_period",
                 "year": 2023,
@@ -89,7 +64,7 @@
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "The user"
+                "description": "the user"
               },
               "predicate": "visited",
               "object": {
@@ -97,10 +72,10 @@
                 "entity": {
                   "name": "Osaka",
                   "type": "place",
-                  "description": "A city in Japan"
+                  "description": "a city in Japan"
                 }
               },
-              "statement": "The user visited Osaka in April 2023.",
+              "statement": "The user visited Osaka.",
               "validFrom": {
                 "kind": "named_period",
                 "year": 2023,
@@ -117,7 +92,32 @@
               "subject": {
                 "name": "Jordan",
                 "type": "person",
-                "description": "The user's partner"
+                "description": "the user's partner"
+              },
+              "predicate": "partner_of",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "SELF",
+                  "type": "person",
+                  "description": "the user"
+                }
+              },
+              "statement": "Jordan is the partner of the user.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "Jordan",
+                "type": "person",
+                "description": "the user's partner"
               },
               "predicate": "likes",
               "object": {
@@ -138,7 +138,7 @@
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "The user"
+                "description": "the user"
               },
               "predicate": "likes",
               "object": {

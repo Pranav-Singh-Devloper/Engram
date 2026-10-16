@@ -42,6 +42,7 @@ function adjudicationInput(
 ): MethodInput<'adjudicate'> {
   return {
     predicate: c.predicate,
+    context: c.context,
     cardinality: spec?.cardinality ?? 'many',
     mutability: spec?.mutability ?? 'dynamic',
     candidate: {

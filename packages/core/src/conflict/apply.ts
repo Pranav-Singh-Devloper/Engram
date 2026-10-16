@@ -41,7 +41,13 @@ function insertCandidate(
   t: Date,
   overrides: { id?: string; validTo?: Date | null; supersededBy?: string | null } = {},
 ): Promise<Fact> {
-  const { raw: _raw, isCorrection: _isCorrection, objectName: _objectName, ...fact } = c;
+  const {
+    raw: _raw,
+    isCorrection: _isCorrection,
+    objectName: _objectName,
+    context: _context,
+    ...fact
+  } = c;
   const validTo = overrides.validTo === undefined ? fact.validTo : overrides.validTo;
   return insertFact(tx, {
     ...fact,

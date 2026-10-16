@@ -16,9 +16,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "64e7fa21aa8d",
+    "promptVersion": "25f6695a1099",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T16:27:18.959Z",
+    "recordedAt": "2026-10-16T17:53:08.399Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -36,7 +36,7 @@
           ]
         },
         "output": {
-          "importance": 0.5,
+          "importance": 0.8,
           "candidates": [
             {
               "subject": {
@@ -117,7 +117,7 @@
                 "entity": {
                   "name": "Acme",
                   "type": "org",
-                  "description": "the user's current employer"
+                  "description": "the organization the user works for"
                 }
               },
               "statement": "The user works at Acme.",

@@ -16,9 +16,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "64e7fa21aa8d",
+    "promptVersion": "25f6695a1099",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T16:26:20.495Z",
+    "recordedAt": "2026-10-16T17:52:42.646Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -46,12 +46,8 @@
               },
               "predicate": "lives_in",
               "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "Berlin",
-                  "type": "place",
-                  "description": "the city of Berlin"
-                }
+                "kind": "literal",
+                "value": "Berlin"
               },
               "statement": "The user lives in Berlin.",
               "validFrom": {
@@ -74,14 +70,10 @@
               },
               "predicate": "likes",
               "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "cello lessons",
-                  "type": "concept",
-                  "description": "lessons for playing the cello"
-                }
+                "kind": "literal",
+                "value": "cello lessons"
               },
-              "statement": "The user has been taking cello lessons.",
+              "statement": "The user takes cello lessons.",
               "validFrom": {
                 "kind": "named_period",
                 "year": null,
@@ -113,7 +105,7 @@
           ]
         },
         "output": {
-          "importance": 0.5,
+          "importance": 0.6,
           "candidates": [
             {
               "subject": {

@@ -26,6 +26,8 @@ export interface ResolvedCandidate {
   sourceEpisodeIds: string[];
   /** What the model returned, kept for revision audits and rejects. */
   raw: FactCandidate;
+  /** The episode text the candidate came from. */
+  context: string;
 }
 
 export type ResolutionKind =

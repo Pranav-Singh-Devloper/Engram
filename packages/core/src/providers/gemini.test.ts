@@ -374,6 +374,7 @@ describe('ids never reach the prompt', () => {
     );
     const decided = await a.provider.adjudicate({
       predicate: 'lives_in',
+      context: 'I moved.',
       cardinality: 'one',
       mutability: 'dynamic',
       candidate: {
