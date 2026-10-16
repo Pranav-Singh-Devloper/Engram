@@ -29,7 +29,8 @@
 
 Rationale:
 - The project exists to demonstrate the internals — conflict resolution, decay, consolidation, temporal queries. Delegating the temporal graph to Graphiti would outsource exactly those parts and add a Python runtime plus a graph database.
-- One database (Supabase free tier) and one web deploy target (Vercel) keep the free-stack story clean and the quickstart under 10 minutes.
+- One database engine (Postgres + pgvector: a plain Docker container locally and in CI, Supabase free tier when hosted) and one web deploy target (Vercel) keep the free-stack story clean and the quickstart under 10 minutes.
+- **Everything runs on free tiers or free trials.** No paid service is required at any point; every quota decision is made against free limits.
 - TypeScript end-to-end: engine, MCP server (official TS SDK), Next.js app, and bench share types.
 
 Graphiti, Mem0, Letta, and Cognee are **prior art** (Appendix C); Graphiti remains a documented alternative backend (Appendix B).
@@ -65,9 +66,13 @@ Components:
 - **packages/mcp** — MCP server wrapping core. stdio transport for local clients; streamable HTTP transport mounted in the Next.js app.
 - **apps/web** — Next.js dashboard, chat playground, HTTP API.
 - **bench** — dataset generator, frozen dev/test splits, runner, LongMemEval adapter, reports ("Engram-Bench").
-- **supabase/** — migrations (including SQL functions for decay and cleanup), seed, local config.
+- **supabase/** — `migrations/`: portable SQL (schema, SQL functions for decay and cleanup) applied to every database, local or hosted. `hosted/`: Supabase-only SQL (pg_cron schedules, role revokes) applied only by the deploy step.
 
-Long-running work never runs inside Vercel functions: decay is a SQL function scheduled by `pg_cron`; consolidation (needs an LLM) runs in GitHub Actions against `DATABASE_URL`.
+Long-running work never runs inside Vercel functions: decay is a SQL function scheduled by `pg_cron` on the hosted database; consolidation (needs an LLM) runs in GitHub Actions against `DATABASE_URL`.
+
+**Database targets.**
+- *Local dev, tests, CI:* the plain `pgvector/pgvector` Docker image via `docker-compose.yml` (CI uses the same image as a service container). It has no pg_cron, and nothing local needs it: decay tests call the SQL function directly with a simulated clock.
+- *Hosted:* Supabase free tier. `pnpm db:migrate` applies `supabase/migrations/` to either target; `pnpm db:migrate:hosted` additionally applies `supabase/hosted/`. The local runner never reads `supabase/hosted/`.
 
 ---
 
@@ -77,8 +82,10 @@ Long-running work never runs inside Vercel functions: decay is a SQL function sc
 engram/
 ├── DECISIONS.md              # short ADRs, append-only
 ├── README.md
+├── docker-compose.yml        # local pgvector database
 ├── docs/
 │   ├── SPEC.md               # this file
+│   ├── phases/               # one plan per phase, expanded at phase start
 │   ├── architecture.md       # written in Phase 10
 │   └── demo.md               # scripted demo, Phase 9
 ├── packages/
@@ -93,9 +100,10 @@ engram/
 │   ├── runner/
 │   ├── cache/                # LLM response cache (gitignored)
 │   └── reports/
+├── scripts/                  # migration runner, seed, demo-offline
 ├── supabase/
-│   ├── migrations/
-│   └── seed.sql
+│   ├── migrations/           # portable SQL, applied everywhere
+│   └── hosted/               # Supabase-only SQL (pg_cron, revokes)
 └── .github/workflows/        # ci.yml, bench.yml, consolidate.yml
 ```
 
@@ -109,8 +117,14 @@ Tooling: pnpm workspaces, TypeScript strict, vitest, eslint + prettier, zod for 
 
 Embedding dimension: 768. Verify the current Gemini embedding model at build time. If it natively outputs more dimensions and you request 768 via truncation, L2-normalize vectors before storing. pgvector's HNSW index on the `vector` type supports at most 2,000 dimensions; anything larger needs `halfvec`. Changing dimension is a migration plus an ADR.
 
+**Schemas.** All Engram tables and functions live in a dedicated `engram` schema; extensions live in an `extensions` schema. Both targets use the same layout, and connections set `search_path = engram, extensions`. The DDL below omits the `engram.` prefix for readability.
+
+**Hosted exposure.** Supabase automatically serves the `public` schema over its REST API, and the anon key is public by design. Keeping everything in `engram` (not in the API's exposed schemas) means the REST API can't reach stored memories. As defense in depth, `supabase/hosted/` revokes all privileges on `engram` from `anon` and `authenticated`. The app connects only through `DATABASE_URL`, so neither measure affects application code.
+
 ```sql
-create extension if not exists vector;
+create schema if not exists extensions;
+create schema if not exists engram;
+create extension if not exists vector with schema extensions;
 
 -- Isolation boundary: one per user/client config, per bench item, per demo visitor
 create table namespaces (
@@ -260,7 +274,7 @@ The write path is split into a fast step and a slow step so interactive clients 
    - First-person references resolve to the namespace's `is_self` entity.
    - Relative dates ("last week", "since March") resolve against the episode's `occurred_at`, never against wall-clock now.
    - Episodes with `role = 'tool'` are **not** extracted by default (`extractFromToolOutput = false`). This prevents web pages and file contents from planting facts.
-2. **Entity resolution**, inside a per-namespace advisory lock so concurrent writes can't create duplicates:
+2. **Entity resolution**, inside a per-namespace advisory lock so concurrent writes can't create duplicates. The lock is transaction-scoped (`pg_advisory_xact_lock`), taken inside the processing transaction, so it is safe behind Supabase's transaction-mode pooler; session-level advisory locks are not used anywhere.
    1. Exact normalized name and type match.
    2. Alias match.
    3. Embedding similarity on `"name (type): description"` ≥ 0.85.
@@ -336,8 +350,15 @@ Let the candidate be `c` with window `[c.from, c.to)`. `c.from` defaults to the 
    - Log `merge`.
 4. **Coexist.** For `cardinality: 'many'`, insert `c`. Both stay current.
 5. **Contradiction.** For `cardinality: 'one'`, run the rule fast-path first:
-   - **Update (forward in time).** `e` is open-ended, `c.from > e.from`, and the predicate is dynamic. Write a closed version of `e`: a new row copying `e` with `valid_to = c.from`, `status = 'superseded'`, `superseded_by = c.id`, `revises = e.id`. Set `e.invalidated_at = now()` and `e.status = 'revised'`. Insert `c` as active. Log `update`.
+   - **Update (forward in time).** `e` is open-ended, `c.from > e.from`, and the predicate is dynamic. Log `update`. The steps, all in one transaction with a single transaction timestamp `t`:
+     1. Generate ids in the application, so rows can reference each other without placeholder writes.
+     2. Insert `c` as active, `recorded_at = t`.
+     3. Insert the closed version of `e`: a new row copying `e`'s content with `valid_to = c.from`, `status = 'superseded'`, `superseded_by = c.id`, `revises = e.id`, and `recorded_at = t`. The closed copy's record time is when the system started believing the *closed* window, so it must never be copied from `e`.
+     4. Set `e.invalidated_at = t` and `e.status = 'revised'`.
+
+     Because the closed copy's `recorded_at` and `e.invalidated_at` are the same `t`, a `knownAt` query at any instant sees exactly one of them: no gap, no overlap.
    - **Backfill (out-of-order history).** `c` lies entirely before `e.from`, e.g. "I lived in Paris 2018–2020" learned after Berlin. Insert `c` with `valid_to = c.to ?? e.from`, `status = 'superseded'`, `superseded_by = e.id`. Leave `e` untouched. Log `backfill`.
+     - If `c`'s window overlaps an existing *closed* row in `E` (several past cities, one of them already recorded), the rule fast-path does not apply; the candidate goes to the LLM adjudicator.
    - **Correction cue.** `c.is_correction` is true ("actually", "no, I never…"). Set `e.invalidated_at = now()` and `e.status = 'retracted'`, then insert `c`. Log `correction`.
    - **Noise.** `c.confidence < 0.4` and `e.confidence ≥ 0.8` → reject `c`; store it in `fact_revisions.candidate`. Log `reject`.
    - **Anything else** goes to the LLM adjudicator: same start time, overlapping explicit windows, ambiguous cues. It classifies **update**, **correction**, **coexist** (apparent conflict, e.g. two concurrent jobs; optionally flag the predicate for reclassification), or **reject**, and the same mechanics as above apply.
@@ -367,6 +388,8 @@ Let the candidate be `c` with window `[c.from, c.to)`. `c.from` defaults to the 
 10. Noise rejection.
 11. Predicate synonym normalization: `resides_in` conflicts with `lives_in`.
 12. Relative date resolution against `occurred_at`.
+13. A backfill candidate that overlaps an existing closed history row goes to the adjudicator, not the rule fast-path.
+14. No `knownAt` gap or overlap at the update instant: at `t`, at `t − ε`, and at `t + ε`, exactly one row (open original or closed copy) is believed.
 
 ---
 
@@ -427,6 +450,14 @@ For a default-importance fact (0.5) that is never accessed, the score crosses θ
   4. consolidation summaries whose `summarizes` include purged episodes, which are regenerated or deleted;
   5. all associated embeddings.
 
+  The purge runs in one transaction, in this order, because facts reference each other (`revises`, `superseded_by`) and `fact_revisions` references facts:
+  1. compute the purge set: the target facts plus their whole `revises` chain in both directions;
+  2. null out `superseded_by` and `revises` on rows *outside* the purge set that point into it;
+  3. delete `fact_revisions` rows whose `old_fact_id` or `new_fact_id` is in the set;
+  4. delete the fact rows (their embeddings go with them);
+  5. delete or redact the source episodes;
+  6. regenerate or delete the summaries that summarize purged episodes.
+
   A purge test asserts that a full-text search for the purged literal returns nothing afterwards.
 
 ---
@@ -472,8 +503,11 @@ Thin Next.js route handlers over `packages/core`.
 - `/api/mcp`
 
 **Demo (anonymous, rate-limited)**
-- `POST /api/demo/session` — creates a `demo` namespace with a 24h expiry, set in an httpOnly cookie.
+- `POST /api/demo/session` — creates a `demo` namespace with a 24h expiry, set in an httpOnly cookie. Throttled per client IP (hashed, never stored raw), since otherwise a visitor could mint unlimited namespaces and sidestep the per-namespace limit.
 - `POST /api/chat` — streams; operates only on the cookie's namespace; 30 turns/hour per namespace via `rate_limits`.
+- A **global daily turn cap** across all demo namespaces protects the free Gemini quota. When it's reached, the chat returns a clear "demo quota exhausted, try again tomorrow" message and the read-only showcase stays available.
+
+**Connection pooling.** Vercel functions connect through Supabase's transaction-mode pooler. That mode doesn't support prepared statements, so the Postgres client is configured with them disabled. Long-running jobs (consolidation, migrations) use the session pooler or a direct connection.
 - Read endpoints are scoped to the cookie namespace, or to the seeded read-only showcase namespace.
 
 ---
@@ -497,6 +531,8 @@ Next.js App Router + Tailwind + shadcn/ui + TanStack Query. Verify current Next.
 **Stretch:** `/graph` — force-directed entity–fact graph with `valid_at` and `known_at` sliders.
 
 **Design bar:** clean, dense, fast; dark-mode friendly; no lorem ipsum anywhere.
+
+**Data notice:** the chat playground shows a persistent "don't enter personal data" notice, because the free Gemini tier may use inputs to improve Google's products.
 
 ---
 
@@ -580,6 +616,8 @@ Reports go to `bench/reports/<date>.md`; the summary table is copied into the RE
 
 `bench/longmemeval/` adapts a subset of LongMemEval-S (target ~100 items, stratified by its question types) to the runner. Check the dataset's repo, license, and format at build time. Report the engram and full_context numbers on it next to the internal ones.
 
+LongMemEval-S histories are long (on the order of 115k tokens per item), so `full_context` is the expensive mode. If the pre-run estimate exceeds what the free tier allows in a reasonable number of days, shrink to a smaller stratified subset (at least 50 items) and record the size and reason in an ADR. Never drop question types to fit.
+
 ### 13.7 CI
 
 - Every PR: a 20-item smoke subset from **dev**, `exact`/`contains` judges only, with the FakeProvider plus recorded fixtures — no network, no cost.
@@ -605,13 +643,16 @@ A deterministic `FakeProvider` backs the unit tests, which never hit the network
 
 | Concern | Default (free) | Notes |
 |---|---|---|
-| DB / vectors / FTS / cron | Supabase free tier | pgvector and pg_cron included. Free projects pause after a period of inactivity; document how to restore one, and expect the hosted demo to need occasional attention |
-| Embeddings + LLM | Gemini API free tier (AI Studio key) | Verify current model names, embedding dimensions, and rate/daily quotas at build time. **Free-tier inputs may be used by Google to improve its products** — stated in README limitations, since Engram stores personal facts. Use a paid tier for real personal data |
-| Judge LLM | a different family where possible (Cohere trial, Anthropic API, or another) | Note: a Claude Max subscription does not include Anthropic API credits |
-| Hosting | Vercel Hobby | web, API, HTTP MCP endpoint. No long-running jobs here; check function duration limits |
-| CI + jobs | GitHub Actions free | ci.yml, bench.yml, consolidate.yml. Scheduled workflows are auto-disabled after a period of repository inactivity; document re-enabling |
+| DB, local / tests / CI | `pgvector/pgvector` Docker image | Via `docker-compose.yml` locally and as a GitHub Actions service container. Small, offline, no pg_cron needed |
+| DB, hosted (vectors / FTS / cron) | Supabase free tier | pgvector and pg_cron included. Free projects pause after a period of inactivity; the nightly consolidation workflow touches the database and doubles as a keep-alive. Document how to restore a paused project |
+| Embeddings + LLM | Gemini API free tier (AI Studio key) | Verify current model names, embedding dimensions, and rate/daily quotas at build time. **Free-tier inputs may be used by Google to improve its products** — stated in README limitations and in the demo UI, since Engram stores personal facts |
+| Judge LLM | Groq free tier (Llama family); fallbacks: Mistral free tier, Cohere trial | A different family from Gemini, as §13.4 requires. Verify current models and limits at build time |
+| Hosting | Vercel Hobby | web, API, HTTP MCP endpoint. No long-running jobs here; check function duration limits. Connect via Supabase's transaction pooler with prepared statements disabled (§11) |
+| CI + jobs | GitHub Actions free | ci.yml, bench.yml, consolidate.yml. Scheduled workflows are auto-disabled after 60 days of repository inactivity; document re-enabling |
 
-Secrets only via `.env` (never committed); `.env.example` kept current. Required keys: `DATABASE_URL`, `SUPABASE_*`, `GEMINI_API_KEY`, `JUDGE_*`, `ENGRAM_API_TOKEN`, `ENGRAM_NAMESPACE`.
+Secrets only via `.env` (never committed); `.env.example` kept current. Required keys: `DATABASE_URL`, `GEMINI_API_KEY`, `JUDGE_*`, `ENGRAM_API_TOKEN`, `ENGRAM_NAMESPACE`. Hosted-only: `HOSTED_DATABASE_URL` (session pooler or direct, for migrations and jobs).
+
+**Offline mode.** With no API keys set, `pnpm demo:offline` runs the engine against the local database with the FakeProvider. It exists so anyone can see the bitemporal mechanics without signing up for anything.
 
 ---
 
@@ -619,28 +660,33 @@ Secrets only via `.env` (never committed); `.env.example` kept current. Required
 
 Each phase follows the same loop: plan → approval → implement in small steps → tests, typecheck, and lint green → 3–8 commits → short summary. One phase at a time.
 
-- **P0 Scaffold.** pnpm workspaces, TS strict, vitest, eslint + prettier, Supabase local (`supabase init/start`), migration 0001 applied, `.env.example`, `.gitignore` (including agent files and `bench/cache`), CI workflow.
+Each phase has a file in `docs/phases/`. Early phases are written in full; later ones start as outlines (goal, dependencies, done-when, risks) and are expanded into a full plan at the start of the phase, which is the "plan" step of the loop. When a phase's plan changes something here, this spec is updated in the same phase.
+
+- **P0 Scaffold.** pnpm workspaces, TS strict, vitest, eslint + prettier, `docker-compose.yml` with the pgvector image, a plain-SQL migration runner (`db:up`, `db:reset`, `db:migrate`, `db:migrate:hosted`) with the `supabase/migrations/` vs `supabase/hosted/` split, migration 0001 (`engram` and `extensions` schemas, pgvector) applied, `.env.example`, `.gitignore` (including agent files and `bench/cache`), CI workflow with a pgvector service container.
   - *Done when:* `pnpm -r typecheck && pnpm -r test && pnpm -r lint` is green locally and in CI, and a fresh clone boots.
 - **P1 Store + providers.** Schema with namespaces, constraints, and indexes; repository layer; Gemini and Fake providers; `ingest`; `is_self` entity creation per namespace.
   - *Done when:* repository unit tests pass, including a pgvector round-trip and the CHECK constraints rejecting bad rows.
 - **P2 Extraction + entities.** Combined importance + extraction call (zod), predicate normalization, relative-date resolution, tool-output exclusion, entity resolution with advisory lock, disambiguation, and alias learning; provenance.
   - *Done when:* golden-file tests over ~10 fixture conversations pass; a concurrency test proves no duplicate entities; a two-Sams fixture resolves correctly.
-- **P3 Conflict + temporal.** Registry, versioned-row mechanics, rule fast-path, LLM adjudication, the `validAt`/`knownAt` query, and `history()`.
-  - *Done when:* the §7.4 suite passes.
+- **P3 Conflict + temporal.** Registry, versioned-row mechanics, rule fast-path, LLM adjudication, the `validAt`/`knownAt` query, `history()`, and the `pnpm demo:offline` scenario script (Paris → Berlin, correction, backfill).
+  - *Done when:* the §7.4 suite passes, and `pnpm demo:offline` prints the expected bitemporal answers with no API keys set.
 - **P4 Bench harness v0.** Generator, frozen dev split (40 items), runner with all four modes, cache, and resumability; CI smoke on dev.
   - *Done when:* all four modes produce a dev report. (Test split not yet frozen.)
 - **P5 Retrieval.** Candidate lists, graph expansion, RRF plus priors, the abstention floor, composer with `supported`/`used_memory_ids`, and access tracking. Tuned on dev only.
   - *Done when:* retrieval fixtures pass, and dev recall@8 and accuracy targets are recorded in DECISIONS.md.
 - **P6 Jobs.** The decay SQL function with simulated-clock tests (including the §9.1 invariant and crossing times), the pg_cron schedule, consolidation via the write path with the provenance-aware merge test, the GitHub Actions workflow, demo cleanup, and the hard-purge cascade with its test.
-  - *Done when:* the time-travel and purge tests pass, and the consolidation workflow runs end-to-end against local Supabase.
+  - *Done when:* the time-travel and purge tests pass, and the consolidation job runs end-to-end against the local Docker database. The pg_cron schedules live in `supabase/hosted/` and are verified at deploy (P10).
 - **P7 MCP.** Tools and resource, namespace selection, stdio and streamable HTTP, Inspector walkthrough, client config docs.
   - *Done when:* the SDK-client integration test passes, and Claude Code can call `engram_remember` and `engram_recall` locally.
 - **P8 Bench full.** Freeze the test split after human review, label the 40 judge-validation answers, build the LongMemEval subset adapter, run everything, and write reports.
   - *Done when:* the test and LongMemEval reports exist, and the README table shows four modes plus judge agreement.
 - **P9 Web.** Required pages against the real API, demo namespaces, rate limiting.
   - *Done when:* `docs/demo.md` can be followed without improvisation.
-- **P10 Ship.** Supabase cloud and Vercel deploy; a showcase namespace seed; the README (gif, <10-minute quickstart, architecture diagram, bench tables, design notes, limitations, prior art); `docs/architecture.md`; a DECISIONS.md tidy.
-  - *Done when:* a fresh-clone quickstart is verified against the README, and the hosted demo is live.
+- **P10 Ship.** Supabase cloud and Vercel deploy (`db:migrate:hosted` applied); a showcase namespace seed; the README (gif, <10-minute quickstart, architecture diagram, bench tables, design notes, limitations, prior art); `docs/architecture.md`; a DECISIONS.md tidy. Three ways for a reviewer to try it:
+  1. the hosted demo: no setup;
+  2. `pnpm demo:offline`: Docker only, no API keys;
+  3. the full quickstart with a free Gemini key.
+  - *Done when:* all three paths are verified from a fresh clone against the README, and the hosted demo is live.
 
 ---
 
@@ -698,7 +744,7 @@ git log --format='%B' | grep -iE 'co-authored|generated'   # no output expected
 
 1. Hero gif of the chat demo: remember → new session → recall → contradiction → timeline.
 2. What and why in five sentences.
-3. Quickstart in under 10 minutes (local Supabase path).
+3. Quickstart in under 10 minutes (Docker database path), plus the no-key `pnpm demo:offline` path and the hosted demo link.
 4. Architecture diagram.
 5. **Benchmark tables:** buffer vs. rag vs. full_context vs. engram per category, the LongMemEval subset number, judge agreement, and cost per item. Present wins and losses honestly.
 6. MCP client setup snippets (Claude Code, Claude Desktop, Cursor).
@@ -730,7 +776,9 @@ Exposed over MCP; measured by bench/. Source of truth: docs/SPEC.md.
 
 ## Commands
 - pnpm -r typecheck · pnpm -r test · pnpm -r lint   (all green before any commit)
-- pnpm db:start / db:reset / db:migrate             (local Supabase)
+- pnpm db:up / db:reset / db:migrate                (local Docker pgvector)
+- pnpm db:migrate:hosted                            (Supabase: migrations + supabase/hosted/)
+- pnpm demo:offline                                 (FakeProvider, no API keys)
 - pnpm bench --split=dev|test --memory=engram|rag|full_context|buffer
 - pnpm bench:longmemeval
 - pnpm jobs:consolidate                             (decay runs in pg_cron)
