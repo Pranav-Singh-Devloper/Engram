@@ -9,7 +9,8 @@
     "test": "vitest run",
     "lint": "eslint .",
     "gemini:check": "tsx gemini-check.ts",
-    "fixtures:record": "tsx record-fixtures.ts"
+    "fixtures:record": "tsx record-fixtures.ts",
+    "demo:offline": "tsx demo-offline.ts"
   },
   "devDependencies": {
     "tsx": "^4.23.15"

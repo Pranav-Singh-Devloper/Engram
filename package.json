@@ -18,7 +18,8 @@
     "db:migrate:hosted": "pnpm --filter @engram/scripts migrate --hosted",
     "db:reset": "pnpm --filter @engram/scripts migrate --reset",
     "gemini:check": "pnpm --filter @engram/scripts gemini:check",
-    "fixtures:record": "pnpm --filter @engram/scripts fixtures:record"
+    "fixtures:record": "pnpm --filter @engram/scripts fixtures:record",
+    "demo:offline": "pnpm --filter @engram/scripts demo:offline"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
