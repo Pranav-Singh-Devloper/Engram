@@ -20,6 +20,31 @@ export default defineConfig(
     },
   },
   {
+    // SPEC §13.2: dataset generation must not see the predicate registry, or
+    // the bench would grade Engram on its own assumptions.
+    files: ['bench/dataset/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@engram/core',
+              importNames: ['PREDICATES', 'PREDICATE_NAMES', 'getPredicate', 'lookupPredicate'],
+              message: 'The bench dataset must not see the predicate registry (SPEC §13.2).',
+            },
+          ],
+          patterns: [
+            {
+              group: ['**/conflict/predicates*'],
+              message: 'The bench dataset must not see the predicate registry (SPEC §13.2).',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['**/*.{js,mjs,cjs}'],
     extends: [tseslint.configs.disableTypeChecked],
   },

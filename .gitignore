@@ -18,3 +18,6 @@ CLAUDE.md
 
 # Bench LLM response cache
 bench/cache/
+
+# Bench per-item run results (reports are committed)
+bench/runs/
