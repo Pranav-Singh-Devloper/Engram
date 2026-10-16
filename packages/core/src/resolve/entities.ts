@@ -26,6 +26,7 @@ import { ProviderOutputError } from '../providers/provider.js';
 import type { Provider } from '../providers/provider.js';
 import type { Entity } from '../types/index.js';
 import { lockNamespace } from './lock.js';
+import { namesCompatible } from './names.js';
 
 export interface ResolveContext {
   namespaceId: string;
@@ -82,11 +83,13 @@ async function plan(
         : { kind: 'match', entity: only, via };
     }
   }
-  const similar = await findSimilarEntities(
-    db,
-    namespaceId,
-    embedding,
-    config.entities.matchThreshold,
+  // Similar labels only count when the names themselves could be variants.
+  const similar = (
+    await findSimilarEntities(db, namespaceId, embedding, config.entities.matchThreshold)
+  ).filter(
+    (e) =>
+      namesCompatible(mention.name, e.name) ||
+      e.aliases.some((a) => namesCompatible(mention.name, a)),
   );
   const [closest] = similar;
   if (similar.length > 1) return { kind: 'ambiguous', candidates: similar };

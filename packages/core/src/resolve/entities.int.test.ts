@@ -127,3 +127,16 @@ describe('resolveEntity ladder', () => {
     });
   });
 });
+
+describe('the embedding rung', () => {
+  it('never merges different names whose generic descriptions look alike', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const description = 'the company the user works for';
+      const acme = await seed(ns, ref('Acme Robotics', 'org', description));
+      const r = await resolve(ns, ref('Initech', 'org', description));
+      expect(r.created).toBe(true);
+      expect(r.entity.id).not.toBe(acme.id);
+      expect((await getEntity(db, acme.id))?.aliases).toEqual([]);
+    });
+  });
+});
