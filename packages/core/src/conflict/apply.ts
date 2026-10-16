@@ -127,7 +127,18 @@ export async function applyDecision(
     }
     case 'correction': {
       await invalidateFact(tx, d.target.id, { at: t, status: 'retracted' });
-      const f = await insertCandidate(tx, c, t);
+      // "It was Acme all along": without stated bounds, the corrected fact
+      // takes over the window of the one it replaces.
+      const inherited =
+        c.validFromSource === 'episode'
+          ? {
+              ...c,
+              validFrom: d.target.validFrom,
+              validFromSource: d.target.validFromSource,
+              validTo: c.validTo ?? d.target.validTo,
+            }
+          : c;
+      const f = await insertCandidate(tx, inherited, t);
       await log('correction', d.target.id, f.id);
       return { kind: 'corrected', factId: f.id };
     }
