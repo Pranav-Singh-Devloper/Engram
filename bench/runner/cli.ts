@@ -3,7 +3,7 @@
 //
 // --offline       replay recorded responses only (no network, no keys); fails on a miss
 // --record-smoke  record the smoke subset's responses into bench/fixtures/smoke-cache
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { DEFAULT_DATABASE_URL, createDb } from '@engram/core';
 import { PORTABLE, migrate } from '@engram/core/migrate';
@@ -68,7 +68,11 @@ async function main(): Promise<void> {
       `${items.length} items × ${modes.length} modes, run ${runId}${offline ? ' (offline replay)' : ''}`,
     );
     console.log(describeEstimate(estimate(items, modes, llmJudge), geminiRpm));
-    const providers = makeProviders({ cacheDir, mode: offline ? 'readonly' : 'readwrite' });
+    const providers = makeProviders({
+      cacheDir,
+      mode: offline ? 'readonly' : 'readwrite',
+      fallbackCacheDir: recordSmoke ? DEFAULT_CACHE_DIR : undefined,
+    });
     const db = createDb(process.env.DATABASE_URL || DEFAULT_DATABASE_URL, { max: 4 });
     try {
       await migrate(db, { sources: [PORTABLE] });
@@ -100,7 +104,10 @@ async function main(): Promise<void> {
     judge: llmJudge ? process.env.JUDGE_MODEL || 'openai/gpt-oss-120b' : 'exact/contains only',
     date: new Date().toISOString().slice(0, 10),
   });
-  if (!smoke) writeFileSync(reportFile, report);
+  if (!smoke) {
+    mkdirSync(path.dirname(reportFile), { recursive: true });
+    writeFileSync(reportFile, report);
+  }
   console.log(`\n${report.split('## Abstention')[0] ?? ''}`);
   if (!smoke) console.log(`Report: ${path.relative(process.cwd(), reportFile)}`);
 

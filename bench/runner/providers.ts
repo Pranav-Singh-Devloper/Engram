@@ -24,7 +24,14 @@ export interface Providers {
   meter: UsageMeter;
 }
 
-export function makeProviders(options: { cacheDir?: string; mode?: CacheMode } = {}): Providers {
+export interface ProviderOptions {
+  cacheDir?: string;
+  mode?: CacheMode;
+  /** Misses fall through to this cache before the network (recording the smoke subset). */
+  fallbackCacheDir?: string;
+}
+
+export function makeProviders(options: ProviderOptions = {}): Providers {
   const meter = new UsageMeter();
   const pacer = new Pacer({
     'gemini-generate': rpm('BENCH_RPM_GEMINI', DEFAULT_RPM['gemini-generate']),
@@ -32,7 +39,16 @@ export function makeProviders(options: { cacheDir?: string; mode?: CacheMode } =
     groq: rpm('BENCH_RPM_GROQ', DEFAULT_RPM.groq),
   });
   const mode = options.mode ?? 'readwrite';
-  const fetch = cachingFetch({ dir: options.cacheDir ?? DEFAULT_CACHE_DIR, mode, meter, pacer });
+  const network = options.fallbackCacheDir
+    ? cachingFetch({ dir: options.fallbackCacheDir, mode: 'readwrite', pacer })
+    : undefined;
+  const fetch = cachingFetch({
+    dir: options.cacheDir ?? DEFAULT_CACHE_DIR,
+    mode,
+    meter,
+    pacer: network ? undefined : pacer,
+    fetch: network,
+  });
   // Offline replays never need a real key; the cache answers or 404s.
   const key = (name: string) => process.env[name] || (mode === 'readonly' ? 'offline' : '');
   const http = { fetch };
