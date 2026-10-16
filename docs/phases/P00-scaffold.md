@@ -1,6 +1,6 @@
 # P00 — Scaffold
 
-**Status:** planned
+**Status:** done (2026-10-16)
 
 ## Goal
 Set up an empty but fully wired monorepo. A fresh clone should install, start a local pgvector database, apply migrations, and pass typecheck, test and lint, both locally and in CI. This phase also decides the database layout every later phase builds on: the `engram` schema and the split between `migrations/` and `hosted/`.
@@ -93,12 +93,12 @@ DECISIONS.md                     # ADR-001..003
 - A smoke query that `select '[1,2,3]'::vector` works with the configured `search_path`.
 
 ## Definition of done
-- [ ] `pnpm -r typecheck && pnpm -r test && pnpm -r lint` is green locally.
-- [ ] The same is green in GitHub Actions on `main`.
-- [ ] A fresh clone boots: install, `db:up`, `db:migrate` and the gates all pass with no manual steps beyond copying `.env.example`.
-- [ ] Re-running `db:migrate` is a no-op, and a changed applied migration fails.
-- [ ] ADR-001 to ADR-003 are written.
-- [ ] `git log --format='%an <%ae>' | sort -u` shows one identity, and there are no attribution trailers.
+- [x] `pnpm -r typecheck && pnpm -r test && pnpm -r lint` is green locally.
+- [x] The same is green in GitHub Actions on `main`.
+- [x] A fresh clone boots: install, `db:up`, `db:migrate` and the gates all pass with no manual steps beyond copying `.env.example`.
+- [x] Re-running `db:migrate` is a no-op, and a changed applied migration fails.
+- [x] ADR-001 to ADR-003 are written.
+- [x] `git log --format='%an <%ae>' | sort -u` shows one identity, and there are no attribution trailers.
 
 ## Planned commits
 1. `chore: scaffold pnpm workspace with strict typescript`
@@ -123,3 +123,21 @@ DECISIONS.md                     # ADR-001..003
 - **Verify:** current Node LTS; the `pgvector/pgvector` tag that matches Supabase's Postgres major; current eslint flat-config and typescript-eslint setup.
 - **Hosted `search_path`:** Supabase may restrict `alter database`. The client-side `search_path` option (postgres.js `connection: { search_path }`) is the fallback, so make sure the client always sets it.
 - **Port clash:** document overriding the port via `ENGRAM_DB_PORT` if 54329 is taken.
+
+## Summary
+
+Done 2026-10-16. Workspace, local pgvector DB, migration runner with the `migrations/` vs `hosted/` split, migration 0001, hosted revokes, CI and ADR-001 to ADR-003 are in place. 27 tests; CI green on `main`; the fresh-clone check passed.
+
+Deviations from the plan above:
+- **`scripts/` is a workspace package** (`@engram/scripts`), so `pnpm -r` gates cover it. Tests are `db.test.ts` (target-safety rules), `migrator.int.test.ts` (runner, including a concurrent-runner test that was mutation-checked) and `schema.int.test.ts` (real migrations; hosted revokes checked by creating `anon`/`authenticated` inside a rolled-back transaction).
+- **Versions:**
+  - TypeScript is pinned to 6.0 (typescript-eslint caps at `<6.1`; TS 7 is the native port).
+  - vitest is 5.0.4, because pnpm 11's minimum-release-age gate rejected 5.0.5.
+  - Node stays on 22 (installed locally; still LTS).
+- **pnpm 11 blocks install scripts:** `allowBuilds: esbuild: false`. tsx and vite work without esbuild's postinstall.
+- **The image is 656 MB unpacked**, not ~400 MB. Free disk was about 6 GB afterwards.
+- **pgcrypto isn't needed:** `gen_random_uuid()` is built in.
+- **Prettier ignores `docs/`**, so the spec isn't reflowed.
+
+Follow-ups for P01:
+- `packages/core/src/db/client.ts` should reuse the `scripts/db.ts` pattern (always set `search_path`, SSL off only for local). Move the shared bits into core, and have `scripts` depend on `@engram/core`.
