@@ -4,14 +4,10 @@
 // inserting a new version that `revises` the old one.
 import type { Queryable } from './client.js';
 import { defined, maybeOne, one } from './rows.js';
-import { fromSql, toSql } from './vector.js';
+import { parseFact } from './factRows.js';
+import type { FactRow } from './factRows.js';
+import { toSql } from './vector.js';
 import type { Fact, FactStatus, FactTier, ValidFromSource } from '../types/index.js';
-
-type FactRow = Omit<Fact, 'embedding'> & { embedding: string | null };
-
-function parseFact(row: FactRow): Fact {
-  return { ...row, embedding: row.embedding === null ? null : fromSql(row.embedding) };
-}
 
 export interface NewFact {
   id?: string;
