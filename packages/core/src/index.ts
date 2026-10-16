@@ -86,3 +86,6 @@ export type { HistoryEntry, HistoryOptions } from './temporal/history.js';
 export { DEFAULT_JUDGE_MODEL, GROQ_BASE_URL, GroqProvider } from './providers/groq.js';
 export type { GroqOptions, GroqRequest } from './providers/groq.js';
 export { DONT_KNOW } from './compose/prompt.js';
+export { recall } from './retrieve/recall.js';
+export type { ListName, RecallOptions, RecallResult, RecalledMemory } from './retrieve/recall.js';
+export { trackUse } from './retrieve/access.js';

@@ -43,6 +43,13 @@ export const config = {
     importanceWeight: 0.1,
     /** Recency prior is exp(−age / recencyScaleDays). */
     recencyScaleDays: 30,
+    graphLimit: 20,
+    /** 'rrf' or the min-max weighted-linear alternative. Chosen on dev (ADR). */
+    ranker: 'rrf' as 'rrf' | 'linear',
+    /** Weighted-linear ranker: normalized similarity, normalized text rank, recency, importance. */
+    linearWeights: { similarity: 0.7, text: 0.2, recency: 0.05, importance: 0.05 },
+    /** Below this best raw cosine, recall returns nothing. Tuned on dev. */
+    floor: 0.5,
   },
   decay: {
     tauWorkingDays: 14,
