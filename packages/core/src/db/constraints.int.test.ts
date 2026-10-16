@@ -72,8 +72,16 @@ describe('facts constraints', () => {
     ['unknown valid_from_source', { validFromSource: 'guess' }],
     ['confidence above 1', { confidence: 1.5 }],
     ['negative access score', { accessScore: -1 }],
+    ['an unknown source with a known start', { validFromSource: 'unknown' }],
+    ['-infinity with a known source', { validFrom: '-infinity' }],
   ])('reject %s', async (_name, overrides) => {
     expect(await errorCode(insertFact(overrides))).toBe(CHECK);
+  });
+
+  it('accept an unknown start as -infinity', async () => {
+    await expect(
+      insertFact({ validFrom: '-infinity', validFromSource: 'unknown' }),
+    ).resolves.toBeUndefined();
   });
 
   it('reject both object columns set', async () => {

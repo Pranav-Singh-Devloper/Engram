@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, it } from 'vitest';
-import { createDb, DEFAULT_DATABASE_URL } from '../db/client.js';
+import { createDb, DEFAULT_DATABASE_URL, UNKNOWN_START } from '../db/client.js';
 import type { Sql } from '../db/client.js';
 import { getEpisode } from '../db/episodes.js';
 import type { NamespaceWithSelf } from '../db/namespaces.js';
@@ -261,7 +261,7 @@ describe('processEpisode', () => {
     });
   });
 
-  it('drops a fact that ended before the turn when its start is unknown', async () => {
+  it('gives a fact that ended before the turn, with no stated start, an unknown start', async () => {
     await withTestNamespace(db, async (ns) => {
       const fake = new FakeProvider().when('processEpisode', () => true, {
         importance: 0.5,
@@ -274,8 +274,12 @@ describe('processEpisode', () => {
       });
       const ep = await episode(ns, fake, 'Before that I lived in Marseille.');
       const result = await processEpisode(db, fake, ep.id);
-      expect(result).toMatchObject({ dropped: 1, outcomes: { inserted: 0 } });
-      expect(await facts(db, ns.namespace.id)).toHaveLength(0);
+      expect(result).toMatchObject({ dropped: 0, outcomes: { inserted: 1 } });
+      expect((await facts(db, ns.namespace.id))[0]).toMatchObject({
+        validFrom: UNKNOWN_START,
+        validFromSource: 'unknown',
+        validTo: new Date('2015-01-01T00:00:00Z'),
+      });
     });
   });
 

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, expectTypeOf, it } from 'vitest';
 import { basisVector, testDb, withTestNamespace } from '../testing/db.js';
-import { transaction } from './client.js';
+import { UNKNOWN_START, transaction } from './client.js';
 import { getEntity, insertEntity } from './entities.js';
 import { getEpisode, insertEpisode } from './episodes.js';
 import { insertFactRevision, listFactRevisions } from './factRevisions.js';
@@ -162,6 +162,32 @@ describe('facts', () => {
         recordedAt,
       });
       expect(await facts.getFact(db, fact.id)).toEqual(fact);
+    });
+  });
+
+  it('round-trips an unknown start through -infinity', async () => {
+    await withTestNamespace(db, async ({ namespace, selfEntity }) => {
+      const fact = await facts.insertFact(db, {
+        namespaceId: namespace.id,
+        subjectId: selfEntity.id,
+        predicate: 'lives_in',
+        objectLiteral: 'Marseille',
+        statement: 'The user lived in Marseille.',
+        validFrom: UNKNOWN_START,
+        validFromSource: 'unknown',
+        validTo: new Date('2015-01-01T00:00:00Z'),
+        recordedAt,
+      });
+      expect(fact.validFrom).toEqual(UNKNOWN_START);
+      const [row] = await db<
+        { v: string }[]
+      >`select valid_from::text as v from facts where id = ${fact.id}`;
+      expect(row?.v).toBe('-infinity');
+      // The canonical predicate needs no special case: -infinity precedes every instant.
+      const [hit] = await db`
+        select 1 from facts where id = ${fact.id}
+          and valid_from <= ${new Date('1900-01-01T00:00:00Z')}`;
+      expect(hit).toBeDefined();
     });
   });
 

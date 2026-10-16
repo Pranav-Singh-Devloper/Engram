@@ -5,6 +5,7 @@ import { config } from '../config/index.js';
 import { systemClock } from '../config/clock.js';
 import type { Clock } from '../config/clock.js';
 import { PREDICATE_NAMES } from '../conflict/predicates.js';
+import { UNKNOWN_START } from '../db/client.js';
 import type { Sql } from '../db/client.js';
 import { getEpisode, markEpisodeProcessed } from '../db/episodes.js';
 import { getSelfEntity } from '../db/namespaces.js';
@@ -14,7 +15,7 @@ import type { EntityRef, FactCandidate } from '../providers/contracts.js';
 import type { Provider } from '../providers/provider.js';
 import { entityLabel, isSelfRef, resolveEntity } from '../resolve/entities.js';
 import type { ResolveContext } from '../resolve/entities.js';
-import type { Episode } from '../types/index.js';
+import type { Episode, ValidFromSource } from '../types/index.js';
 import { insertOnlyResolver } from './resolver.js';
 import type { CandidateResolver, ResolutionKind, ResolvedCandidate } from './resolver.js';
 
@@ -33,7 +34,7 @@ export interface ProcessSummary {
   /** Candidates the model returned. */
   extracted: number;
   createdEntities: number;
-  /** Candidates dropped before resolution: an unusable predicate, or a window that can't be placed. */
+  /** Candidates dropped before resolution, e.g. an unusable predicate. */
   dropped: number;
   /** End bounds discarded because they weren't after the start. */
   droppedBounds: number;
@@ -78,23 +79,23 @@ function mentions(candidates: readonly FactCandidate[]): Map<string, EntityRef> 
 
 interface Window {
   validFrom: Date;
-  explicitFrom: boolean;
+  validFromSource: ValidFromSource;
   validTo: Date | null;
   droppedBound: boolean;
 }
 
 /**
- * Turns a candidate's hints into a validity window, or null when it can't be
- * placed. An end resolves to the start of its period, so "from 2015 to 2018"
+ * Turns a candidate's hints into a validity window. An end resolves to the start of its period, so "from 2015 to 2018"
  * meets "since 2018" instead of overlapping it; "in summer 2023" (the same
  * period at both ends) spans that period.
  */
-function resolveWindow(raw: FactCandidate, occurredAt: Date): Window | null {
+function resolveWindow(raw: FactCandidate, occurredAt: Date): Window {
   const from = resolveHint(raw.validFrom, occurredAt, 'start');
   const validFrom = from ?? occurredAt;
+  const validFromSource = from ? 'explicit' : 'episode';
   let validTo = resolveHint(raw.validTo, occurredAt, 'start');
   if (!validTo || validTo > validFrom) {
-    return { validFrom, explicitFrom: from !== null, validTo, droppedBound: false };
+    return { validFrom, validFromSource, validTo, droppedBound: false };
   }
 
   const samePeriod =
@@ -102,13 +103,15 @@ function resolveWindow(raw: FactCandidate, occurredAt: Date): Window | null {
     JSON.stringify(raw.validTo) === JSON.stringify(raw.validFrom);
   if (samePeriod) {
     validTo = resolveHint(raw.validTo, occurredAt, 'end');
-    return { validFrom, explicitFrom: true, validTo, droppedBound: false };
+    return { validFrom, validFromSource: 'explicit', validTo, droppedBound: false };
   }
   // It ended before the turn and its start is unknown ("before that I lived in
   // Marseille"). Defaulting the start to the turn would invent a current fact.
-  if (from === null) return null;
+  if (from === null) {
+    return { validFrom: UNKNOWN_START, validFromSource: 'unknown', validTo, droppedBound: false };
+  }
   // A point in time, or a bound that isn't after the start: keep the fact open.
-  return { validFrom, explicitFrom: true, validTo: null, droppedBound: true };
+  return { validFrom, validFromSource: 'explicit', validTo: null, droppedBound: true };
 }
 
 /**
@@ -174,14 +177,11 @@ export async function processEpisode(
       continue;
     }
 
-    const window = resolveWindow(raw, episode.occurredAt);
-    if (!window) {
-      result.dropped++;
-      continue;
-    }
-    const { validFrom, explicitFrom } = window;
-    if (window.droppedBound) result.droppedBounds++;
-    const validTo = window.validTo;
+    const { validFrom, validFromSource, validTo, droppedBound } = resolveWindow(
+      raw,
+      episode.occurredAt,
+    );
+    if (droppedBound) result.droppedBounds++;
 
     const candidate: ResolvedCandidate = {
       namespaceId: episode.namespaceId,
@@ -195,7 +195,7 @@ export async function processEpisode(
       confidence: raw.confidence,
       importance: extraction.importance,
       validFrom,
-      validFromSource: explicitFrom ? 'explicit' : 'episode',
+      validFromSource,
       validTo,
       isCorrection: raw.isCorrection,
       sourceEpisodeIds: [episode.id],

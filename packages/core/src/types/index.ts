@@ -20,7 +20,8 @@ export type FactStatus = (typeof FACT_STATUSES)[number];
 export const FACT_TIERS = ['working', 'long_term', 'archived'] as const;
 export type FactTier = (typeof FACT_TIERS)[number];
 
-export const VALID_FROM_SOURCES = ['explicit', 'episode'] as const;
+/** `unknown` means valid_from is UNKNOWN_START (-infinity in the database). */
+export const VALID_FROM_SOURCES = ['explicit', 'episode', 'unknown'] as const;
 export type ValidFromSource = (typeof VALID_FROM_SOURCES)[number];
 
 export const REVISION_KINDS = [

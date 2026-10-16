@@ -23,11 +23,11 @@
       "status": "processed",
       "importance": 0.5,
       "extracted": 2,
-      "createdEntities": 1,
-      "dropped": 1,
+      "createdEntities": 2,
+      "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
-        "inserted": 1,
+        "inserted": 2,
         "merged": 0,
         "updated": 0,
         "backfilled": 0,
@@ -47,6 +47,13 @@
     },
     {
       "name": "Lyon",
+      "type": "place",
+      "aliases": [],
+      "description": "a city in France",
+      "isSelf": false
+    },
+    {
+      "name": "Marseille",
       "type": "place",
       "aliases": [],
       "description": "a city in France",
@@ -76,6 +83,15 @@
       "statement": "The user lives in Paris.",
       "validFrom": "2018-01-01 (explicit)",
       "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "User visited Marseille",
+      "adHoc": false,
+      "statement": "The user lived in Marseille before Lyon.",
+      "validFrom": "unknown (unknown)",
+      "validTo": "2015-01-01",
       "confidence": 1,
       "sources": 1
     }

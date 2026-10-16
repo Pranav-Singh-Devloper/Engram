@@ -5,6 +5,7 @@
 // change, then review both diffs.
 import path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
+import { UNKNOWN_START } from '../db/client.js';
 import { ingest } from '../ingest/ingest.js';
 import { processEpisode } from '../ingest/process.js';
 import type { ProcessSummary } from '../ingest/process.js';
@@ -19,7 +20,12 @@ afterAll(async () => {
   await db.end();
 });
 
-const day = (d: Date | null) => d?.toISOString().slice(0, 10) ?? null;
+const day = (d: Date | null) =>
+  d === null
+    ? null
+    : d.getTime() === UNKNOWN_START.getTime()
+      ? 'unknown'
+      : d.toISOString().slice(0, 10);
 
 interface EntityRow {
   name: string;

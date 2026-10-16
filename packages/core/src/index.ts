@@ -7,6 +7,7 @@ export * from './types/index.js';
 export {
   DEFAULT_DATABASE_URL,
   SEARCH_PATH,
+  UNKNOWN_START,
   createDb,
   isLocalUrl,
   transaction,
