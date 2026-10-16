@@ -621,7 +621,7 @@ LongMemEval-S histories are long (on the order of 115k tokens per item), so `ful
 
 ### 13.7 CI
 
-- Every PR: a 20-item smoke subset from **dev**, `exact`/`contains` judges only, with the FakeProvider plus recorded fixtures — no network, no cost.
+- Every PR: a 20-item smoke subset from **dev** through all four modes, `exact`/`contains` judges only, replayed from committed recorded HTTP responses (`bench/fixtures/smoke-cache/`) by the real providers in read-only cache mode — no network, no keys, no cost. Providers keep database ids out of prompts so request bodies are deterministic.
 - `bench.yml`: full test and LongMemEval runs, manually triggered or nightly, with API keys from secrets.
 
 ---
@@ -647,7 +647,7 @@ A deterministic `FakeProvider` backs the unit tests, which never hit the network
 | DB, local / tests / CI | `pgvector/pgvector` Docker image | Via `docker-compose.yml` locally and as a GitHub Actions service container. Small, offline, no pg_cron needed |
 | DB, hosted (vectors / FTS / cron) | Supabase free tier | pgvector and pg_cron included. Free projects pause after a period of inactivity; the nightly consolidation workflow touches the database and doubles as a keep-alive. Document how to restore a paused project |
 | Embeddings + LLM | Gemini API free tier (AI Studio key) | Verify current model names, embedding dimensions, and rate/daily quotas at build time. **Free-tier inputs may be used by Google to improve its products** — stated in README limitations and in the demo UI, since Engram stores personal facts |
-| Judge LLM | Groq free tier (Llama family); fallbacks: Mistral free tier, Cohere trial | A different family from Gemini, as §13.4 requires. Verify current models and limits at build time |
+| Judge LLM | Groq free tier: `openai/gpt-oss-120b` with strict JSON-schema output; fallbacks: Mistral free tier, Cohere trial | A different family from Gemini, as §13.4 requires. Dataset verbalization uses a third family (`qwen/qwen3.8-27b` on Groq). Verify current models and limits at build time |
 | Hosting | Vercel Hobby | web, API, HTTP MCP endpoint. No long-running jobs here; check function duration limits. Connect via Supabase's transaction pooler with prepared statements disabled (§11) |
 | CI + jobs | GitHub Actions free | ci.yml, bench.yml, consolidate.yml. Scheduled workflows are auto-disabled after 60 days of repository inactivity; document re-enabling |
 
