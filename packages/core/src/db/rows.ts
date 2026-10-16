@@ -19,3 +19,8 @@ export function maybeOne<T>(rows: readonly T[]): T | undefined {
   }
   return rows[0];
 }
+
+/** Drops undefined keys so the insert helper leaves those columns to their defaults. */
+export function defined(values: Record<string, SerializableParameter | null | undefined>): Values {
+  return Object.fromEntries(Object.entries(values).filter(([, v]) => v !== undefined)) as Values;
+}
