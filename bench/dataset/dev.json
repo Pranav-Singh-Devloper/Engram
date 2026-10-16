@@ -476,7 +476,7 @@
           "session_id": "p3-s2",
           "occurred_at": "2024-04-19T09:00:00.000Z",
           "turns": [
-            "Hey, I'm really craving tacos tonight.",
+            "Hey, tacos are my favourite food, and I'm really craving them tonight.",
             "Ah, that reminds me, I'm allergic to penicillin so I have to be careful with meds.",
             "I'm going to practice my cello after dinner to relax.",
             "My partner Alex will probably be late since he works at Hooli."
@@ -530,7 +530,7 @@
           "session_id": "p3-s2",
           "occurred_at": "2024-04-19T09:00:00.000Z",
           "turns": [
-            "Hey, I'm really craving tacos tonight.",
+            "Hey, tacos are my favourite food, and I'm really craving them tonight.",
             "Ah, that reminds me, I'm allergic to penicillin so I have to be careful with meds.",
             "I'm going to practice my cello after dinner to relax.",
             "My partner Alex will probably be late since he works at Hooli."
@@ -584,7 +584,7 @@
           "session_id": "p3-s2",
           "occurred_at": "2024-04-19T09:00:00.000Z",
           "turns": [
-            "Hey, I'm really craving tacos tonight.",
+            "Hey, tacos are my favourite food, and I'm really craving them tonight.",
             "Ah, that reminds me, I'm allergic to penicillin so I have to be careful with meds.",
             "I'm going to practice my cello after dinner to relax.",
             "My partner Alex will probably be late since he works at Hooli."
@@ -638,7 +638,7 @@
           "session_id": "p3-s2",
           "occurred_at": "2024-04-19T09:00:00.000Z",
           "turns": [
-            "Hey, I'm really craving tacos tonight.",
+            "Hey, tacos are my favourite food, and I'm really craving them tonight.",
             "Ah, that reminds me, I'm allergic to penicillin so I have to be careful with meds.",
             "I'm going to practice my cello after dinner to relax.",
             "My partner Alex will probably be late since he works at Hooli."
@@ -692,7 +692,7 @@
           "session_id": "p3-s2",
           "occurred_at": "2024-04-19T09:00:00.000Z",
           "turns": [
-            "Hey, I'm really craving tacos tonight.",
+            "Hey, tacos are my favourite food, and I'm really craving them tonight.",
             "Ah, that reminds me, I'm allergic to penicillin so I have to be careful with meds.",
             "I'm going to practice my cello after dinner to relax.",
             "My partner Alex will probably be late since he works at Hooli."
@@ -1896,5 +1896,5 @@
       "notes": "record time: the move had happened but was not yet said"
     }
   ],
-  "review": "Reviewed 2026-10-16 by reading every persona's turns against its timeline. Three turns were hand-edited for meaning drift: p1-s4 (a statement phrased as a question), p7-s1 ('messaging you from Marseille' did not say the user lives there; dev-035 depends on it), p5-s2 ('sensitive to pollen' instead of the planned 'allergic to pollen'; no dev item asks it, but the turn should state the fact as planned)."
+  "review": "Reviewed 2026-10-16 by reading every persona's turns against its timeline. Three turns were hand-edited for meaning drift: p1-s4 (a statement phrased as a question), p7-s1 ('messaging you from Marseille' did not say the user lives there; dev-035 depends on it), p5-s2 ('sensitive to pollen' instead of the planned 'allergic to pollen'; no dev item asks it, but the turn should state the fact as planned). After the first dev run (2026-10-16), a fourth turn was edited: p3-s2 said 'craving tacos tonight' without saying tacos were the favourite food, so every mode abstained on dev-013."
 }
