@@ -52,13 +52,18 @@ async function main(): Promise<void> {
           for (const [i, text] of s.turns.entries()) {
             const at = turnTime(s, i);
             clock.set(at);
-            const ep = await ingest(db, gemini, {
-              namespaceId: namespace.id,
-              sessionId: s.session_id,
-              role: 'user',
-              content: text,
-              occurredAt: at,
-            });
+            const ep = await ingest(
+              db,
+              gemini,
+              {
+                namespaceId: namespace.id,
+                sessionId: s.session_id,
+                role: 'user',
+                content: text,
+                occurredAt: at,
+              },
+              { clock },
+            );
             const sum = await processEpisode(db, gemini, ep.id, { clock });
             const outcomes = Object.entries(sum.outcomes)
               .filter(([, n]) => n > 0)

@@ -19,6 +19,8 @@ export interface NewEpisode {
   embedding?: readonly number[] | null;
   importance?: number;
   occurredAt?: Date;
+  /** Record time; defaults to the database's now(). The engine passes its clock. */
+  createdAt?: Date;
   summarizes?: string[];
 }
 

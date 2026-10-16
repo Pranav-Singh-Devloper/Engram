@@ -1,4 +1,5 @@
 import { afterAll, describe, expect, it } from 'vitest';
+import { SimClock } from '../config/clock.js';
 import { getEpisode } from '../db/episodes.js';
 import { cosine } from '../db/vector.js';
 import { FakeProvider, fakeEmbedding } from '../providers/fake.js';
@@ -53,6 +54,25 @@ describe('ingest', () => {
         occurredAt,
       });
       expect(episode.occurredAt).toEqual(occurredAt);
+    });
+  });
+
+  it('records the episode at the engine clock, not the database clock', async () => {
+    await withTestNamespace(db, async ({ namespace }) => {
+      const learned = new Date('2024-06-10T09:00:00Z');
+      const episode = await ingest(
+        db,
+        new FakeProvider(),
+        {
+          namespaceId: namespace.id,
+          sessionId: 's',
+          role: 'user',
+          content: 'hi',
+          occurredAt: learned,
+        },
+        { clock: new SimClock(learned) },
+      );
+      expect(episode.createdAt).toEqual(learned);
     });
   });
 

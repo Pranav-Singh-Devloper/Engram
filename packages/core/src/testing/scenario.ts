@@ -105,14 +105,19 @@ export class Scenario {
       candidates: turn.candidates,
     });
     const before = await this.revisionCount();
-    const episode = await ingest(this.db, this.fake, {
-      namespaceId: this.ns.namespace.id,
-      sessionId: 's1',
-      role: 'user',
-      content: turn.content,
-      occurredAt: new Date(turn.at),
-    });
     this.clock.set(turn.learnedAt ?? turn.at);
+    const episode = await ingest(
+      this.db,
+      this.fake,
+      {
+        namespaceId: this.ns.namespace.id,
+        sessionId: 's1',
+        role: 'user',
+        content: turn.content,
+        occurredAt: new Date(turn.at),
+      },
+      { clock: this.clock },
+    );
     const summary = await processEpisode(this.db, this.fake, episode.id, { clock: this.clock });
     return { summary, revisions: (await this.revisionCount()) - before };
   }

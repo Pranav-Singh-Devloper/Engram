@@ -108,13 +108,18 @@ async function engram(item: BenchItem, turns: Turn[], deps: ModeDeps): Promise<M
     const clock = new SimClock(turns[0]?.at ?? new Date(item.asked_at));
     for (const t of turns) {
       clock.set(t.at);
-      const episode = await ingest(db, provider, {
-        namespaceId: namespace.id,
-        sessionId: t.id.split('#')[0] ?? 's',
-        role: 'user',
-        content: t.text,
-        occurredAt: t.at,
-      });
+      const episode = await ingest(
+        db,
+        provider,
+        {
+          namespaceId: namespace.id,
+          sessionId: t.id.split('#')[0] ?? 's',
+          role: 'user',
+          content: t.text,
+          occurredAt: t.at,
+        },
+        { clock },
+      );
       await processEpisode(db, provider, episode.id, { clock });
     }
 

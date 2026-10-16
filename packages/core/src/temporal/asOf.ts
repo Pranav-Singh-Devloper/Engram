@@ -34,6 +34,15 @@ export function asOfPredicate(db: Queryable, asOf: AsOf, alias = 'f'): PendingQu
     ${asOf.includeArchived ? db`` : db`and ${t}.tier <> 'archived'`}`;
 }
 
+/**
+ * The episode analogue (SPEC §5.1): said by valid time T, and recorded by
+ * record time K.
+ */
+export function episodesAsOfPredicate(db: Queryable, asOf: AsOf, alias = 'e'): PendingQuery<Row[]> {
+  const t = db(alias);
+  return db`${t}.occurred_at <= ${asOf.validAt} and ${t}.created_at <= ${asOf.knownAt}`;
+}
+
 export interface FactsAsOfQuery extends Partial<AsOf> {
   namespaceId: string;
   subjectId?: string;

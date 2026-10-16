@@ -1,3 +1,4 @@
+import type { Clock } from '../config/clock.js';
 import type { Queryable } from '../db/client.js';
 import { insertEpisode } from '../db/episodes.js';
 import type { Provider } from '../providers/provider.js';
@@ -22,10 +23,16 @@ export async function ingest(
   db: Queryable,
   provider: Pick<Provider, 'embed'>,
   input: IngestInput,
+  options: { clock?: Clock } = {},
 ): Promise<Episode> {
   if (input.content.trim() === '') throw new Error('Episode content is empty.');
   if (input.sessionId.trim() === '') throw new Error('Episode session id is empty.');
 
   const [embedding] = await provider.embed([input.content], { purpose: 'document' });
-  return insertEpisode(db, { ...input, embedding: embedding ?? null });
+  // created_at is the episode's record time (SPEC §5.1): when the system learned it.
+  return insertEpisode(db, {
+    ...input,
+    embedding: embedding ?? null,
+    createdAt: options.clock?.now(),
+  });
 }

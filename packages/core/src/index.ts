@@ -71,7 +71,7 @@ export { processEpisode } from './ingest/process.js';
 export type { ProcessOptions, ProcessStatus, ProcessSummary } from './ingest/process.js';
 export { createConflictResolver, currentBeliefs } from './conflict/resolver.js';
 export { SimClock } from './config/clock.js';
-export { factsAsOf, asOfPredicate } from './temporal/asOf.js';
+export { asOfPredicate, episodesAsOfPredicate, factsAsOf } from './temporal/asOf.js';
 export type { AsOf, FactsAsOfQuery } from './temporal/asOf.js';
 export type {
   CandidateResolver,
