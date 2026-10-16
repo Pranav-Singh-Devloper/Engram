@@ -1,0 +1,55 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      db:
+        # Keep this tag in sync with docker-compose.yml.
+        image: pgvector/pgvector:0.8.7-pg17
+        env:
+          POSTGRES_USER: engram
+          POSTGRES_PASSWORD: engram
+          POSTGRES_DB: engram
+        ports:
+          - 54329:5432
+        options: >-
+          --health-cmd "pg_isready -U engram -d engram"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+
+    env:
+      DATABASE_URL: postgres://engram:engram@localhost:54329/engram
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Reads the pnpm version from package.json#packageManager.
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:migrate
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm test
