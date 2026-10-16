@@ -50,3 +50,6 @@ export {
 } from './providers/gemini.js';
 export type { GeminiOptions } from './providers/gemini.js';
 export type { RetryOptions } from './providers/http.js';
+
+export { ingest } from './ingest/ingest.js';
+export type { IngestInput } from './ingest/ingest.js';
