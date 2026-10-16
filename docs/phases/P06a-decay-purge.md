@@ -25,6 +25,11 @@ P05. Access tracking feeds `access_score` and `last_accessed_at`.
 - [ ] The hard purge follows the §9.3 order in one transaction and requires an explicit flag. The purge test asserts that an FTS search for the purged literal returns nothing across facts, revisions (`candidate` jsonb) and episodes, and that no dangling `revises`/`superseded_by` remain.
 - [ ] A test for partial redaction: an episode that also holds other facts is redacted, not deleted.
 
+## Carried in from P03
+
+- **Versions are one fact.** Decay must score and archive the current version, not stale ones. `access_score` and `last_accessed_at` are copied into each new version.
+- **Purge:** "the whole `revises` chain in both directions" now includes merge versions as well as update copies, and backfills link to their successor through `superseded_by`.
+
 ## Risks and verify-at-build-time
 - **Summary regeneration on purge** depends on P06b. Until then, summaries that cover purged episodes are deleted (the simpler option), and P06b adds regeneration.
 - **Float drift** between TS config and SQL: the tests compute expected scores in TS and compare them with the SQL output within a tolerance.

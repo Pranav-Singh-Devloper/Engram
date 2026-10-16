@@ -1,6 +1,6 @@
 # P03 — Conflict + temporal
 
-**Status:** planned
+**Status:** done (2026-10-16)
 
 ## Goal
 Implement the core of the project: resolving each new candidate fact against current beliefs using versioned, immutable rows, and querying them bitemporally. This phase also ships `pnpm demo:offline`, the first thing a reviewer can run with no API key.
@@ -112,10 +112,10 @@ Also:
 - CI runs `pnpm demo:offline` after the tests.
 
 ## Definition of done
-- [ ] All 14 §7.4 cases pass, plus the rules, history and invariant tests.
-- [ ] `pnpm demo:offline` prints the expected answers with no API keys set, and runs in CI.
-- [ ] Every resolution outcome writes exactly one `fact_revisions` row (asserted in each case).
-- [ ] ADRs cover the injected clock, noisy-OR confidence, and merge equality.
+- [x] All 14 §7.4 cases pass, plus the rules, history and invariant tests.
+- [x] `pnpm demo:offline` prints the expected answers with no API keys set, and runs in CI.
+- [x] Every resolution outcome writes exactly one `fact_revisions` row (asserted in each case).
+- [x] ADRs cover the injected clock, noisy-OR confidence, and merge equality.
 
 ## Planned commits
 1. `feat(core): add injectable clock and canonical as-of filter`
@@ -143,3 +143,23 @@ Also:
 - **Clock skew between the app and the DB** no longer matters, because record time comes from the app clock. Document that a multi-instance deploy relies on reasonably synced clocks.
 - **The `superseded_by` FK and insertion order:** inserting `c` first satisfies it. If a deferred-constraint approach turns out to be needed, it gets an ADR.
 - **Merge threshold** starts as a guess (0.9). It's a P05 dev-split tuning target.
+
+## Summary
+
+Done 2026-10-16. Candidates now resolve against current beliefs through versioned, immutable rows on one transaction timestamp. `factsAsOf` is the single canonical bitemporal filter, and `history()` gives the timeline with a record-time audit view. All 14 §7.4 cases pass end to end on a simulated clock, with per-turn revision accounting and §5.1 invariant checks. `pnpm demo:offline` answers 10 bitemporal questions with no API key and runs in CI. 240 tests pass.
+
+On the real-model fixtures (re-recorded with the adjudicator prompt):
+- **04:** the correction retracts Initech.
+- **09:** the assistant echo merges, with 2 sources and confidence 0.99.
+- **10:** Lyon is backfilled before Paris, and Marseille before Lyon.
+
+Deviations from the plan above:
+- **Unknown starts are supported** (ADR-007, migration 0003), so end-only facts are kept instead of dropped.
+- **Check order:** correction cue and noise come before update (ADR-008); otherwise §7.4 case 4 fails.
+- **Corrections inherit the retracted fact's window** when they have no stated bounds.
+- **Merges** write a new version whenever they change provenance, confidence or bounds. Objects compare by entity, then label, then literal paraphrase. A real-model fixture had Toronto as a literal and, after an assistant echo, as an entity, and the resolver treated that as a move.
+- **Locking:** rule decisions apply under the lock. The fully optimistic version starved when ten writers restated one fact; only the LLM calls now leave the lock. Entity resolution got the same change.
+- **The resolver context passes a clock**, not a fixed `recordedAt`, so `t` is read inside the lock. `insertOnlyResolver` is gone.
+- **`reviseFact` invalidates the original before inserting the copy.** It's the same transaction and the same `t`, and the invalidation doubles as the currency check. The spec now states the requirement (ids generated up front, one `t`) rather than a fixed write order.
+- **`history()` finds replaced versions by lineage** (`revises`), not by status.
+- **Commits:** apply, the adjudicator and the resolver landed as one commit (the prompt version and the re-recorded fixtures tie them together). The correction-window rule and history were separate commits.

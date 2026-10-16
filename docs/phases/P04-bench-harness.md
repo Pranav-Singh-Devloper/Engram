@@ -28,6 +28,8 @@ P03: the full write path and as-of queries. Uses the P02 recorded-fixture mechan
 - **Duplicate entities from nicknames** ("Rob" next to "Robert") are a real failure. Track the duplicate-entity rate with real embeddings; fixtures use fake ones.
 - **Budget from flash-lite's free per-minute and per-day quotas** (ADR-005). Backoff already honours Gemini's RetryInfo.
 
+- **Ad-hoc rate on re-recorded fixtures: 32.4%** (`has_occupation`, `job_title`, `profession` and `occupation` all appeared for one concept). It's a strong case for an `occupation` registry entry.
+
 ## Risks and verify-at-build-time
 - **Verify:** Groq free-tier models and limits (fallbacks: Mistral, then Cohere), and Gemini RPM/RPD. On 2026-10-16 the Groq key listed no Llama chat models, only `openai/gpt-oss-120b`, `openai/gpt-oss-20b` and `qwen/qwen3.8-27b`. Any of these is a different family from Gemini; pick one, and update SPEC §14's "Llama family" wording. Write the expected wall-clock time of a full dev run into the report.
 - **Who writes the dataset?** If an LLM generates the scenarios, use a different model or prompt context than extraction, and never show it the registry. The human review pass catches the rest.
