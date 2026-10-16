@@ -2,11 +2,11 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import type { Sql } from 'postgres';
+import type { Sql } from './client.js';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { DEFAULT_DATABASE_URL, connect } from './db.js';
-import { migrate } from './migrator.js';
-import type { MigrationSource } from './migrator.js';
+import { DEFAULT_DATABASE_URL, createDb } from './client.js';
+import { migrate } from './migrate.js';
+import type { MigrationSource } from './migrate.js';
 
 const url = process.env.DATABASE_URL || DEFAULT_DATABASE_URL;
 
@@ -17,7 +17,7 @@ let schema: string;
 let work: string;
 
 beforeEach(async () => {
-  sql = connect(url);
+  sql = createDb(url, { max: 1 });
   schema = `migrate_test_${randomUUID().slice(0, 8)}`;
   work = await mkdtemp(path.join(tmpdir(), 'engram-migrate-'));
 });
@@ -38,11 +38,11 @@ async function source(prefix: string, files: Record<string, string>): Promise<Mi
 }
 
 async function tables(): Promise<string[]> {
-  const rows = await sql<{ table_name: string }[]>`
-    select table_name from information_schema.tables
+  const rows = await sql<{ name: string }[]>`
+    select table_name as name from information_schema.tables
     where table_schema = ${schema} and table_name <> 'schema_migrations'
     order by table_name`;
-  return rows.map((r) => r.table_name);
+  return rows.map((r) => r.name);
 }
 
 async function recorded(): Promise<string[]> {
@@ -136,7 +136,7 @@ describe('migrate', () => {
       files[`000${i}_t.sql`] = `create table ${schema}.t${i} (id int);`;
     }
     const src = await source('migrations', files);
-    const other = connect(url);
+    const other = createDb(url, { max: 1 });
     try {
       const results = await Promise.all([
         migrate(sql, { sources: [src], trackingSchema: schema }),

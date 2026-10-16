@@ -1,25 +1,4 @@
-import postgres from 'postgres';
-import type { Sql } from 'postgres';
-
-export const DEFAULT_DATABASE_URL = 'postgres://engram:engram@localhost:54329/engram';
-
-/** Every Engram connection resolves unqualified names in this order (SPEC §5). */
-export const SEARCH_PATH = 'engram, extensions, public';
-
-const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
-
-export function isLocalUrl(url: string): boolean {
-  return LOCAL_HOSTS.has(new URL(url).hostname);
-}
-
-export function connect(url: string): Sql {
-  return postgres(url, {
-    max: 1,
-    ssl: isLocalUrl(url) ? false : 'require',
-    onnotice: () => undefined,
-    connection: { search_path: SEARCH_PATH },
-  });
-}
+import { DEFAULT_DATABASE_URL, isLocalUrl } from '@engram/core';
 
 export interface MigrateTarget {
   url: string;

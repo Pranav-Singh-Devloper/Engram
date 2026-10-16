@@ -1,15 +1,15 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { connect, resolveTarget } from './db.js';
-import { dropSchemas, migrate } from './migrator.js';
-import { HOSTED, PORTABLE, REPO_ROOT } from './sources.js';
+import { createDb } from '@engram/core';
+import { HOSTED, PORTABLE, dropSchemas, migrate } from '@engram/core/migrate';
+import { resolveTarget } from './target.js';
 
-const envFile = path.join(REPO_ROOT, '.env');
+const envFile = path.resolve(import.meta.dirname, '../.env');
 if (existsSync(envFile)) process.loadEnvFile(envFile);
 
 async function main(): Promise<void> {
   const target = resolveTarget(process.argv.slice(2), process.env);
-  const sql = connect(target.url);
+  const sql = createDb(target.url, { max: 1 });
   try {
     if (target.reset) {
       await dropSchemas(sql, ['engram', 'extensions']);

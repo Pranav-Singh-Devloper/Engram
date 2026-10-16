@@ -9,10 +9,10 @@
     "test": "vitest run",
     "lint": "eslint ."
   },
-  "dependencies": {
-    "postgres": "^3.4.9"
-  },
   "devDependencies": {
     "tsx": "^4.23.15"
+  },
+  "dependencies": {
+    "@engram/core": "workspace:*"
   }
 }

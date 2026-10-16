@@ -1,16 +1,15 @@
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { Sql } from 'postgres';
+import type { Sql } from './client.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { DEFAULT_DATABASE_URL, connect } from './db.js';
-import { migrate } from './migrator.js';
-import { HOSTED, PORTABLE } from './sources.js';
+import { DEFAULT_DATABASE_URL, createDb } from './client.js';
+import { HOSTED, PORTABLE, migrate } from './migrate.js';
 
 const url = process.env.DATABASE_URL || DEFAULT_DATABASE_URL;
 let sql: Sql;
 
 beforeAll(async () => {
-  sql = connect(url);
+  sql = createDb(url, { max: 1 });
   // Same call as `pnpm db:migrate`; a no-op if the database is already current.
   await migrate(sql, { sources: [PORTABLE] });
 });
@@ -75,11 +74,11 @@ describe('hosted revoke SQL', () => {
           has_table_privilege('anon', 'engram.revoke_probe_later', 'SELECT') as anon_select_later,
           has_function_privilege('anon', 'engram.revoke_probe_fn()', 'EXECUTE') as anon_execute`;
       expect(p).toEqual({
-        anon_usage: false,
-        auth_usage: false,
-        anon_select: false,
-        anon_select_later: false,
-        anon_execute: false,
+        anonUsage: false,
+        authUsage: false,
+        anonSelect: false,
+        anonSelectLater: false,
+        anonExecute: false,
       });
       throw rollback;
     });

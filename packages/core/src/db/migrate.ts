@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
-import type { Sql } from 'postgres';
+import type { Sql } from './client.js';
 
 export interface MigrationSource {
   /** Directory of `*.sql` files, applied in lexical order. */
@@ -9,6 +9,20 @@ export interface MigrationSource {
   /** Recorded with each filename so files from different sources can't collide. */
   prefix: string;
 }
+
+const SUPABASE_DIR = path.resolve(import.meta.dirname, '../../../../supabase');
+
+/** Portable SQL, applied to every database (SPEC §3). */
+export const PORTABLE: MigrationSource = {
+  dir: path.join(SUPABASE_DIR, 'migrations'),
+  prefix: 'migrations',
+};
+
+/** Supabase-only SQL (pg_cron, role revokes), applied only by `db:migrate:hosted`. */
+export const HOSTED: MigrationSource = {
+  dir: path.join(SUPABASE_DIR, 'hosted'),
+  prefix: 'hosted',
+};
 
 export interface Migration {
   name: string;
