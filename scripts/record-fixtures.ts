@@ -1,6 +1,15 @@
 // Records real Gemini responses for the P02 fixture conversations. Manual and
 // deliberate: re-recording changes what the golden tests replay, so review
-// the fixture diffs. Usage: pnpm fixtures:record [fixture-id ...]
+// the fixture diffs.
+//
+//   pnpm fixtures:record              re-record only stale fixtures (the default)
+//   pnpm fixtures:record --all        re-record every fixture
+//   pnpm fixtures:record 07-alias ... re-record the named fixtures
+//
+// A fixture is stale when its recorded calls no longer replay: the prompt
+// version changed, or the pipeline now asks the model something different
+// (e.g. a new predicate list). Checking is offline, so fresh fixtures cost no
+// quota (free Gemini allows 500 requests a day).
 import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
@@ -10,45 +19,80 @@ import {
   PROMPT_VERSION,
   createDb,
   ensureNamespace,
+  geminiKeysFromEnv,
   ingest,
   processEpisode,
 } from '@engram/core';
-import { loadConversations, recordingProvider, saveConversation } from '@engram/core/testing';
-import type { RecordedCall } from '@engram/core/testing';
+import type { Provider, Sql } from '@engram/core';
+import {
+  loadConversations,
+  recordingProvider,
+  replayProvider,
+  saveConversation,
+} from '@engram/core/testing';
+import type { FixtureConversation, RecordedCall } from '@engram/core/testing';
 
 const envFile = path.resolve(import.meta.dirname, '../.env');
 if (existsSync(envFile)) process.loadEnvFile(envFile);
 
+/** Runs a conversation through the write path in a throwaway namespace. */
+async function play(db: Sql, provider: Provider, conversation: FixtureConversation): Promise<void> {
+  const { namespace } = await ensureNamespace(db, {
+    slug: `fixture-record-${conversation.id}-${randomUUID()}`,
+    kind: 'bench',
+  });
+  try {
+    for (const ep of conversation.episodes) {
+      const episode = await ingest(db, provider, {
+        namespaceId: namespace.id,
+        sessionId: ep.sessionId,
+        role: ep.role,
+        content: ep.content,
+        occurredAt: new Date(ep.occurredAt),
+      });
+      await processEpisode(db, provider, episode.id);
+    }
+  } finally {
+    await db`delete from namespaces where id = ${namespace.id}`;
+  }
+}
+
+async function isStale(db: Sql, conversation: FixtureConversation): Promise<boolean> {
+  const { recording } = conversation;
+  if (recording?.promptVersion !== PROMPT_VERSION) return true;
+  try {
+    await play(db, replayProvider(recording), conversation);
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 async function main(): Promise<void> {
   const model = process.env.GEMINI_CHAT_MODEL;
   if (!model) throw new Error('Set GEMINI_CHAT_MODEL to record fixtures.');
-  const gemini = new GeminiProvider({ apiKey: process.env.GEMINI_API_KEY ?? '', chatModel: model });
-  const only = new Set(process.argv.slice(2));
+  const gemini = new GeminiProvider({
+    ...geminiKeysFromEnv(process.env),
+    chatModel: model,
+    onKeySwitch: (i) => {
+      console.error(`gemini: main key's quota is exhausted; switched to fallback key ${i}`);
+    },
+  });
+  const args = process.argv.slice(2);
+  const named = new Set(args.filter((a) => !a.startsWith('--')));
+  const all = args.includes('--all');
   const db = createDb(process.env.DATABASE_URL || DEFAULT_DATABASE_URL, { max: 2 });
 
   try {
     for (const conversation of loadConversations()) {
-      if (only.size > 0 && !only.has(conversation.id)) continue;
-      const calls: RecordedCall[] = [];
-      const provider = recordingProvider(gemini, calls);
-      const { namespace } = await ensureNamespace(db, {
-        slug: `fixture-record-${conversation.id}-${randomUUID()}`,
-        kind: 'bench',
-      });
-      try {
-        for (const ep of conversation.episodes) {
-          const episode = await ingest(db, provider, {
-            namespaceId: namespace.id,
-            sessionId: ep.sessionId,
-            role: ep.role,
-            content: ep.content,
-            occurredAt: new Date(ep.occurredAt),
-          });
-          await processEpisode(db, provider, episode.id);
-        }
-      } finally {
-        await db`delete from namespaces where id = ${namespace.id}`;
+      if (
+        named.size > 0 ? !named.has(conversation.id) : !all && !(await isStale(db, conversation))
+      ) {
+        if (named.size === 0) console.log(`${conversation.id}: fresh, skipped`);
+        continue;
       }
+      const calls: RecordedCall[] = [];
+      await play(db, recordingProvider(gemini, calls), conversation);
       saveConversation({
         ...conversation,
         recording: {

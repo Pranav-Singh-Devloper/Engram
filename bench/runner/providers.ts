@@ -2,7 +2,7 @@
 // front of them. Shared by the dataset generator and the runner.
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { DEFAULT_JUDGE_MODEL, GeminiProvider, GroqProvider } from '@engram/core';
+import { DEFAULT_JUDGE_MODEL, GeminiProvider, GroqProvider, geminiKeysFromEnv } from '@engram/core';
 import { UsageMeter, cachingFetch } from './cache.js';
 import type { CacheMode } from './cache.js';
 import { DEFAULT_RPM, Pacer } from './pacer.js';
@@ -55,7 +55,13 @@ export function makeProviders(options: ProviderOptions = {}): Providers {
   const groq = (model: string) => new GroqProvider({ apiKey: key('JUDGE_API_KEY'), model, http });
   return {
     gemini: new GeminiProvider({
+      ...geminiKeysFromEnv(process.env),
       apiKey: key('GEMINI_API_KEY'),
+      onKeySwitch: (i, reason) => {
+        console.error(
+          `gemini: main key's quota is exhausted; switched to fallback key ${i} (${reason})`,
+        );
+      },
       embedModel: process.env.GEMINI_EMBED_MODEL || undefined,
       chatModel: process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash-lite',
       http,

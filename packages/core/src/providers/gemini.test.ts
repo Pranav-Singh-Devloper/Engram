@@ -151,14 +151,21 @@ describe('postJson retries', () => {
     expect(d.sleeps).toEqual([75, 150]);
   });
 
-  it('honours Retry-After, capped at maxDelayMs', async () => {
-    const d = deps([
-      json({}, 429, { 'retry-after': '2' }),
-      json({}, 429, { 'retry-after': '0.3' }),
-      json({}),
-    ]);
+  it('honours a Retry-After within the backoff cap', async () => {
+    const d = deps([json({}, 429, { 'retry-after': '0.3' }), json({})]);
     await postJson('u', {}, { headers: {}, retry, deps: d.deps });
-    expect(d.sleeps).toEqual([1000, 300]);
+    expect(d.sleeps).toEqual([300]);
+  });
+
+  it('fails at once, marked exhausted, when the wait exceeds the cap (a daily quota)', async () => {
+    const d = deps([json({}, 429, { 'retry-after': '3600' }), json({})]);
+    const err = await postJson('u', {}, { headers: {}, retry, deps: d.deps }).catch(
+      (e: unknown) => e,
+    );
+    expect(err).toBeInstanceOf(ProviderHttpError);
+    expect(err).toMatchObject({ status: 429, quotaExhausted: true, retryAfterMs: 3_600_000 });
+    expect(d.sleeps).toEqual([]);
+    expect(d.calls()).toBe(1);
   });
 
   it("honours Gemini's RetryInfo delay from the error body", async () => {
@@ -396,5 +403,72 @@ describe('ids never reach the prompt', () => {
     });
     expect(decided.targetFactId).toBe(uuid(3));
     expect(JSON.stringify(a.requests[0]?.body)).not.toContain(uuid(3));
+  });
+});
+
+describe('key fallback', () => {
+  const daily = () =>
+    json(
+      {
+        error: {
+          code: 429,
+          details: [{ '@type': 'type.googleapis.com/google.rpc.RetryInfo', retryDelay: '19293s' }],
+        },
+      },
+      429,
+    );
+  const minute = () =>
+    json(
+      {
+        error: {
+          details: [{ '@type': 'type.googleapis.com/google.rpc.RetryInfo', retryDelay: '0.2s' }],
+        },
+      },
+      429,
+    );
+
+  function keyed(byKey: Record<string, (() => Response)[]>) {
+    const used: string[] = [];
+    const switches: number[] = [];
+    const fetch = (_url: string, init: { headers: Record<string, string> }) => {
+      const key = init.headers['x-goog-api-key'] ?? '';
+      used.push(key);
+      return Promise.resolve((byKey[key]?.shift() ?? (() => embedReply({ requests: [1] })))());
+    };
+    const provider = new GeminiProvider({
+      apiKey: 'main',
+      fallbackApiKeys: ['spare'],
+      onKeySwitch: (i) => switches.push(i),
+      http: {
+        fetch: fetch as unknown as typeof globalThis.fetch,
+        sleep: () => Promise.resolve(),
+        random: () => 0.5,
+      },
+    });
+    return { provider, used, switches };
+  }
+
+  it("moves to the fallback key when the main key's daily quota is exhausted, and stays there", async () => {
+    const k = keyed({ main: [daily] });
+    await k.provider.embed(['a'], { purpose: 'document' });
+    await k.provider.embed(['b'], { purpose: 'document' });
+    expect(k.used).toEqual(['main', 'spare', 'spare']);
+    expect(k.switches).toEqual([1]);
+    expect(k.provider.activeKey).toBe(1);
+  });
+
+  it('rides out a per-minute limit on the same key', async () => {
+    const k = keyed({ main: [minute] });
+    await k.provider.embed(['a'], { purpose: 'document' });
+    expect(k.used).toEqual(['main', 'main']);
+    expect(k.switches).toEqual([]);
+  });
+
+  it('throws once every key is exhausted', async () => {
+    const k = keyed({ main: [daily], spare: [daily] });
+    await expect(k.provider.embed(['a'], { purpose: 'document' })).rejects.toMatchObject({
+      quotaExhausted: true,
+    });
+    expect(k.used).toEqual(['main', 'spare']);
   });
 });

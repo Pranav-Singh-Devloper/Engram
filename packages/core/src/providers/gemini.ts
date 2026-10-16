@@ -28,7 +28,7 @@ import { aliasIds } from './aliases.js';
 import { DEFAULT_RETRY, defaultHttpDeps, postJson } from './http.js';
 import type { HttpDeps, RetryOptions } from './http.js';
 import type { Provider } from './provider.js';
-import { ProviderError, ProviderOutputError } from './provider.js';
+import { ProviderError, ProviderHttpError, ProviderOutputError } from './provider.js';
 import { generateStructured } from './structured.js';
 import type { StructuredRequest } from './structured.js';
 
@@ -45,6 +45,14 @@ const EMBED_BATCH = 100;
 
 export interface GeminiOptions {
   apiKey: string;
+  /**
+   * Keys from other accounts. Free quotas are per Google Cloud project, so
+   * when a key's quota is exhausted the provider moves to the next one and
+   * stays there.
+   */
+  fallbackApiKeys?: readonly string[];
+  /** Told when the provider moves to the next key (never given the key itself). */
+  onKeySwitch?: (toIndex: number, reason: string) => void;
   embedModel?: string;
   /** Required by the structured methods; unused by `embed`. */
   chatModel?: string;
@@ -56,6 +64,24 @@ export interface GeminiOptions {
 const BatchEmbedResponse = z.object({
   embeddings: z.array(z.object({ values: z.array(z.number()) })),
 });
+
+/**
+ * The main key and any fallbacks from the environment: GEMINI_API_KEY, then
+ * GEMINI_API_KEY_FALLBACK (comma-separated). Keys from other accounts have
+ * their own free quotas, since limits are per Google Cloud project.
+ */
+export function geminiKeysFromEnv(env: Record<string, string | undefined>): {
+  apiKey: string;
+  fallbackApiKeys: string[];
+} {
+  return {
+    apiKey: env.GEMINI_API_KEY ?? '',
+    fallbackApiKeys: (env.GEMINI_API_KEY_FALLBACK ?? '')
+      .split(',')
+      .map((k) => k.trim())
+      .filter(Boolean),
+  };
+}
 
 /** gemini-embedding-2's documented task prefixes. */
 export function embedText(text: string, purpose: EmbedPurpose): string {
@@ -70,6 +96,8 @@ export class GeminiProvider implements Provider {
   private readonly baseUrl: string;
   private readonly retry: RetryOptions;
   private readonly deps: HttpDeps;
+  private readonly keys: string[];
+  private keyIndex = 0;
 
   constructor(private readonly options: GeminiOptions) {
     if (!options.apiKey) throw new ProviderError('GEMINI_API_KEY is not set.');
@@ -77,14 +105,29 @@ export class GeminiProvider implements Provider {
     this.baseUrl = options.baseUrl ?? GEMINI_BASE_URL;
     this.retry = { ...DEFAULT_RETRY, ...options.retry };
     this.deps = { ...defaultHttpDeps, ...options.http };
+    this.keys = [options.apiKey, ...(options.fallbackApiKeys ?? []).filter(Boolean)];
   }
 
-  private post(path: string, body: unknown): Promise<unknown> {
-    return postJson(`${this.baseUrl}/${path}`, body, {
-      headers: { 'x-goog-api-key': this.options.apiKey },
-      retry: this.retry,
-      deps: this.deps,
-    });
+  /** Which key is in use: 0 for the main key, 1+ for fallbacks. */
+  get activeKey(): number {
+    return this.keyIndex;
+  }
+
+  private async post(path: string, body: unknown): Promise<unknown> {
+    for (;;) {
+      try {
+        return await postJson(`${this.baseUrl}/${path}`, body, {
+          headers: { 'x-goog-api-key': this.keys[this.keyIndex] ?? '' },
+          retry: this.retry,
+          deps: this.deps,
+        });
+      } catch (err) {
+        const exhausted = err instanceof ProviderHttpError && err.quotaExhausted;
+        if (!exhausted || this.keyIndex >= this.keys.length - 1) throw err;
+        this.keyIndex++;
+        this.options.onKeySwitch?.(this.keyIndex, err.message.slice(0, 120));
+      }
+    }
   }
 
   async embed(texts: readonly string[], options: { purpose: EmbedPurpose }): Promise<number[][]> {

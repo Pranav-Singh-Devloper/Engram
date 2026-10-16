@@ -79,6 +79,18 @@ export async function postJson(
 
     const text = await res.text();
     const detail = text.slice(0, 500);
+    const hinted = retryAfterMs(res.headers.get('retry-after')) ?? retryInfoMs(text);
+    // A wait longer than backoff allows is a quota (daily, typically), not a
+    // burst: fail now so the caller can switch keys or stop, instead of
+    // spending minutes retrying a quota that resets in hours.
+    if (res.status === 429 && hinted !== undefined && hinted > retry.maxDelayMs) {
+      throw new ProviderHttpError(
+        `HTTP 429, quota exhausted (retry in ${Math.round(hinted / 60_000)} min): ${detail}`,
+        429,
+        attempts,
+        hinted,
+      );
+    }
     if (!RETRYABLE.has(res.status) || attempt >= retry.maxRetries) {
       throw new ProviderHttpError(
         `HTTP ${res.status} after ${attempts} attempt(s): ${detail}`,
@@ -86,7 +98,6 @@ export async function postJson(
         attempts,
       );
     }
-    const hinted = retryAfterMs(res.headers.get('retry-after')) ?? retryInfoMs(text);
     await deps.sleep(backoff(attempt, hinted, retry, deps));
   }
 }

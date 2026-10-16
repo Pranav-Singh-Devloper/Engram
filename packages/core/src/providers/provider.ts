@@ -35,7 +35,14 @@ export class ProviderHttpError extends ProviderError {
     message: string,
     readonly status: number | undefined,
     readonly attempts: number,
+    /** Set when the server asked for a wait longer than backoff allows: a quota, not a burst. */
+    readonly retryAfterMs?: number,
   ) {
     super(message);
+  }
+
+  /** A 429 whose quota won't come back within backoff (typically a daily quota). */
+  get quotaExhausted(): boolean {
+    return this.status === 429 && this.retryAfterMs !== undefined;
   }
 }
