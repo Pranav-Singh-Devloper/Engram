@@ -49,3 +49,27 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 **Decision.** Call the REST API with `fetch` rather than the SDK: the surface we use is two endpoints, and owning the HTTP layer gives us testable backoff (429/5xx with jitter, Retry-After) and no extra dependency. Embed with `gemini-embedding-2` at `outputDimensionality: 768` using the documented prefixes (`title: none | text: …` for documents, `task: search result | query: …` for queries), and L2-normalize anyway as a cheap safeguard. Structured calls use `generateContent` with `responseMimeType: application/json`, zod validation and one repair round. The chat model is chosen in P02.
 
 **Consequences.** Vectors are stored as pgvector float32, so they round-trip by direction, not bit-for-bit. Switching to `gemini-embedding-001` would need `taskType` instead of prefixes and a re-embed of everything (an ADR). `pnpm gemini:check` verifies a real key in 2–3 requests.
+
+---
+
+## ADR-005 — Chat model gemini-3.5-flash-lite, with flat "wire" schemas
+
+**Date:** 2026-10-16 · **Status:** Accepted
+
+**Context.** An A/B on four tricky turns: `gemini-3.5-flash` and `gemini-3.8-flash` returned 503 ("high demand") and 429 within a few calls. The free tier allows 5 requests per minute per model for 3.8-flash. `gemini-3.5-flash-lite` answered every call, and after two prompt fixes its extractions were correct on corrections, relative dates, closed windows and the two-Sams case. Gemini accepts a JSON Schema (`responseJsonSchema`) but doesn't enforce `const`/`anyOf` branches: it returned `"kind": "forever"` for a discriminated union.
+
+**Decision.** Use `gemini-3.5-flash-lite` for extraction and disambiguation. The model fills flat wire schemas (enums and nullable fields, which it follows reliably); code maps them onto the contract types and validates once, reporting issues through the zod context so a bad reply still gets its repair round. Backoff honours `google.rpc.RetryInfo` from the error body. A prompt version hash travels with recorded fixtures.
+
+**Consequences.** Throughput is bounded by flash-lite's free per-minute and per-day quotas; P04 budgets bench runs from them. If a larger model becomes usable on the free tier, compare it on the dev split before switching (ADR).
+
+---
+
+## ADR-006 — Temporal hints, window rules, and no LLM calls under the lock
+
+**Date:** 2026-10-16 · **Status:** Accepted
+
+**Context.** Models are unreliable at date arithmetic, and transactions held open across network calls hurt the pooler and serialize writers for seconds.
+
+**Decision.** Extraction returns temporal hints (absolute, relative, named period, none) that `resolveHint` resolves against `occurred_at` in pure, tested code. A window's end resolves to the start of its period, so adjacent statements meet instead of overlapping. The same period at both ends spans it. End-only facts with no start are dropped. Entity resolution plans and disambiguates outside any transaction, then re-checks under `pg_advisory_xact_lock` and restarts if the candidates changed.
+
+**Consequences.** "From 2015 through 2018" loses 2018 at year precision; acceptable. Dropped end-only facts ("before that, Marseille") stay recoverable from episodes; supporting an unknown `valid_from` is a P03 design question. Conflict resolution (P03) should reuse the optimistic pattern.
