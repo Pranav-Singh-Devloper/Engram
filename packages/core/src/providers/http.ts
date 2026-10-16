@@ -24,6 +24,15 @@ export const defaultHttpDeps: HttpDeps = {
 
 const RETRYABLE = new Set([429, 500, 502, 503, 504]);
 
+/**
+ * Google APIs put the wait in the error body (`google.rpc.RetryInfo`, e.g.
+ * `"retryDelay": "8s"`) rather than a Retry-After header.
+ */
+export function retryInfoMs(body: string): number | undefined {
+  const match = /"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"/.exec(body);
+  return match?.[1] === undefined ? undefined : Math.ceil(Number(match[1]) * 1000);
+}
+
 /** Retry-After in seconds or as an HTTP date. */
 function retryAfterMs(header: string | null): number | undefined {
   if (header === null) return undefined;
@@ -36,7 +45,7 @@ function retryAfterMs(header: string | null): number | undefined {
 /**
  * POSTs JSON and returns the parsed body. Rate limits (429), server errors
  * and network failures are retried with exponential backoff and jitter,
- * honouring Retry-After. Other statuses fail immediately.
+ * honouring Retry-After or the body's RetryInfo. Other statuses fail immediately.
  */
 export async function postJson(
   url: string,
@@ -68,7 +77,8 @@ export async function postJson(
 
     if (res.ok) return res.json();
 
-    const detail = (await res.text()).slice(0, 500);
+    const text = await res.text();
+    const detail = text.slice(0, 500);
     if (!RETRYABLE.has(res.status) || attempt >= retry.maxRetries) {
       throw new ProviderHttpError(
         `HTTP ${res.status} after ${attempts} attempt(s): ${detail}`,
@@ -76,7 +86,8 @@ export async function postJson(
         attempts,
       );
     }
-    await deps.sleep(backoff(attempt, retryAfterMs(res.headers.get('retry-after')), retry, deps));
+    const hinted = retryAfterMs(res.headers.get('retry-after')) ?? retryInfoMs(text);
+    await deps.sleep(backoff(attempt, hinted, retry, deps));
   }
 }
 

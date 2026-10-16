@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { EMBEDDING_DIM } from '../config/index.js';
 import { GeminiProvider, embedText } from './gemini.js';
 import type { GeminiOptions } from './gemini.js';
-import { postJson } from './http.js';
+import { postJson, retryInfoMs } from './http.js';
 import { ProviderHttpError, ProviderOutputError } from './provider.js';
 
 type Handler = (url: string, body: unknown) => Response | Promise<Response>;
@@ -159,6 +159,24 @@ describe('postJson retries', () => {
     ]);
     await postJson('u', {}, { headers: {}, retry, deps: d.deps });
     expect(d.sleeps).toEqual([1000, 300]);
+  });
+
+  it("honours Gemini's RetryInfo delay from the error body", async () => {
+    const quota = {
+      error: {
+        code: 429,
+        details: [{ '@type': 'type.googleapis.com/google.rpc.RetryInfo', retryDelay: '0.25s' }],
+      },
+    };
+    const d = deps([json(quota, 429), json({})]);
+    await postJson('u', {}, { headers: {}, retry, deps: d.deps });
+    expect(d.sleeps).toEqual([250]);
+  });
+
+  it('parses RetryInfo delays', () => {
+    expect(retryInfoMs('{"retryDelay": "8s"}')).toBe(8000);
+    expect(retryInfoMs('{"retryDelay":"8.25571627s"}')).toBe(8256);
+    expect(retryInfoMs('{"error": "quota"}')).toBeUndefined();
   });
 
   it('retries network errors', async () => {
