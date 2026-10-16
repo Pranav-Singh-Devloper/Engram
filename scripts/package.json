@@ -7,12 +7,14 @@
     "migrate": "tsx migrate.ts",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "gemini:check": "tsx gemini-check.ts"
   },
   "devDependencies": {
     "tsx": "^4.23.15"
   },
   "dependencies": {
-    "@engram/core": "workspace:*"
+    "@engram/core": "workspace:*",
+    "zod": "^4.6.7"
   }
 }

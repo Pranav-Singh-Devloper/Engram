@@ -42,3 +42,11 @@ export { ProviderError, ProviderHttpError, ProviderOutputError } from './provide
 export type { Provider } from './providers/provider.js';
 export { FakeProvider, FakeProviderError, fakeEmbedding } from './providers/fake.js';
 export type { FakeCall } from './providers/fake.js';
+export {
+  DEFAULT_EMBED_MODEL,
+  GEMINI_BASE_URL,
+  GeminiProvider,
+  embedText,
+} from './providers/gemini.js';
+export type { GeminiOptions } from './providers/gemini.js';
+export type { RetryOptions } from './providers/http.js';
