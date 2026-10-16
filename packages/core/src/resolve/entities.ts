@@ -58,7 +58,15 @@ export function isSelfRef(ref: EntityRef): boolean {
   return ref.name.trim().toUpperCase() === SELF_REF;
 }
 
+/**
+ * A lone name match whose description conflicts goes to disambiguation. Only
+ * for people: same-name people are common (two Sams), while a place or
+ * organization's description just tracks the user's relationship to it
+ * ("where I live", later "where I used to live"), and the dev bench showed
+ * that drift splitting one city into two entities.
+ */
 function conflicts(mention: EntityRef, embedding: readonly number[], entity: Entity): boolean {
+  if (mention.type !== 'person' && entity.type !== 'person') return false;
   if (!mention.description || !entity.description || !entity.embedding) return false;
   return cosine(embedding, entity.embedding) < config.entities.descriptionConflictThreshold;
 }

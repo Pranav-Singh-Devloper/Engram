@@ -79,6 +79,11 @@ async function main(): Promise<void> {
           where namespace_id = ${namespace.id} order by created_at, id`;
         for (const r of revisions)
           console.log(`  revision: ${r.kind} (${r.resolver}) ${r.reason ?? ''}`);
+        const dupes = await db<{ name: string; n: number }[]>`
+          select min(name) as name, count(*)::int as n from entities
+          where namespace_id = ${namespace.id} and not is_self
+          group by lower(name) having count(*) > 1`;
+        for (const d of dupes) console.log(`  duplicate entity: ${d.name} ×${d.n}`);
       } finally {
         await db`delete from namespaces where id = ${namespace.id}`;
       }

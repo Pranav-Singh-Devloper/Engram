@@ -140,3 +140,16 @@ describe('the embedding rung', () => {
     });
   });
 });
+
+describe('description drift', () => {
+  it("doesn't split a place whose description changed with the user's relationship to it", async () => {
+    await withTestNamespace(db, async (ns) => {
+      const city = await seed(ns, ref('Melbourne', 'place', 'a city in Australia'));
+      const r = await resolve(
+        ns,
+        ref('Melbourne', 'place', 'the city the user currently lives in'),
+      );
+      expect(r).toMatchObject({ entity: { id: city.id }, via: 'exact', created: false });
+    });
+  });
+});
