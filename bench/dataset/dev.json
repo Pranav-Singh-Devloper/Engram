@@ -1,0 +1,1900 @@
+{
+  "split": "dev",
+  "seed": 42,
+  "generated_at": "2026-10-16T17:00:20.118Z",
+  "verbalizer": "qwen/qwen3.8-27b",
+  "items": [
+    {
+      "id": "dev-001",
+      "split": "dev",
+      "category": "cross_session_recall",
+      "persona": "p1",
+      "setup_sessions": [
+        {
+          "session_id": "p1-s1",
+          "occurred_at": "2024-02-11T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Priya and I live in Krakow.",
+            "I work as a teacher at Acme Robotics.",
+            "I have a dog named Ziggy, and my sister Ana lives in Nairobi."
+          ]
+        },
+        {
+          "session_id": "p1-s2",
+          "occurred_at": "2024-04-01T09:00:00.000Z",
+          "turns": [
+            "My favorite thing to eat is sushi, but sadly I'm allergic to pollen so I can't always be outside for dates.",
+            "Since I play the piano, I usually stay home to practice.",
+            "It's nice that my partner Riley works at Hooli because they're usually pretty busy with work."
+          ]
+        },
+        {
+          "session_id": "p1-s3",
+          "occurred_at": "2024-06-18T09:00:00.000Z",
+          "turns": [
+            "Hey, it's been a whirlwind since I moved from Krakow to Osaka in May.",
+            "Ziggy is settling in really well, actually.",
+            "I also started a new gig at Stark Analytics in June, still teaching."
+          ]
+        },
+        {
+          "session_id": "p1-s4",
+          "occurred_at": "2024-07-10T09:00:00.000Z",
+          "turns": [
+            "Quick bit of my history: I lived in Melbourne from 2016 to 2019.",
+            "Before I moved to Krakow, that was the last place I stayed.",
+            "Also, I've been trying to get better at speaking Portuguese lately. It's a bit of a struggle."
+          ]
+        }
+      ],
+      "question": "What's my dog called?",
+      "asked_at": "2024-07-17T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Ziggy",
+      "judge": "contains",
+      "notes": "pet named in session 1, restated in session 3"
+    },
+    {
+      "id": "dev-002",
+      "split": "dev",
+      "category": "cross_session_recall",
+      "persona": "p1",
+      "setup_sessions": [
+        {
+          "session_id": "p1-s1",
+          "occurred_at": "2024-02-11T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Priya and I live in Krakow.",
+            "I work as a teacher at Acme Robotics.",
+            "I have a dog named Ziggy, and my sister Ana lives in Nairobi."
+          ]
+        },
+        {
+          "session_id": "p1-s2",
+          "occurred_at": "2024-04-01T09:00:00.000Z",
+          "turns": [
+            "My favorite thing to eat is sushi, but sadly I'm allergic to pollen so I can't always be outside for dates.",
+            "Since I play the piano, I usually stay home to practice.",
+            "It's nice that my partner Riley works at Hooli because they're usually pretty busy with work."
+          ]
+        },
+        {
+          "session_id": "p1-s3",
+          "occurred_at": "2024-06-18T09:00:00.000Z",
+          "turns": [
+            "Hey, it's been a whirlwind since I moved from Krakow to Osaka in May.",
+            "Ziggy is settling in really well, actually.",
+            "I also started a new gig at Stark Analytics in June, still teaching."
+          ]
+        },
+        {
+          "session_id": "p1-s4",
+          "occurred_at": "2024-07-10T09:00:00.000Z",
+          "turns": [
+            "Quick bit of my history: I lived in Melbourne from 2016 to 2019.",
+            "Before I moved to Krakow, that was the last place I stayed.",
+            "Also, I've been trying to get better at speaking Portuguese lately. It's a bit of a struggle."
+          ]
+        }
+      ],
+      "question": "Remind me, what am I allergic to?",
+      "asked_at": "2024-07-17T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "pollen",
+      "judge": "contains",
+      "notes": "allergy from session 2"
+    },
+    {
+      "id": "dev-003",
+      "split": "dev",
+      "category": "knowledge_update",
+      "persona": "p1",
+      "setup_sessions": [
+        {
+          "session_id": "p1-s1",
+          "occurred_at": "2024-02-11T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Priya and I live in Krakow.",
+            "I work as a teacher at Acme Robotics.",
+            "I have a dog named Ziggy, and my sister Ana lives in Nairobi."
+          ]
+        },
+        {
+          "session_id": "p1-s2",
+          "occurred_at": "2024-04-01T09:00:00.000Z",
+          "turns": [
+            "My favorite thing to eat is sushi, but sadly I'm allergic to pollen so I can't always be outside for dates.",
+            "Since I play the piano, I usually stay home to practice.",
+            "It's nice that my partner Riley works at Hooli because they're usually pretty busy with work."
+          ]
+        },
+        {
+          "session_id": "p1-s3",
+          "occurred_at": "2024-06-18T09:00:00.000Z",
+          "turns": [
+            "Hey, it's been a whirlwind since I moved from Krakow to Osaka in May.",
+            "Ziggy is settling in really well, actually.",
+            "I also started a new gig at Stark Analytics in June, still teaching."
+          ]
+        },
+        {
+          "session_id": "p1-s4",
+          "occurred_at": "2024-07-10T09:00:00.000Z",
+          "turns": [
+            "Quick bit of my history: I lived in Melbourne from 2016 to 2019.",
+            "Before I moved to Krakow, that was the last place I stayed.",
+            "Also, I've been trying to get better at speaking Portuguese lately. It's a bit of a struggle."
+          ]
+        }
+      ],
+      "question": "Where do I work these days?",
+      "asked_at": "2024-07-17T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Stark Analytics",
+      "judge": "contains",
+      "notes": "job change from Acme Robotics in session 3"
+    },
+    {
+      "id": "dev-004",
+      "split": "dev",
+      "category": "multi_hop",
+      "persona": "p1",
+      "setup_sessions": [
+        {
+          "session_id": "p1-s1",
+          "occurred_at": "2024-02-11T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Priya and I live in Krakow.",
+            "I work as a teacher at Acme Robotics.",
+            "I have a dog named Ziggy, and my sister Ana lives in Nairobi."
+          ]
+        },
+        {
+          "session_id": "p1-s2",
+          "occurred_at": "2024-04-01T09:00:00.000Z",
+          "turns": [
+            "My favorite thing to eat is sushi, but sadly I'm allergic to pollen so I can't always be outside for dates.",
+            "Since I play the piano, I usually stay home to practice.",
+            "It's nice that my partner Riley works at Hooli because they're usually pretty busy with work."
+          ]
+        },
+        {
+          "session_id": "p1-s3",
+          "occurred_at": "2024-06-18T09:00:00.000Z",
+          "turns": [
+            "Hey, it's been a whirlwind since I moved from Krakow to Osaka in May.",
+            "Ziggy is settling in really well, actually.",
+            "I also started a new gig at Stark Analytics in June, still teaching."
+          ]
+        },
+        {
+          "session_id": "p1-s4",
+          "occurred_at": "2024-07-10T09:00:00.000Z",
+          "turns": [
+            "Quick bit of my history: I lived in Melbourne from 2016 to 2019.",
+            "Before I moved to Krakow, that was the last place I stayed.",
+            "Also, I've been trying to get better at speaking Portuguese lately. It's a bit of a struggle."
+          ]
+        }
+      ],
+      "question": "Which city does my sister live in?",
+      "asked_at": "2024-07-17T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Nairobi",
+      "judge": "contains",
+      "notes": "user → sister → city"
+    },
+    {
+      "id": "dev-005",
+      "split": "dev",
+      "category": "single_session_recall",
+      "persona": "p1",
+      "setup_sessions": [
+        {
+          "session_id": "p1-s1",
+          "occurred_at": "2024-02-11T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Priya and I live in Krakow.",
+            "I work as a teacher at Acme Robotics.",
+            "I have a dog named Ziggy, and my sister Ana lives in Nairobi."
+          ]
+        }
+      ],
+      "question": "What do I do for work?",
+      "asked_at": "2024-02-12T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "teacher",
+      "judge": "contains",
+      "notes": "job title, session 1 only"
+    },
+    {
+      "id": "dev-006",
+      "split": "dev",
+      "category": "abstention",
+      "persona": "p2",
+      "setup_sessions": [
+        {
+          "session_id": "p2-s1",
+          "occurred_at": "2024-02-09T09:00:00.000Z",
+          "turns": [
+            "Hi, I'm Mateo. I live in Melbourne and work as an architect at Umbrella Health.",
+            "I also have a cat named Ziggy who keeps me company at home.",
+            "Oh, and my sister Freya lives in Porto, so we don't see each other often."
+          ]
+        },
+        {
+          "session_id": "p2-s2",
+          "occurred_at": "2024-04-03T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm a huge fan of tacos and I also play the drums in my spare time.",
+            "Oh, and heads up: I'm actually allergic to penicillin, so keep that in mind if I ever get sick.",
+            "I should mention that my partner Jordan works at Initech, just so you have the full context."
+          ]
+        },
+        {
+          "session_id": "p2-s3",
+          "occurred_at": "2024-06-10T09:00:00.000Z",
+          "turns": [
+            "I finally made the switch from Melbourne to Denver back in May. It's been a wild adjustment.",
+            "Ziggy is settling in pretty well, actually. He's found a new sunbeam in the living room.",
+            "Just glad we got the move sorted out."
+          ]
+        },
+        {
+          "session_id": "p2-s4",
+          "occurred_at": "2024-07-11T09:00:00.000Z",
+          "turns": [
+            "Hey, so before I moved to Melbourne, I was actually living in Osaka from 2015 to 2018.",
+            "It was a wild time there. I'm currently trying to pick up German as well, just to keep my brain busy."
+          ]
+        }
+      ],
+      "question": "What's my brother's name?",
+      "asked_at": "2024-07-18T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "I don't know",
+      "judge": "exact",
+      "notes": "never mentioned"
+    },
+    {
+      "id": "dev-007",
+      "split": "dev",
+      "category": "cross_session_recall",
+      "persona": "p2",
+      "setup_sessions": [
+        {
+          "session_id": "p2-s1",
+          "occurred_at": "2024-02-09T09:00:00.000Z",
+          "turns": [
+            "Hi, I'm Mateo. I live in Melbourne and work as an architect at Umbrella Health.",
+            "I also have a cat named Ziggy who keeps me company at home.",
+            "Oh, and my sister Freya lives in Porto, so we don't see each other often."
+          ]
+        },
+        {
+          "session_id": "p2-s2",
+          "occurred_at": "2024-04-03T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm a huge fan of tacos and I also play the drums in my spare time.",
+            "Oh, and heads up: I'm actually allergic to penicillin, so keep that in mind if I ever get sick.",
+            "I should mention that my partner Jordan works at Initech, just so you have the full context."
+          ]
+        },
+        {
+          "session_id": "p2-s3",
+          "occurred_at": "2024-06-10T09:00:00.000Z",
+          "turns": [
+            "I finally made the switch from Melbourne to Denver back in May. It's been a wild adjustment.",
+            "Ziggy is settling in pretty well, actually. He's found a new sunbeam in the living room.",
+            "Just glad we got the move sorted out."
+          ]
+        },
+        {
+          "session_id": "p2-s4",
+          "occurred_at": "2024-07-11T09:00:00.000Z",
+          "turns": [
+            "Hey, so before I moved to Melbourne, I was actually living in Osaka from 2015 to 2018.",
+            "It was a wild time there. I'm currently trying to pick up German as well, just to keep my brain busy."
+          ]
+        }
+      ],
+      "question": "Which instrument do I play?",
+      "asked_at": "2024-07-18T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "drums",
+      "judge": "contains",
+      "notes": "instrument from session 2"
+    },
+    {
+      "id": "dev-008",
+      "split": "dev",
+      "category": "knowledge_update",
+      "persona": "p2",
+      "setup_sessions": [
+        {
+          "session_id": "p2-s1",
+          "occurred_at": "2024-02-09T09:00:00.000Z",
+          "turns": [
+            "Hi, I'm Mateo. I live in Melbourne and work as an architect at Umbrella Health.",
+            "I also have a cat named Ziggy who keeps me company at home.",
+            "Oh, and my sister Freya lives in Porto, so we don't see each other often."
+          ]
+        },
+        {
+          "session_id": "p2-s2",
+          "occurred_at": "2024-04-03T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm a huge fan of tacos and I also play the drums in my spare time.",
+            "Oh, and heads up: I'm actually allergic to penicillin, so keep that in mind if I ever get sick.",
+            "I should mention that my partner Jordan works at Initech, just so you have the full context."
+          ]
+        },
+        {
+          "session_id": "p2-s3",
+          "occurred_at": "2024-06-10T09:00:00.000Z",
+          "turns": [
+            "I finally made the switch from Melbourne to Denver back in May. It's been a wild adjustment.",
+            "Ziggy is settling in pretty well, actually. He's found a new sunbeam in the living room.",
+            "Just glad we got the move sorted out."
+          ]
+        },
+        {
+          "session_id": "p2-s4",
+          "occurred_at": "2024-07-11T09:00:00.000Z",
+          "turns": [
+            "Hey, so before I moved to Melbourne, I was actually living in Osaka from 2015 to 2018.",
+            "It was a wild time there. I'm currently trying to pick up German as well, just to keep my brain busy."
+          ]
+        }
+      ],
+      "question": "Which city do I live in now?",
+      "asked_at": "2024-07-18T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Denver",
+      "judge": "contains",
+      "notes": "plain move from Melbourne in session 3"
+    },
+    {
+      "id": "dev-009",
+      "split": "dev",
+      "category": "single_session_recall",
+      "persona": "p2",
+      "setup_sessions": [
+        {
+          "session_id": "p2-s1",
+          "occurred_at": "2024-02-09T09:00:00.000Z",
+          "turns": [
+            "Hi, I'm Mateo. I live in Melbourne and work as an architect at Umbrella Health.",
+            "I also have a cat named Ziggy who keeps me company at home.",
+            "Oh, and my sister Freya lives in Porto, so we don't see each other often."
+          ]
+        }
+      ],
+      "question": "What do I do for work?",
+      "asked_at": "2024-02-10T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "architect",
+      "judge": "contains",
+      "notes": "job title, session 1 only"
+    },
+    {
+      "id": "dev-010",
+      "split": "dev",
+      "category": "temporal_reasoning",
+      "persona": "p2",
+      "setup_sessions": [
+        {
+          "session_id": "p2-s1",
+          "occurred_at": "2024-02-09T09:00:00.000Z",
+          "turns": [
+            "Hi, I'm Mateo. I live in Melbourne and work as an architect at Umbrella Health.",
+            "I also have a cat named Ziggy who keeps me company at home.",
+            "Oh, and my sister Freya lives in Porto, so we don't see each other often."
+          ]
+        },
+        {
+          "session_id": "p2-s2",
+          "occurred_at": "2024-04-03T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm a huge fan of tacos and I also play the drums in my spare time.",
+            "Oh, and heads up: I'm actually allergic to penicillin, so keep that in mind if I ever get sick.",
+            "I should mention that my partner Jordan works at Initech, just so you have the full context."
+          ]
+        },
+        {
+          "session_id": "p2-s3",
+          "occurred_at": "2024-06-10T09:00:00.000Z",
+          "turns": [
+            "I finally made the switch from Melbourne to Denver back in May. It's been a wild adjustment.",
+            "Ziggy is settling in pretty well, actually. He's found a new sunbeam in the living room.",
+            "Just glad we got the move sorted out."
+          ]
+        },
+        {
+          "session_id": "p2-s4",
+          "occurred_at": "2024-07-11T09:00:00.000Z",
+          "turns": [
+            "Hey, so before I moved to Melbourne, I was actually living in Osaka from 2015 to 2018.",
+            "It was a wild time there. I'm currently trying to pick up German as well, just to keep my brain busy."
+          ]
+        }
+      ],
+      "question": "Where was I living in March 2024?",
+      "asked_at": "2024-07-18T09:00:00.000Z",
+      "valid_at": "2024-03-21T09:00:00.000Z",
+      "known_at": null,
+      "expected": "Melbourne",
+      "judge": "contains",
+      "notes": "valid time between the first session and the move"
+    },
+    {
+      "id": "dev-011",
+      "split": "dev",
+      "category": "abstention",
+      "persona": "p3",
+      "setup_sessions": [
+        {
+          "session_id": "p3-s1",
+          "occurred_at": "2024-02-22T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Aisha.",
+            "I'm based in Edinburgh and work as a nurse at Initech.",
+            "I've got a parrot named Nori who keeps me company.",
+            "My sister Leila is over in Lisbon."
+          ]
+        },
+        {
+          "session_id": "p3-s2",
+          "occurred_at": "2024-04-19T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm really craving tacos tonight.",
+            "Ah, that reminds me, I'm allergic to penicillin so I have to be careful with meds.",
+            "I'm going to practice my cello after dinner to relax.",
+            "My partner Alex will probably be late since he works at Hooli."
+          ]
+        },
+        {
+          "session_id": "p3-s3",
+          "occurred_at": "2024-06-11T09:00:00.000Z",
+          "turns": [
+            "So it's been a bit since I made the big move from Edinburgh to Melbourne back in May. I'm settling in okay.",
+            "I was thinking about Nori today. The little guy has definitely adapted to the new environment and is quite the character now.",
+            "Work has picked up too. I started a new position at Wayne Logistics in June, still doing my thing as a nurse."
+          ]
+        },
+        {
+          "session_id": "p3-s4",
+          "occurred_at": "2024-07-04T09:00:00.000Z",
+          "turns": [
+            "So, before I moved to Edinburgh, I was actually in Berlin from 2014 to 2016.",
+            "It was a wild time for sure.",
+            "These days I'm busy learning Portuguese, which is a whole new challenge.",
+            "Trying to keep up with the language is tough but fun."
+          ]
+        }
+      ],
+      "question": "Which university did I go to?",
+      "asked_at": "2024-07-11T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "I don't know",
+      "judge": "exact",
+      "notes": "never mentioned"
+    },
+    {
+      "id": "dev-012",
+      "split": "dev",
+      "category": "cross_session_recall",
+      "persona": "p3",
+      "setup_sessions": [
+        {
+          "session_id": "p3-s1",
+          "occurred_at": "2024-02-22T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Aisha.",
+            "I'm based in Edinburgh and work as a nurse at Initech.",
+            "I've got a parrot named Nori who keeps me company.",
+            "My sister Leila is over in Lisbon."
+          ]
+        },
+        {
+          "session_id": "p3-s2",
+          "occurred_at": "2024-04-19T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm really craving tacos tonight.",
+            "Ah, that reminds me, I'm allergic to penicillin so I have to be careful with meds.",
+            "I'm going to practice my cello after dinner to relax.",
+            "My partner Alex will probably be late since he works at Hooli."
+          ]
+        },
+        {
+          "session_id": "p3-s3",
+          "occurred_at": "2024-06-11T09:00:00.000Z",
+          "turns": [
+            "So it's been a bit since I made the big move from Edinburgh to Melbourne back in May. I'm settling in okay.",
+            "I was thinking about Nori today. The little guy has definitely adapted to the new environment and is quite the character now.",
+            "Work has picked up too. I started a new position at Wayne Logistics in June, still doing my thing as a nurse."
+          ]
+        },
+        {
+          "session_id": "p3-s4",
+          "occurred_at": "2024-07-04T09:00:00.000Z",
+          "turns": [
+            "So, before I moved to Edinburgh, I was actually in Berlin from 2014 to 2016.",
+            "It was a wild time for sure.",
+            "These days I'm busy learning Portuguese, which is a whole new challenge.",
+            "Trying to keep up with the language is tough but fun."
+          ]
+        }
+      ],
+      "question": "Remind me, what am I allergic to?",
+      "asked_at": "2024-07-11T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "penicillin",
+      "judge": "contains",
+      "notes": "allergy from session 2"
+    },
+    {
+      "id": "dev-013",
+      "split": "dev",
+      "category": "cross_session_recall",
+      "persona": "p3",
+      "setup_sessions": [
+        {
+          "session_id": "p3-s1",
+          "occurred_at": "2024-02-22T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Aisha.",
+            "I'm based in Edinburgh and work as a nurse at Initech.",
+            "I've got a parrot named Nori who keeps me company.",
+            "My sister Leila is over in Lisbon."
+          ]
+        },
+        {
+          "session_id": "p3-s2",
+          "occurred_at": "2024-04-19T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm really craving tacos tonight.",
+            "Ah, that reminds me, I'm allergic to penicillin so I have to be careful with meds.",
+            "I'm going to practice my cello after dinner to relax.",
+            "My partner Alex will probably be late since he works at Hooli."
+          ]
+        },
+        {
+          "session_id": "p3-s3",
+          "occurred_at": "2024-06-11T09:00:00.000Z",
+          "turns": [
+            "So it's been a bit since I made the big move from Edinburgh to Melbourne back in May. I'm settling in okay.",
+            "I was thinking about Nori today. The little guy has definitely adapted to the new environment and is quite the character now.",
+            "Work has picked up too. I started a new position at Wayne Logistics in June, still doing my thing as a nurse."
+          ]
+        },
+        {
+          "session_id": "p3-s4",
+          "occurred_at": "2024-07-04T09:00:00.000Z",
+          "turns": [
+            "So, before I moved to Edinburgh, I was actually in Berlin from 2014 to 2016.",
+            "It was a wild time for sure.",
+            "These days I'm busy learning Portuguese, which is a whole new challenge.",
+            "Trying to keep up with the language is tough but fun."
+          ]
+        }
+      ],
+      "question": "What's my favourite food?",
+      "asked_at": "2024-07-11T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "tacos",
+      "judge": "contains",
+      "notes": "food from session 2"
+    },
+    {
+      "id": "dev-014",
+      "split": "dev",
+      "category": "knowledge_update",
+      "persona": "p3",
+      "setup_sessions": [
+        {
+          "session_id": "p3-s1",
+          "occurred_at": "2024-02-22T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Aisha.",
+            "I'm based in Edinburgh and work as a nurse at Initech.",
+            "I've got a parrot named Nori who keeps me company.",
+            "My sister Leila is over in Lisbon."
+          ]
+        },
+        {
+          "session_id": "p3-s2",
+          "occurred_at": "2024-04-19T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm really craving tacos tonight.",
+            "Ah, that reminds me, I'm allergic to penicillin so I have to be careful with meds.",
+            "I'm going to practice my cello after dinner to relax.",
+            "My partner Alex will probably be late since he works at Hooli."
+          ]
+        },
+        {
+          "session_id": "p3-s3",
+          "occurred_at": "2024-06-11T09:00:00.000Z",
+          "turns": [
+            "So it's been a bit since I made the big move from Edinburgh to Melbourne back in May. I'm settling in okay.",
+            "I was thinking about Nori today. The little guy has definitely adapted to the new environment and is quite the character now.",
+            "Work has picked up too. I started a new position at Wayne Logistics in June, still doing my thing as a nurse."
+          ]
+        },
+        {
+          "session_id": "p3-s4",
+          "occurred_at": "2024-07-04T09:00:00.000Z",
+          "turns": [
+            "So, before I moved to Edinburgh, I was actually in Berlin from 2014 to 2016.",
+            "It was a wild time for sure.",
+            "These days I'm busy learning Portuguese, which is a whole new challenge.",
+            "Trying to keep up with the language is tough but fun."
+          ]
+        }
+      ],
+      "question": "Which city do I live in now?",
+      "asked_at": "2024-07-11T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Melbourne",
+      "judge": "contains",
+      "notes": "plain move from Edinburgh in session 3"
+    },
+    {
+      "id": "dev-015",
+      "split": "dev",
+      "category": "temporal_reasoning",
+      "persona": "p3",
+      "setup_sessions": [
+        {
+          "session_id": "p3-s1",
+          "occurred_at": "2024-02-22T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Aisha.",
+            "I'm based in Edinburgh and work as a nurse at Initech.",
+            "I've got a parrot named Nori who keeps me company.",
+            "My sister Leila is over in Lisbon."
+          ]
+        },
+        {
+          "session_id": "p3-s2",
+          "occurred_at": "2024-04-19T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm really craving tacos tonight.",
+            "Ah, that reminds me, I'm allergic to penicillin so I have to be careful with meds.",
+            "I'm going to practice my cello after dinner to relax.",
+            "My partner Alex will probably be late since he works at Hooli."
+          ]
+        },
+        {
+          "session_id": "p3-s3",
+          "occurred_at": "2024-06-11T09:00:00.000Z",
+          "turns": [
+            "So it's been a bit since I made the big move from Edinburgh to Melbourne back in May. I'm settling in okay.",
+            "I was thinking about Nori today. The little guy has definitely adapted to the new environment and is quite the character now.",
+            "Work has picked up too. I started a new position at Wayne Logistics in June, still doing my thing as a nurse."
+          ]
+        },
+        {
+          "session_id": "p3-s4",
+          "occurred_at": "2024-07-04T09:00:00.000Z",
+          "turns": [
+            "So, before I moved to Edinburgh, I was actually in Berlin from 2014 to 2016.",
+            "It was a wild time for sure.",
+            "These days I'm busy learning Portuguese, which is a whole new challenge.",
+            "Trying to keep up with the language is tough but fun."
+          ]
+        }
+      ],
+      "question": "Which city was I living in during 2015?",
+      "asked_at": "2024-07-11T09:00:00.000Z",
+      "valid_at": "2015-06-15T00:00:00.000Z",
+      "known_at": null,
+      "expected": "Berlin",
+      "judge": "contains",
+      "notes": "valid time inside history learned last"
+    },
+    {
+      "id": "dev-016",
+      "split": "dev",
+      "category": "cross_session_recall",
+      "persona": "p4",
+      "setup_sessions": [
+        {
+          "session_id": "p4-s1",
+          "occurred_at": "2024-02-07T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Lukas.",
+            "I live in Osaka and work as a teacher at Soylent Foods. I also have a dog named Ziggy.",
+            "By the way, my sister Rosa lives in Porto."
+          ]
+        },
+        {
+          "session_id": "p4-s2",
+          "occurred_at": "2024-03-18T09:00:00.000Z",
+          "turns": [
+            "Hey, did I ever tell you my favourite food is paella? It's just the best.",
+            "Oh, and something important: I'm actually allergic to penicillin, so keep that in mind for any meds.",
+            "Also, I play the drums on the side, so I'm usually pretty loud at home.",
+            "My partner Alex works at Vandelay Imports, so they're usually stuck in the office all day."
+          ]
+        },
+        {
+          "session_id": "p4-s3",
+          "occurred_at": "2024-05-01T09:00:00.000Z",
+          "turns": [
+            "Hey, I've been settling into Valencia since I moved here from Osaka in April.",
+            "Just wanted to mention Ziggy again. The pup seems to be adapting pretty well to the new city."
+          ]
+        },
+        {
+          "session_id": "p4-s4",
+          "occurred_at": "2024-05-30T09:00:00.000Z",
+          "turns": [
+            "Hey, did I tell you that I actually lived in Melbourne from 2015 to 2019 before moving to Osaka?",
+            "It's been a wild journey. By the way, I've been trying to learn Korean lately.",
+            "It's way harder than I expected, but I'm sticking with it."
+          ]
+        }
+      ],
+      "question": "Which instrument do I play?",
+      "asked_at": "2024-06-06T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "drums",
+      "judge": "contains",
+      "notes": "instrument from session 2"
+    },
+    {
+      "id": "dev-017",
+      "split": "dev",
+      "category": "knowledge_update",
+      "persona": "p4",
+      "setup_sessions": [
+        {
+          "session_id": "p4-s1",
+          "occurred_at": "2024-02-07T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Lukas.",
+            "I live in Osaka and work as a teacher at Soylent Foods. I also have a dog named Ziggy.",
+            "By the way, my sister Rosa lives in Porto."
+          ]
+        },
+        {
+          "session_id": "p4-s2",
+          "occurred_at": "2024-03-18T09:00:00.000Z",
+          "turns": [
+            "Hey, did I ever tell you my favourite food is paella? It's just the best.",
+            "Oh, and something important: I'm actually allergic to penicillin, so keep that in mind for any meds.",
+            "Also, I play the drums on the side, so I'm usually pretty loud at home.",
+            "My partner Alex works at Vandelay Imports, so they're usually stuck in the office all day."
+          ]
+        },
+        {
+          "session_id": "p4-s3",
+          "occurred_at": "2024-05-01T09:00:00.000Z",
+          "turns": [
+            "Hey, I've been settling into Valencia since I moved here from Osaka in April.",
+            "Just wanted to mention Ziggy again. The pup seems to be adapting pretty well to the new city."
+          ]
+        },
+        {
+          "session_id": "p4-s4",
+          "occurred_at": "2024-05-30T09:00:00.000Z",
+          "turns": [
+            "Hey, did I tell you that I actually lived in Melbourne from 2015 to 2019 before moving to Osaka?",
+            "It's been a wild journey. By the way, I've been trying to learn Korean lately.",
+            "It's way harder than I expected, but I'm sticking with it."
+          ]
+        }
+      ],
+      "question": "Which city do I live in now?",
+      "asked_at": "2024-06-06T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Valencia",
+      "judge": "contains",
+      "notes": "plain move from Osaka in session 3"
+    },
+    {
+      "id": "dev-018",
+      "split": "dev",
+      "category": "multi_hop",
+      "persona": "p4",
+      "setup_sessions": [
+        {
+          "session_id": "p4-s1",
+          "occurred_at": "2024-02-07T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Lukas.",
+            "I live in Osaka and work as a teacher at Soylent Foods. I also have a dog named Ziggy.",
+            "By the way, my sister Rosa lives in Porto."
+          ]
+        },
+        {
+          "session_id": "p4-s2",
+          "occurred_at": "2024-03-18T09:00:00.000Z",
+          "turns": [
+            "Hey, did I ever tell you my favourite food is paella? It's just the best.",
+            "Oh, and something important: I'm actually allergic to penicillin, so keep that in mind for any meds.",
+            "Also, I play the drums on the side, so I'm usually pretty loud at home.",
+            "My partner Alex works at Vandelay Imports, so they're usually stuck in the office all day."
+          ]
+        },
+        {
+          "session_id": "p4-s3",
+          "occurred_at": "2024-05-01T09:00:00.000Z",
+          "turns": [
+            "Hey, I've been settling into Valencia since I moved here from Osaka in April.",
+            "Just wanted to mention Ziggy again. The pup seems to be adapting pretty well to the new city."
+          ]
+        },
+        {
+          "session_id": "p4-s4",
+          "occurred_at": "2024-05-30T09:00:00.000Z",
+          "turns": [
+            "Hey, did I tell you that I actually lived in Melbourne from 2015 to 2019 before moving to Osaka?",
+            "It's been a wild journey. By the way, I've been trying to learn Korean lately.",
+            "It's way harder than I expected, but I'm sticking with it."
+          ]
+        }
+      ],
+      "question": "Which city does my sister live in?",
+      "asked_at": "2024-06-06T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Porto",
+      "judge": "contains",
+      "notes": "user → sister → city"
+    },
+    {
+      "id": "dev-019",
+      "split": "dev",
+      "category": "temporal_reasoning",
+      "persona": "p4",
+      "setup_sessions": [
+        {
+          "session_id": "p4-s1",
+          "occurred_at": "2024-02-07T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Lukas.",
+            "I live in Osaka and work as a teacher at Soylent Foods. I also have a dog named Ziggy.",
+            "By the way, my sister Rosa lives in Porto."
+          ]
+        },
+        {
+          "session_id": "p4-s2",
+          "occurred_at": "2024-03-18T09:00:00.000Z",
+          "turns": [
+            "Hey, did I ever tell you my favourite food is paella? It's just the best.",
+            "Oh, and something important: I'm actually allergic to penicillin, so keep that in mind for any meds.",
+            "Also, I play the drums on the side, so I'm usually pretty loud at home.",
+            "My partner Alex works at Vandelay Imports, so they're usually stuck in the office all day."
+          ]
+        },
+        {
+          "session_id": "p4-s3",
+          "occurred_at": "2024-05-01T09:00:00.000Z",
+          "turns": [
+            "Hey, I've been settling into Valencia since I moved here from Osaka in April.",
+            "Just wanted to mention Ziggy again. The pup seems to be adapting pretty well to the new city."
+          ]
+        },
+        {
+          "session_id": "p4-s4",
+          "occurred_at": "2024-05-30T09:00:00.000Z",
+          "turns": [
+            "Hey, did I tell you that I actually lived in Melbourne from 2015 to 2019 before moving to Osaka?",
+            "It's been a wild journey. By the way, I've been trying to learn Korean lately.",
+            "It's way harder than I expected, but I'm sticking with it."
+          ]
+        }
+      ],
+      "question": "When did I move to Valencia?",
+      "asked_at": "2024-06-06T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "April 2024",
+      "judge": "llm",
+      "notes": "plain move; month and year"
+    },
+    {
+      "id": "dev-020",
+      "split": "dev",
+      "category": "temporal_reasoning",
+      "persona": "p4",
+      "setup_sessions": [
+        {
+          "session_id": "p4-s1",
+          "occurred_at": "2024-02-07T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Lukas.",
+            "I live in Osaka and work as a teacher at Soylent Foods. I also have a dog named Ziggy.",
+            "By the way, my sister Rosa lives in Porto."
+          ]
+        },
+        {
+          "session_id": "p4-s2",
+          "occurred_at": "2024-03-18T09:00:00.000Z",
+          "turns": [
+            "Hey, did I ever tell you my favourite food is paella? It's just the best.",
+            "Oh, and something important: I'm actually allergic to penicillin, so keep that in mind for any meds.",
+            "Also, I play the drums on the side, so I'm usually pretty loud at home.",
+            "My partner Alex works at Vandelay Imports, so they're usually stuck in the office all day."
+          ]
+        },
+        {
+          "session_id": "p4-s3",
+          "occurred_at": "2024-05-01T09:00:00.000Z",
+          "turns": [
+            "Hey, I've been settling into Valencia since I moved here from Osaka in April.",
+            "Just wanted to mention Ziggy again. The pup seems to be adapting pretty well to the new city."
+          ]
+        },
+        {
+          "session_id": "p4-s4",
+          "occurred_at": "2024-05-30T09:00:00.000Z",
+          "turns": [
+            "Hey, did I tell you that I actually lived in Melbourne from 2015 to 2019 before moving to Osaka?",
+            "It's been a wild journey. By the way, I've been trying to learn Korean lately.",
+            "It's way harder than I expected, but I'm sticking with it."
+          ]
+        }
+      ],
+      "question": "Where did I live before Osaka?",
+      "asked_at": "2024-06-06T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Melbourne",
+      "judge": "contains",
+      "notes": "history told out of order in session 4"
+    },
+    {
+      "id": "dev-021",
+      "split": "dev",
+      "category": "abstention",
+      "persona": "p5",
+      "setup_sessions": [
+        {
+          "session_id": "p5-s1",
+          "occurred_at": "2024-02-07T09:00:00.000Z",
+          "turns": [
+            "Hi, I'm Mei.",
+            "I live in Lyon and I'm a teacher at Globex.",
+            "Oh, and my parrot Olive is here too.",
+            "My sister Marta is in Krakow right now."
+          ]
+        },
+        {
+          "session_id": "p5-s2",
+          "occurred_at": "2024-03-21T09:00:00.000Z",
+          "turns": [
+            "hey, did i ever tell you my absolute favourite food is paella? it's my go-to when i'm hungry.",
+            "i'm also allergic to pollen, which is annoying when i'm out practicing my drums.",
+            "oh, and just a heads up that my partner Morgan is busy at work today because they're stuck at Northwind."
+          ]
+        },
+        {
+          "session_id": "p5-s3",
+          "occurred_at": "2024-05-06T09:00:00.000Z",
+          "turns": [
+            "Hey, so I finally made it to Porto in April after leaving Lyon. It's been a wild transition.",
+            "I keep thinking about how Olive has settled in here better than I expected. She's definitely the boss of the apartment now.",
+            "Work-wise, I started at Initech in May. It's a new role, but I'm still teaching, just in a different environment."
+          ]
+        },
+        {
+          "session_id": "p5-s4",
+          "occurred_at": "2024-05-27T09:00:00.000Z",
+          "turns": [
+            "I lived in Osaka from 2015 to 2019 before moving to Lyon.",
+            "I'm actually learning Korean right now."
+          ]
+        }
+      ],
+      "question": "What's my mother's name?",
+      "asked_at": "2024-06-03T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "I don't know",
+      "judge": "exact",
+      "notes": "never mentioned"
+    },
+    {
+      "id": "dev-022",
+      "split": "dev",
+      "category": "cross_session_recall",
+      "persona": "p5",
+      "setup_sessions": [
+        {
+          "session_id": "p5-s1",
+          "occurred_at": "2024-02-07T09:00:00.000Z",
+          "turns": [
+            "Hi, I'm Mei.",
+            "I live in Lyon and I'm a teacher at Globex.",
+            "Oh, and my parrot Olive is here too.",
+            "My sister Marta is in Krakow right now."
+          ]
+        },
+        {
+          "session_id": "p5-s2",
+          "occurred_at": "2024-03-21T09:00:00.000Z",
+          "turns": [
+            "hey, did i ever tell you my absolute favourite food is paella? it's my go-to when i'm hungry.",
+            "i'm also allergic to pollen, which is annoying when i'm out practicing my drums.",
+            "oh, and just a heads up that my partner Morgan is busy at work today because they're stuck at Northwind."
+          ]
+        },
+        {
+          "session_id": "p5-s3",
+          "occurred_at": "2024-05-06T09:00:00.000Z",
+          "turns": [
+            "Hey, so I finally made it to Porto in April after leaving Lyon. It's been a wild transition.",
+            "I keep thinking about how Olive has settled in here better than I expected. She's definitely the boss of the apartment now.",
+            "Work-wise, I started at Initech in May. It's a new role, but I'm still teaching, just in a different environment."
+          ]
+        },
+        {
+          "session_id": "p5-s4",
+          "occurred_at": "2024-05-27T09:00:00.000Z",
+          "turns": [
+            "I lived in Osaka from 2015 to 2019 before moving to Lyon.",
+            "I'm actually learning Korean right now."
+          ]
+        }
+      ],
+      "question": "What's my parrot called?",
+      "asked_at": "2024-06-03T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Olive",
+      "judge": "contains",
+      "notes": "pet named in session 1, restated in session 3"
+    },
+    {
+      "id": "dev-023",
+      "split": "dev",
+      "category": "cross_session_recall",
+      "persona": "p5",
+      "setup_sessions": [
+        {
+          "session_id": "p5-s1",
+          "occurred_at": "2024-02-07T09:00:00.000Z",
+          "turns": [
+            "Hi, I'm Mei.",
+            "I live in Lyon and I'm a teacher at Globex.",
+            "Oh, and my parrot Olive is here too.",
+            "My sister Marta is in Krakow right now."
+          ]
+        },
+        {
+          "session_id": "p5-s2",
+          "occurred_at": "2024-03-21T09:00:00.000Z",
+          "turns": [
+            "hey, did i ever tell you my absolute favourite food is paella? it's my go-to when i'm hungry.",
+            "i'm also allergic to pollen, which is annoying when i'm out practicing my drums.",
+            "oh, and just a heads up that my partner Morgan is busy at work today because they're stuck at Northwind."
+          ]
+        },
+        {
+          "session_id": "p5-s3",
+          "occurred_at": "2024-05-06T09:00:00.000Z",
+          "turns": [
+            "Hey, so I finally made it to Porto in April after leaving Lyon. It's been a wild transition.",
+            "I keep thinking about how Olive has settled in here better than I expected. She's definitely the boss of the apartment now.",
+            "Work-wise, I started at Initech in May. It's a new role, but I'm still teaching, just in a different environment."
+          ]
+        },
+        {
+          "session_id": "p5-s4",
+          "occurred_at": "2024-05-27T09:00:00.000Z",
+          "turns": [
+            "I lived in Osaka from 2015 to 2019 before moving to Lyon.",
+            "I'm actually learning Korean right now."
+          ]
+        }
+      ],
+      "question": "Which instrument do I play?",
+      "asked_at": "2024-06-03T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "drums",
+      "judge": "contains",
+      "notes": "instrument from session 2"
+    },
+    {
+      "id": "dev-024",
+      "split": "dev",
+      "category": "knowledge_update",
+      "persona": "p5",
+      "setup_sessions": [
+        {
+          "session_id": "p5-s1",
+          "occurred_at": "2024-02-07T09:00:00.000Z",
+          "turns": [
+            "Hi, I'm Mei.",
+            "I live in Lyon and I'm a teacher at Globex.",
+            "Oh, and my parrot Olive is here too.",
+            "My sister Marta is in Krakow right now."
+          ]
+        },
+        {
+          "session_id": "p5-s2",
+          "occurred_at": "2024-03-21T09:00:00.000Z",
+          "turns": [
+            "hey, did i ever tell you my absolute favourite food is paella? it's my go-to when i'm hungry.",
+            "i'm also allergic to pollen, which is annoying when i'm out practicing my drums.",
+            "oh, and just a heads up that my partner Morgan is busy at work today because they're stuck at Northwind."
+          ]
+        },
+        {
+          "session_id": "p5-s3",
+          "occurred_at": "2024-05-06T09:00:00.000Z",
+          "turns": [
+            "Hey, so I finally made it to Porto in April after leaving Lyon. It's been a wild transition.",
+            "I keep thinking about how Olive has settled in here better than I expected. She's definitely the boss of the apartment now.",
+            "Work-wise, I started at Initech in May. It's a new role, but I'm still teaching, just in a different environment."
+          ]
+        },
+        {
+          "session_id": "p5-s4",
+          "occurred_at": "2024-05-27T09:00:00.000Z",
+          "turns": [
+            "I lived in Osaka from 2015 to 2019 before moving to Lyon.",
+            "I'm actually learning Korean right now."
+          ]
+        }
+      ],
+      "question": "Where do I work these days?",
+      "asked_at": "2024-06-03T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Initech",
+      "judge": "contains",
+      "notes": "job change from Globex in session 3"
+    },
+    {
+      "id": "dev-025",
+      "split": "dev",
+      "category": "single_session_recall",
+      "persona": "p5",
+      "setup_sessions": [
+        {
+          "session_id": "p5-s1",
+          "occurred_at": "2024-02-07T09:00:00.000Z",
+          "turns": [
+            "Hi, I'm Mei.",
+            "I live in Lyon and I'm a teacher at Globex.",
+            "Oh, and my parrot Olive is here too.",
+            "My sister Marta is in Krakow right now."
+          ]
+        }
+      ],
+      "question": "What's my pet's name?",
+      "asked_at": "2024-02-08T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Olive",
+      "judge": "contains",
+      "notes": "pet, session 1 only"
+    },
+    {
+      "id": "dev-026",
+      "split": "dev",
+      "category": "cross_session_recall",
+      "persona": "p6",
+      "setup_sessions": [
+        {
+          "session_id": "p6-s1",
+          "occurred_at": "2024-01-23T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Tomás. I live in Krakow and work as a nurse at Acme Robotics.",
+            "I have a dog named Mochi who keeps me company.",
+            "My sister Imani lives in Denver, so I miss her a lot."
+          ]
+        },
+        {
+          "session_id": "p6-s2",
+          "occurred_at": "2024-03-20T09:00:00.000Z",
+          "turns": [
+            "I'm a huge fan of dim sum, but I have to be careful because I'm allergic to peanuts.",
+            "By the way, I play the violin in my spare time.",
+            "My partner Riley works at Globex."
+          ]
+        },
+        {
+          "session_id": "p6-s3",
+          "occurred_at": "2024-05-10T09:00:00.000Z",
+          "turns": [
+            "I've been settling into my new neighbourhood in Austin since April, and I'm really starting to feel at home here.",
+            "Mochi has also adjusted well to the change, which is a relief.",
+            "Work has been keeping me busy too since I started at Initech in May. I'm still working as a nurse, so the routine is the same even though the location is new."
+          ]
+        },
+        {
+          "session_id": "p6-s4",
+          "occurred_at": "2024-06-03T09:00:00.000Z",
+          "turns": [
+            "Hey, I was actually in Lyon from 2015 to 2017 before I ended up in Krakow.",
+            "It was a pretty wild time there.",
+            "Also, I've started learning German lately.",
+            "Just trying to pick up a new language."
+          ]
+        }
+      ],
+      "question": "Which instrument do I play?",
+      "asked_at": "2024-06-10T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "violin",
+      "judge": "contains",
+      "notes": "instrument from session 2"
+    },
+    {
+      "id": "dev-027",
+      "split": "dev",
+      "category": "cross_session_recall",
+      "persona": "p6",
+      "setup_sessions": [
+        {
+          "session_id": "p6-s1",
+          "occurred_at": "2024-01-23T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Tomás. I live in Krakow and work as a nurse at Acme Robotics.",
+            "I have a dog named Mochi who keeps me company.",
+            "My sister Imani lives in Denver, so I miss her a lot."
+          ]
+        },
+        {
+          "session_id": "p6-s2",
+          "occurred_at": "2024-03-20T09:00:00.000Z",
+          "turns": [
+            "I'm a huge fan of dim sum, but I have to be careful because I'm allergic to peanuts.",
+            "By the way, I play the violin in my spare time.",
+            "My partner Riley works at Globex."
+          ]
+        },
+        {
+          "session_id": "p6-s3",
+          "occurred_at": "2024-05-10T09:00:00.000Z",
+          "turns": [
+            "I've been settling into my new neighbourhood in Austin since April, and I'm really starting to feel at home here.",
+            "Mochi has also adjusted well to the change, which is a relief.",
+            "Work has been keeping me busy too since I started at Initech in May. I'm still working as a nurse, so the routine is the same even though the location is new."
+          ]
+        },
+        {
+          "session_id": "p6-s4",
+          "occurred_at": "2024-06-03T09:00:00.000Z",
+          "turns": [
+            "Hey, I was actually in Lyon from 2015 to 2017 before I ended up in Krakow.",
+            "It was a pretty wild time there.",
+            "Also, I've started learning German lately.",
+            "Just trying to pick up a new language."
+          ]
+        }
+      ],
+      "question": "What's my dog called?",
+      "asked_at": "2024-06-10T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Mochi",
+      "judge": "contains",
+      "notes": "pet named in session 1, restated in session 3"
+    },
+    {
+      "id": "dev-028",
+      "split": "dev",
+      "category": "knowledge_update",
+      "persona": "p6",
+      "setup_sessions": [
+        {
+          "session_id": "p6-s1",
+          "occurred_at": "2024-01-23T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Tomás. I live in Krakow and work as a nurse at Acme Robotics.",
+            "I have a dog named Mochi who keeps me company.",
+            "My sister Imani lives in Denver, so I miss her a lot."
+          ]
+        },
+        {
+          "session_id": "p6-s2",
+          "occurred_at": "2024-03-20T09:00:00.000Z",
+          "turns": [
+            "I'm a huge fan of dim sum, but I have to be careful because I'm allergic to peanuts.",
+            "By the way, I play the violin in my spare time.",
+            "My partner Riley works at Globex."
+          ]
+        },
+        {
+          "session_id": "p6-s3",
+          "occurred_at": "2024-05-10T09:00:00.000Z",
+          "turns": [
+            "I've been settling into my new neighbourhood in Austin since April, and I'm really starting to feel at home here.",
+            "Mochi has also adjusted well to the change, which is a relief.",
+            "Work has been keeping me busy too since I started at Initech in May. I'm still working as a nurse, so the routine is the same even though the location is new."
+          ]
+        },
+        {
+          "session_id": "p6-s4",
+          "occurred_at": "2024-06-03T09:00:00.000Z",
+          "turns": [
+            "Hey, I was actually in Lyon from 2015 to 2017 before I ended up in Krakow.",
+            "It was a pretty wild time there.",
+            "Also, I've started learning German lately.",
+            "Just trying to pick up a new language."
+          ]
+        }
+      ],
+      "question": "Where do I work these days?",
+      "asked_at": "2024-06-10T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Initech",
+      "judge": "contains",
+      "notes": "job change from Acme Robotics in session 3"
+    },
+    {
+      "id": "dev-029",
+      "split": "dev",
+      "category": "multi_hop",
+      "persona": "p6",
+      "setup_sessions": [
+        {
+          "session_id": "p6-s1",
+          "occurred_at": "2024-01-23T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Tomás. I live in Krakow and work as a nurse at Acme Robotics.",
+            "I have a dog named Mochi who keeps me company.",
+            "My sister Imani lives in Denver, so I miss her a lot."
+          ]
+        },
+        {
+          "session_id": "p6-s2",
+          "occurred_at": "2024-03-20T09:00:00.000Z",
+          "turns": [
+            "I'm a huge fan of dim sum, but I have to be careful because I'm allergic to peanuts.",
+            "By the way, I play the violin in my spare time.",
+            "My partner Riley works at Globex."
+          ]
+        },
+        {
+          "session_id": "p6-s3",
+          "occurred_at": "2024-05-10T09:00:00.000Z",
+          "turns": [
+            "I've been settling into my new neighbourhood in Austin since April, and I'm really starting to feel at home here.",
+            "Mochi has also adjusted well to the change, which is a relief.",
+            "Work has been keeping me busy too since I started at Initech in May. I'm still working as a nurse, so the routine is the same even though the location is new."
+          ]
+        },
+        {
+          "session_id": "p6-s4",
+          "occurred_at": "2024-06-03T09:00:00.000Z",
+          "turns": [
+            "Hey, I was actually in Lyon from 2015 to 2017 before I ended up in Krakow.",
+            "It was a pretty wild time there.",
+            "Also, I've started learning German lately.",
+            "Just trying to pick up a new language."
+          ]
+        }
+      ],
+      "question": "Which city does my sister live in?",
+      "asked_at": "2024-06-10T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Denver",
+      "judge": "contains",
+      "notes": "user → sister → city"
+    },
+    {
+      "id": "dev-030",
+      "split": "dev",
+      "category": "single_session_recall",
+      "persona": "p6",
+      "setup_sessions": [
+        {
+          "session_id": "p6-s1",
+          "occurred_at": "2024-01-23T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Tomás. I live in Krakow and work as a nurse at Acme Robotics.",
+            "I have a dog named Mochi who keeps me company.",
+            "My sister Imani lives in Denver, so I miss her a lot."
+          ]
+        }
+      ],
+      "question": "Which city do I live in?",
+      "asked_at": "2024-01-24T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Krakow",
+      "judge": "contains",
+      "notes": "home, session 1 only"
+    },
+    {
+      "id": "dev-031",
+      "split": "dev",
+      "category": "abstention",
+      "persona": "p7",
+      "setup_sessions": [
+        {
+          "session_id": "p7-s1",
+          "occurred_at": "2024-01-16T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Noor. I live in Marseille.",
+            "I work as a nurse at Umbrella Health. I also have a rabbit named Nori at home.",
+            "My sister Ana lives in Toronto. We talk all the time."
+          ]
+        },
+        {
+          "session_id": "p7-s2",
+          "occurred_at": "2024-03-10T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm craving ramen tonight. It's honestly my favorite food.",
+            "Can't have seafood though, I'm allergic to shellfish. Did I tell you I play the drums too?",
+            "Oh, my partner Morgan works at Stark Analytics."
+          ]
+        },
+        {
+          "session_id": "p7-s3",
+          "occurred_at": "2024-05-18T09:00:00.000Z",
+          "turns": [
+            "I'm still adjusting to my new life in Berlin after moving here from Marseille in April.",
+            "Sorry I forgot to mention earlier. My rabbit Nori is actually doing really well in the new apartment.",
+            "She's exploring every corner and seems quite happy with her new setup."
+          ]
+        },
+        {
+          "session_id": "p7-s4",
+          "occurred_at": "2024-06-17T09:00:00.000Z",
+          "turns": [
+            "So before I moved to Marseille, I was actually in Valencia from 2016 to 2019.",
+            "It was a great time, but now I'm trying something new.",
+            "I've started learning Portuguese recently."
+          ]
+        }
+      ],
+      "question": "What car do I drive?",
+      "asked_at": "2024-06-24T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "I don't know",
+      "judge": "exact",
+      "notes": "never mentioned"
+    },
+    {
+      "id": "dev-032",
+      "split": "dev",
+      "category": "cross_session_recall",
+      "persona": "p7",
+      "setup_sessions": [
+        {
+          "session_id": "p7-s1",
+          "occurred_at": "2024-01-16T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Noor. I live in Marseille.",
+            "I work as a nurse at Umbrella Health. I also have a rabbit named Nori at home.",
+            "My sister Ana lives in Toronto. We talk all the time."
+          ]
+        },
+        {
+          "session_id": "p7-s2",
+          "occurred_at": "2024-03-10T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm craving ramen tonight. It's honestly my favorite food.",
+            "Can't have seafood though, I'm allergic to shellfish. Did I tell you I play the drums too?",
+            "Oh, my partner Morgan works at Stark Analytics."
+          ]
+        },
+        {
+          "session_id": "p7-s3",
+          "occurred_at": "2024-05-18T09:00:00.000Z",
+          "turns": [
+            "I'm still adjusting to my new life in Berlin after moving here from Marseille in April.",
+            "Sorry I forgot to mention earlier. My rabbit Nori is actually doing really well in the new apartment.",
+            "She's exploring every corner and seems quite happy with her new setup."
+          ]
+        },
+        {
+          "session_id": "p7-s4",
+          "occurred_at": "2024-06-17T09:00:00.000Z",
+          "turns": [
+            "So before I moved to Marseille, I was actually in Valencia from 2016 to 2019.",
+            "It was a great time, but now I'm trying something new.",
+            "I've started learning Portuguese recently."
+          ]
+        }
+      ],
+      "question": "Remind me, what am I allergic to?",
+      "asked_at": "2024-06-24T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "shellfish",
+      "judge": "contains",
+      "notes": "allergy from session 2"
+    },
+    {
+      "id": "dev-033",
+      "split": "dev",
+      "category": "knowledge_update",
+      "persona": "p7",
+      "setup_sessions": [
+        {
+          "session_id": "p7-s1",
+          "occurred_at": "2024-01-16T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Noor. I live in Marseille.",
+            "I work as a nurse at Umbrella Health. I also have a rabbit named Nori at home.",
+            "My sister Ana lives in Toronto. We talk all the time."
+          ]
+        },
+        {
+          "session_id": "p7-s2",
+          "occurred_at": "2024-03-10T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm craving ramen tonight. It's honestly my favorite food.",
+            "Can't have seafood though, I'm allergic to shellfish. Did I tell you I play the drums too?",
+            "Oh, my partner Morgan works at Stark Analytics."
+          ]
+        },
+        {
+          "session_id": "p7-s3",
+          "occurred_at": "2024-05-18T09:00:00.000Z",
+          "turns": [
+            "I'm still adjusting to my new life in Berlin after moving here from Marseille in April.",
+            "Sorry I forgot to mention earlier. My rabbit Nori is actually doing really well in the new apartment.",
+            "She's exploring every corner and seems quite happy with her new setup."
+          ]
+        },
+        {
+          "session_id": "p7-s4",
+          "occurred_at": "2024-06-17T09:00:00.000Z",
+          "turns": [
+            "So before I moved to Marseille, I was actually in Valencia from 2016 to 2019.",
+            "It was a great time, but now I'm trying something new.",
+            "I've started learning Portuguese recently."
+          ]
+        }
+      ],
+      "question": "Which city do I live in now?",
+      "asked_at": "2024-06-24T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Berlin",
+      "judge": "contains",
+      "notes": "plain move from Marseille in session 3"
+    },
+    {
+      "id": "dev-034",
+      "split": "dev",
+      "category": "single_session_recall",
+      "persona": "p7",
+      "setup_sessions": [
+        {
+          "session_id": "p7-s1",
+          "occurred_at": "2024-01-16T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Noor. I live in Marseille.",
+            "I work as a nurse at Umbrella Health. I also have a rabbit named Nori at home.",
+            "My sister Ana lives in Toronto. We talk all the time."
+          ]
+        }
+      ],
+      "question": "What's my pet's name?",
+      "asked_at": "2024-01-17T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Nori",
+      "judge": "contains",
+      "notes": "pet, session 1 only"
+    },
+    {
+      "id": "dev-035",
+      "split": "dev",
+      "category": "temporal_reasoning",
+      "persona": "p7",
+      "setup_sessions": [
+        {
+          "session_id": "p7-s1",
+          "occurred_at": "2024-01-16T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Noor. I live in Marseille.",
+            "I work as a nurse at Umbrella Health. I also have a rabbit named Nori at home.",
+            "My sister Ana lives in Toronto. We talk all the time."
+          ]
+        },
+        {
+          "session_id": "p7-s2",
+          "occurred_at": "2024-03-10T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm craving ramen tonight. It's honestly my favorite food.",
+            "Can't have seafood though, I'm allergic to shellfish. Did I tell you I play the drums too?",
+            "Oh, my partner Morgan works at Stark Analytics."
+          ]
+        },
+        {
+          "session_id": "p7-s3",
+          "occurred_at": "2024-05-18T09:00:00.000Z",
+          "turns": [
+            "I'm still adjusting to my new life in Berlin after moving here from Marseille in April.",
+            "Sorry I forgot to mention earlier. My rabbit Nori is actually doing really well in the new apartment.",
+            "She's exploring every corner and seems quite happy with her new setup."
+          ]
+        },
+        {
+          "session_id": "p7-s4",
+          "occurred_at": "2024-06-17T09:00:00.000Z",
+          "turns": [
+            "So before I moved to Marseille, I was actually in Valencia from 2016 to 2019.",
+            "It was a great time, but now I'm trying something new.",
+            "I've started learning Portuguese recently."
+          ]
+        }
+      ],
+      "question": "Going only on what I'd told you by 16 May 2024, which city did you think I lived in then?",
+      "asked_at": "2024-06-24T09:00:00.000Z",
+      "valid_at": "2024-05-16T09:00:00.000Z",
+      "known_at": "2024-05-16T09:00:00.000Z",
+      "expected": "Marseille",
+      "judge": "contains",
+      "notes": "record time: the move had happened but was not yet said"
+    },
+    {
+      "id": "dev-036",
+      "split": "dev",
+      "category": "cross_session_recall",
+      "persona": "p8",
+      "setup_sessions": [
+        {
+          "session_id": "p8-s1",
+          "occurred_at": "2024-01-07T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Elena.",
+            "I live in Berlin and work as a chef at Soylent Foods.",
+            "I have a cat named Rocket.",
+            "My sister Hana lives in Lisbon."
+          ]
+        },
+        {
+          "session_id": "p8-s2",
+          "occurred_at": "2024-03-01T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm craving some pho tonight, it's honestly my favourite food ever.",
+            "Also, just a reminder that I'm allergic to penicillin, so keep that in mind for any meds.",
+            "I've been practicing my violin a lot lately, and my partner Alex is super busy at Initech these days."
+          ]
+        },
+        {
+          "session_id": "p8-s3",
+          "occurred_at": "2024-05-16T09:00:00.000Z",
+          "turns": [
+            "I've really settled into my new neighbourhood in Seoul. It feels like home now, especially since I got here in April.",
+            "Rocket is actually quite a good boy, just a bit of a diva. I was thinking of asking you for some advice on his diet."
+          ]
+        },
+        {
+          "session_id": "p8-s4",
+          "occurred_at": "2024-06-06T09:00:00.000Z",
+          "turns": [
+            "I lived in Porto from 2015 to 2019 before moving to Berlin.",
+            "I've also started learning Japanese recently."
+          ]
+        }
+      ],
+      "question": "What's my favourite food?",
+      "asked_at": "2024-06-13T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "pho",
+      "judge": "contains",
+      "notes": "food from session 2"
+    },
+    {
+      "id": "dev-037",
+      "split": "dev",
+      "category": "knowledge_update",
+      "persona": "p8",
+      "setup_sessions": [
+        {
+          "session_id": "p8-s1",
+          "occurred_at": "2024-01-07T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Elena.",
+            "I live in Berlin and work as a chef at Soylent Foods.",
+            "I have a cat named Rocket.",
+            "My sister Hana lives in Lisbon."
+          ]
+        },
+        {
+          "session_id": "p8-s2",
+          "occurred_at": "2024-03-01T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm craving some pho tonight, it's honestly my favourite food ever.",
+            "Also, just a reminder that I'm allergic to penicillin, so keep that in mind for any meds.",
+            "I've been practicing my violin a lot lately, and my partner Alex is super busy at Initech these days."
+          ]
+        },
+        {
+          "session_id": "p8-s3",
+          "occurred_at": "2024-05-16T09:00:00.000Z",
+          "turns": [
+            "I've really settled into my new neighbourhood in Seoul. It feels like home now, especially since I got here in April.",
+            "Rocket is actually quite a good boy, just a bit of a diva. I was thinking of asking you for some advice on his diet."
+          ]
+        },
+        {
+          "session_id": "p8-s4",
+          "occurred_at": "2024-06-06T09:00:00.000Z",
+          "turns": [
+            "I lived in Porto from 2015 to 2019 before moving to Berlin.",
+            "I've also started learning Japanese recently."
+          ]
+        }
+      ],
+      "question": "Which city do I live in now?",
+      "asked_at": "2024-06-13T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Seoul",
+      "judge": "contains",
+      "notes": "implicit move from Berlin in session 3"
+    },
+    {
+      "id": "dev-038",
+      "split": "dev",
+      "category": "multi_hop",
+      "persona": "p8",
+      "setup_sessions": [
+        {
+          "session_id": "p8-s1",
+          "occurred_at": "2024-01-07T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Elena.",
+            "I live in Berlin and work as a chef at Soylent Foods.",
+            "I have a cat named Rocket.",
+            "My sister Hana lives in Lisbon."
+          ]
+        },
+        {
+          "session_id": "p8-s2",
+          "occurred_at": "2024-03-01T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm craving some pho tonight, it's honestly my favourite food ever.",
+            "Also, just a reminder that I'm allergic to penicillin, so keep that in mind for any meds.",
+            "I've been practicing my violin a lot lately, and my partner Alex is super busy at Initech these days."
+          ]
+        },
+        {
+          "session_id": "p8-s3",
+          "occurred_at": "2024-05-16T09:00:00.000Z",
+          "turns": [
+            "I've really settled into my new neighbourhood in Seoul. It feels like home now, especially since I got here in April.",
+            "Rocket is actually quite a good boy, just a bit of a diva. I was thinking of asking you for some advice on his diet."
+          ]
+        },
+        {
+          "session_id": "p8-s4",
+          "occurred_at": "2024-06-06T09:00:00.000Z",
+          "turns": [
+            "I lived in Porto from 2015 to 2019 before moving to Berlin.",
+            "I've also started learning Japanese recently."
+          ]
+        }
+      ],
+      "question": "Which city does my sister live in?",
+      "asked_at": "2024-06-13T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Lisbon",
+      "judge": "contains",
+      "notes": "user → sister → city"
+    },
+    {
+      "id": "dev-039",
+      "split": "dev",
+      "category": "single_session_recall",
+      "persona": "p8",
+      "setup_sessions": [
+        {
+          "session_id": "p8-s1",
+          "occurred_at": "2024-01-07T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Elena.",
+            "I live in Berlin and work as a chef at Soylent Foods.",
+            "I have a cat named Rocket.",
+            "My sister Hana lives in Lisbon."
+          ]
+        }
+      ],
+      "question": "What's my pet's name?",
+      "asked_at": "2024-01-08T09:00:00.000Z",
+      "valid_at": null,
+      "known_at": null,
+      "expected": "Rocket",
+      "judge": "contains",
+      "notes": "pet, session 1 only"
+    },
+    {
+      "id": "dev-040",
+      "split": "dev",
+      "category": "temporal_reasoning",
+      "persona": "p8",
+      "setup_sessions": [
+        {
+          "session_id": "p8-s1",
+          "occurred_at": "2024-01-07T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm Elena.",
+            "I live in Berlin and work as a chef at Soylent Foods.",
+            "I have a cat named Rocket.",
+            "My sister Hana lives in Lisbon."
+          ]
+        },
+        {
+          "session_id": "p8-s2",
+          "occurred_at": "2024-03-01T09:00:00.000Z",
+          "turns": [
+            "Hey, I'm craving some pho tonight, it's honestly my favourite food ever.",
+            "Also, just a reminder that I'm allergic to penicillin, so keep that in mind for any meds.",
+            "I've been practicing my violin a lot lately, and my partner Alex is super busy at Initech these days."
+          ]
+        },
+        {
+          "session_id": "p8-s3",
+          "occurred_at": "2024-05-16T09:00:00.000Z",
+          "turns": [
+            "I've really settled into my new neighbourhood in Seoul. It feels like home now, especially since I got here in April.",
+            "Rocket is actually quite a good boy, just a bit of a diva. I was thinking of asking you for some advice on his diet."
+          ]
+        },
+        {
+          "session_id": "p8-s4",
+          "occurred_at": "2024-06-06T09:00:00.000Z",
+          "turns": [
+            "I lived in Porto from 2015 to 2019 before moving to Berlin.",
+            "I've also started learning Japanese recently."
+          ]
+        }
+      ],
+      "question": "Going only on what I'd told you by 14 May 2024, which city did you think I lived in then?",
+      "asked_at": "2024-06-13T09:00:00.000Z",
+      "valid_at": "2024-05-14T09:00:00.000Z",
+      "known_at": "2024-05-14T09:00:00.000Z",
+      "expected": "Berlin",
+      "judge": "contains",
+      "notes": "record time: the move had happened but was not yet said"
+    }
+  ],
+  "review": "Reviewed 2026-10-16 by reading every persona's turns against its timeline. Three turns were hand-edited for meaning drift: p1-s4 (a statement phrased as a question), p7-s1 ('messaging you from Marseille' did not say the user lives there; dev-035 depends on it), p5-s2 ('sensitive to pollen' instead of the planned 'allergic to pollen'; no dev item asks it, but the turn should state the fact as planned)."
+}

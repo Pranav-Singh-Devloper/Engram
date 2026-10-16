@@ -1,0 +1,51 @@
+// Builds providers from the environment with the response cache and pacer in
+// front of them. Shared by the dataset generator and the runner.
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { DEFAULT_JUDGE_MODEL, GeminiProvider, GroqProvider } from '@engram/core';
+import { UsageMeter, cachingFetch } from './cache.js';
+import type { CacheMode } from './cache.js';
+import { DEFAULT_RPM, Pacer } from './pacer.js';
+
+export const BENCH_DIR = path.resolve(import.meta.dirname, '..');
+export const DEFAULT_CACHE_DIR = path.join(BENCH_DIR, 'cache');
+
+export function loadEnv(): void {
+  const file = path.resolve(BENCH_DIR, '../.env');
+  if (existsSync(file)) process.loadEnvFile(file);
+}
+
+const rpm = (name: string, fallback: number) => Number(process.env[name] ?? fallback) || fallback;
+
+export interface Providers {
+  gemini: GeminiProvider;
+  judge: GroqProvider;
+  verbalizer: (model: string) => GroqProvider;
+  meter: UsageMeter;
+}
+
+export function makeProviders(options: { cacheDir?: string; mode?: CacheMode } = {}): Providers {
+  const meter = new UsageMeter();
+  const pacer = new Pacer({
+    'gemini-generate': rpm('BENCH_RPM_GEMINI', DEFAULT_RPM['gemini-generate']),
+    'gemini-embed': rpm('BENCH_RPM_EMBED', DEFAULT_RPM['gemini-embed']),
+    groq: rpm('BENCH_RPM_GROQ', DEFAULT_RPM.groq),
+  });
+  const mode = options.mode ?? 'readwrite';
+  const fetch = cachingFetch({ dir: options.cacheDir ?? DEFAULT_CACHE_DIR, mode, meter, pacer });
+  // Offline replays never need a real key; the cache answers or 404s.
+  const key = (name: string) => process.env[name] || (mode === 'readonly' ? 'offline' : '');
+  const http = { fetch };
+  const groq = (model: string) => new GroqProvider({ apiKey: key('JUDGE_API_KEY'), model, http });
+  return {
+    gemini: new GeminiProvider({
+      apiKey: key('GEMINI_API_KEY'),
+      embedModel: process.env.GEMINI_EMBED_MODEL || undefined,
+      chatModel: process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash-lite',
+      http,
+    }),
+    judge: groq(process.env.JUDGE_MODEL || DEFAULT_JUDGE_MODEL),
+    verbalizer: groq,
+    meter,
+  };
+}

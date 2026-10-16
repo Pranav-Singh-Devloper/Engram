@@ -19,7 +19,9 @@
     "db:reset": "pnpm --filter @engram/scripts migrate --reset",
     "gemini:check": "pnpm --filter @engram/scripts gemini:check",
     "fixtures:record": "pnpm --filter @engram/scripts fixtures:record",
-    "demo:offline": "pnpm --filter @engram/scripts demo:offline"
+    "demo:offline": "pnpm --filter @engram/scripts demo:offline",
+    "bench": "pnpm --filter @engram/bench bench",
+    "bench:generate": "pnpm --filter @engram/bench bench:generate"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

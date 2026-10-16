@@ -46,6 +46,8 @@ export const SplitFile = z.object({
   generated_at: z.iso.datetime(),
   /** Models that verbalized the turns; the ground truth itself is code. */
   verbalizer: z.string(),
+  /** What the human review pass checked and changed. */
+  review: z.string().optional(),
   items: z.array(BenchItem).min(1),
 });
 export type SplitFile = z.infer<typeof SplitFile>;
