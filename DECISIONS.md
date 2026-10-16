@@ -103,3 +103,20 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 - **Ad-hoc predicates** are multi-valued and dynamic.
 
 **Consequences.** Frequent restatements create version chains, which is the audit trail working as intended, and decay/consolidation must treat versions as one fact. A plain insert into an empty history writes no revision row; every other outcome writes exactly one.
+
+---
+
+## ADR-009 — Engram-Bench: code-derived truth, three model families, an HTTP cache
+
+**Date:** 2026-10-16 · **Status:** Accepted
+
+**Context.** The bench must not grade Engram on its own assumptions (SPEC §13.2), must fit free quotas, and must run in CI with no keys or network.
+
+**Decision.**
+
+- **Ground truth is code.** Seeded persona timelines and every expected answer, including what could be believed at a past record time, are computed in plain TypeScript. A lint rule keeps that code from importing the predicate registry.
+- **Three model families.** Qwen (`qwen3.8-27b` on Groq) only verbalizes sessions, and its output is checked for required strings, forbidden topics and implicit moves. Gemini is the system under test. The judge is `gpt-oss-120b` on Groq.
+- **An HTTP response cache** keyed by URL and request body sits in front of every provider. Items that share a persona replay identical turns as cache hits.
+- **Smoke runs offline.** A 20-item subset replays committed responses in read-only mode in CI. To make request bodies deterministic, providers alias database ids out of prompts.
+
+**Consequences.** A cold dev run is about 25 minutes at free pacing, and re-runs are nearly free. Dev histories are short (≤20 turns), so buffer and full_context see identical prompts; the full test split needs longer histories to separate them.
