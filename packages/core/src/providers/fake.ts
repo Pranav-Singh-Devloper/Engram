@@ -63,6 +63,7 @@ export class FakeProvider implements Provider {
     disambiguate: [],
     adjudicate: [],
     summarize: [],
+    extractSessions: [],
     compose: [],
     judge: [],
   };
@@ -90,6 +91,8 @@ export class FakeProvider implements Provider {
   disambiguate = (input: MethodInput<'disambiguate'>) => this.respond('disambiguate', input);
   adjudicate = (input: MethodInput<'adjudicate'>) => this.respond('adjudicate', input);
   summarize = (input: MethodInput<'summarize'>) => this.respond('summarize', input);
+  extractSessions = (input: MethodInput<'extractSessions'>) =>
+    this.respond('extractSessions', input);
   compose = (input: MethodInput<'compose'>) => this.respond('compose', input);
   judge = (input: MethodInput<'judge'>) => this.respond('judge', input);
 

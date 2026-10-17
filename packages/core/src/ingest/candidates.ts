@@ -29,6 +29,11 @@ export interface CandidateSource {
   /** The text shown to disambiguation and adjudication. */
   context: string;
   importance: number;
+  /**
+   * Record time for this candidate, when it differs from the clock's: bulk
+   * extraction replays history, so a fact is recorded when its turn was learned.
+   */
+  recordAt?: Date;
 }
 
 export interface CandidateBatch {
@@ -175,7 +180,9 @@ export async function resolveCandidates(
       raw,
       context: source.context,
     };
-    const resolution = await options.resolver.resolve(db, candidate, { clock: options.clock });
+    const at = source.recordAt;
+    const clock = at ? { now: () => new Date(at) } : options.clock;
+    const resolution = await options.resolver.resolve(db, candidate, { clock });
     result.outcomes[resolution.kind]++;
     result.resolutions.push(resolution);
   }

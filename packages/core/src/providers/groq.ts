@@ -161,5 +161,6 @@ export class GroqProvider implements Provider {
   disambiguate = () => this.unsupported('disambiguate');
   adjudicate = () => this.unsupported('adjudicate');
   summarize = () => this.unsupported('summarize');
+  extractSessions = () => this.unsupported('extractSessions');
   compose = () => this.unsupported('compose');
 }

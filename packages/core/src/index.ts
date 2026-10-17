@@ -115,3 +115,6 @@ export { BenchSummary } from './types/benchSummary.js';
 export { textArray, uuidArray } from './db/client.js';
 export { DEFAULT_OLLAMA_MODEL, OLLAMA_BASE_URL, OllamaProvider } from './providers/ollama.js';
 export type { OllamaOptions } from './providers/ollama.js';
+export { packSessions, processSessions } from './ingest/sessions.js';
+export type { SessionsOptions, SessionsSummary } from './ingest/sessions.js';
+export { SESSION_PROMPT_VERSION } from './providers/promptVersion.js';

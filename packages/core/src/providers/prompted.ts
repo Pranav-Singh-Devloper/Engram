@@ -14,9 +14,15 @@ import { ADJUDICATE_SYSTEM, WireAdjudicate, adjudicateUser } from '../conflict/p
 import { COMPOSE_SYSTEM, WireCompose, composeUser, normalizeCompose } from '../compose/prompt.js';
 import { SUMMARIZE_SYSTEM, WireSummarize, summarizeUser } from '../consolidate/prompt.js';
 import {
+  EXTRACT_SESSIONS_SYSTEM,
+  WireExtractSessions,
+  extractSessionsUser,
+} from '../extract/sessionPrompt.js';
+import {
   AdjudicateInput,
   ComposeInput,
   DisambiguateInput,
+  ExtractSessionsInput,
   ProcessEpisodeInput,
   SummarizeInput,
 } from './contracts.js';
@@ -32,6 +38,7 @@ const DISAMBIGUATE_JSON_SCHEMA = jsonSchemaFor(WireDisambiguate);
 const ADJUDICATE_JSON_SCHEMA = jsonSchemaFor(WireAdjudicate);
 const COMPOSE_JSON_SCHEMA = jsonSchemaFor(WireCompose);
 const SUMMARIZE_JSON_SCHEMA = jsonSchemaFor(WireSummarize);
+const EXTRACT_SESSIONS_JSON_SCHEMA = jsonSchemaFor(WireExtractSessions);
 
 export abstract class PromptedProvider implements Provider {
   abstract readonly name: string;
@@ -138,6 +145,42 @@ export abstract class PromptedProvider implements Provider {
       .filter((c) => c.sourceEpisodeIds.length > 0);
     return { summary: out.summary, candidates };
   };
+  extractSessions = async (input: MethodInput<'extractSessions'>) => {
+    const parsed = ExtractSessionsInput.parse(input);
+    const turns = aliasIds(
+      parsed.turns.map((t) => t.id),
+      't',
+    );
+    const sessions = aliasIds([...new Set(parsed.turns.map((t) => t.sessionId))], 's');
+    const out = await this.generate({
+      system: EXTRACT_SESSIONS_SYSTEM,
+      user: extractSessionsUser({
+        ...parsed,
+        turns: parsed.turns.map((t) => ({
+          ...t,
+          id: turns.label(t.id),
+          sessionId: sessions.label(t.sessionId),
+        })),
+      }),
+      schema: WireExtractSessions,
+      jsonSchema: EXTRACT_SESSIONS_JSON_SCHEMA,
+    });
+    // Labels map back to episode ids; anything citing no real turn is dropped.
+    const known = new Set(parsed.turns.map((t) => t.id));
+    const real = (label: string) => {
+      const id = turns.resolve(label);
+      return known.has(id) ? [id] : [];
+    };
+    return {
+      importance: out.importance.flatMap((i) =>
+        real(i.episodeId).map((episodeId) => ({ episodeId, importance: i.importance })),
+      ),
+      candidates: out.candidates
+        .map((c) => ({ ...c, sourceEpisodeIds: c.sourceEpisodeIds.flatMap(real) }))
+        .filter((c) => c.sourceEpisodeIds.length > 0),
+    };
+  };
+
   /** The bench judge runs on a different model family (GroqProvider). */
   judge = () => this.notYet('judge', 'GroqProvider');
 }

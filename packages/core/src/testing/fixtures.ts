@@ -116,6 +116,7 @@ export function recordingProvider(real: Provider, calls: RecordedCall[]): Provid
       return output;
     },
     summarize: (input) => real.summarize(input),
+    extractSessions: (input) => real.extractSessions(input),
     compose: (input) => real.compose(input),
     judge: (input) => real.judge(input),
   };

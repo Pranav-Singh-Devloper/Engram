@@ -2,6 +2,11 @@ import { createHash } from 'node:crypto';
 import { ADJUDICATE_SYSTEM, WireAdjudicate, adjudicateUser } from '../conflict/prompt.js';
 import { SUMMARIZE_SYSTEM, WireSummarize, summarizeUser } from '../consolidate/prompt.js';
 import {
+  EXTRACT_SESSIONS_SYSTEM,
+  WireExtractSessions,
+  extractSessionsUser,
+} from '../extract/sessionPrompt.js';
+import {
   DISAMBIGUATE_SYSTEM,
   PROCESS_EPISODE_SYSTEM,
   WireDisambiguate,
@@ -63,6 +68,16 @@ export const CONSOLIDATION_PROMPT_VERSION = version(
   JSON.stringify(jsonSchemaFor(WireSummarize)),
   summarizeUser({
     episodes: [{ id: 't1', role: 'user', content: 'sample', occurredAt: sampleDate }],
+    predicates: ['lives_in'],
+  }),
+);
+
+/** Bulk (packed-session) extraction's own version (P08, ADR-015). */
+export const SESSION_PROMPT_VERSION = version(
+  EXTRACT_SESSIONS_SYSTEM,
+  JSON.stringify(jsonSchemaFor(WireExtractSessions)),
+  extractSessionsUser({
+    turns: [{ id: 't1', sessionId: 's1', role: 'user', content: 'sample', occurredAt: sampleDate }],
     predicates: ['lives_in'],
   }),
 );

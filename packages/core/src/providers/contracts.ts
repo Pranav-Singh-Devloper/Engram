@@ -145,6 +145,28 @@ export const SummarizeOutput = z.object({
   candidates: z.array(ConsolidatedCandidate),
 });
 
+/** Bulk extraction (P08): consecutive sessions in one call, each candidate citing its turns. */
+export const ExtractSessionsInput = z.object({
+  /** In time order; consecutive sessions, each turn tagged with its session. */
+  turns: z
+    .array(
+      z.object({
+        id: z.string(),
+        sessionId: z.string(),
+        role: z.enum(EPISODE_ROLES),
+        content: z.string(),
+        occurredAt: z.date(),
+      }),
+    )
+    .min(1),
+  predicates: z.array(z.string()),
+});
+export const ExtractSessionsOutput = z.object({
+  /** Per turn; turns left out keep their default importance. */
+  importance: z.array(z.object({ episodeId: z.string(), importance: z.number().min(0).max(1) })),
+  candidates: z.array(ConsolidatedCandidate),
+});
+
 export const ComposeInput = z.object({
   question: z.string().min(1),
   now: z.date(),
@@ -181,6 +203,7 @@ export const CONTRACTS = {
   disambiguate: { input: DisambiguateInput, output: DisambiguateOutput },
   adjudicate: { input: AdjudicateInput, output: AdjudicateOutput },
   summarize: { input: SummarizeInput, output: SummarizeOutput },
+  extractSessions: { input: ExtractSessionsInput, output: ExtractSessionsOutput },
   compose: { input: ComposeInput, output: ComposeOutput },
   judge: { input: JudgeInput, output: JudgeOutput },
 } as const;
