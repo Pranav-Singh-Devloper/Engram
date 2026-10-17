@@ -118,3 +118,4 @@ export type { OllamaOptions } from './providers/ollama.js';
 export { packSessions, processSessions } from './ingest/sessions.js';
 export type { SessionsOptions, SessionsSummary } from './ingest/sessions.js';
 export { SESSION_PROMPT_VERSION } from './providers/promptVersion.js';
+export { ingestMany } from './ingest/ingest.js';

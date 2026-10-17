@@ -60,11 +60,19 @@ export function geminiKeysFromEnv(env: Record<string, string | undefined>): {
   };
 }
 
+/**
+ * gemini-embedding-2 reads at most 8,192 tokens. Longer texts (pasted
+ * documents in LongMemEval turns) are cut to their start: ~24k characters is
+ * ~6k tokens, leaving room for multilingual text and the task prefix.
+ */
+export const EMBED_MAX_CHARS = 24_000;
+
 /** gemini-embedding-2's documented task prefixes. */
 export function embedText(text: string, purpose: EmbedPurpose): string {
+  const body = text.length > EMBED_MAX_CHARS ? text.slice(0, EMBED_MAX_CHARS) : text;
   return purpose === 'query'
-    ? `task: search result | query: ${text}`
-    : `title: none | text: ${text}`;
+    ? `task: search result | query: ${body}`
+    : `title: none | text: ${body}`;
 }
 
 export class GeminiProvider extends PromptedProvider {

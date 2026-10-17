@@ -4,7 +4,7 @@ import { getEpisode } from '../db/episodes.js';
 import { cosine } from '../db/vector.js';
 import { FakeProvider, fakeEmbedding } from '../providers/fake.js';
 import { testDb, withTestNamespace } from '../testing/db.js';
-import { ingest } from './ingest.js';
+import { ingest, ingestMany } from './ingest.js';
 
 const db = testDb();
 afterAll(async () => {
@@ -116,6 +116,36 @@ describe('ingest', () => {
         }),
       ).rejects.toThrow(/quota/);
       expect(await db`select 1 from episodes where namespace_id = ${namespace.id}`).toHaveLength(0);
+    });
+  });
+});
+
+describe('ingestMany', () => {
+  it('embeds every episode in one call and keeps each record time', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const fake = new FakeProvider();
+      const turn = (content: string, at: string) => ({
+        namespaceId: ns.namespace.id,
+        sessionId: 's1',
+        role: 'user' as const,
+        content,
+        occurredAt: new Date(at),
+        createdAt: new Date(at),
+      });
+      const episodes = await ingestMany(db, fake, [
+        turn('I live in Paris.', '2024-01-15T09:00:00Z'),
+        turn('I love jazz.', '2024-01-15T09:01:00Z'),
+      ]);
+      expect(fake.callsTo('embed')).toHaveLength(1);
+      expect(episodes.map((e) => e.createdAt.toISOString())).toEqual([
+        '2024-01-15T09:00:00.000Z',
+        '2024-01-15T09:01:00.000Z',
+      ]);
+      const stored = await getEpisode(db, episodes[1]?.id ?? '');
+      expect(cosine(stored?.embedding ?? [], fakeEmbedding('I love jazz.'))).toBeCloseTo(1, 5);
+      await expect(ingestMany(db, fake, [turn('  ', '2024-01-15T09:02:00Z')])).rejects.toThrow(
+        /empty/,
+      );
     });
   });
 });

@@ -74,6 +74,10 @@ describe('GeminiProvider.embed', () => {
 
   it('uses the query prefix for queries', () => {
     expect(embedText('where?', 'query')).toBe('task: search result | query: where?');
+    // Beyond the model's input limit, only the start is embedded.
+    expect(embedText('x'.repeat(30_000), 'document')).toBe(
+      `title: none | text: ${'x'.repeat(24_000)}`,
+    );
   });
 
   it('L2-normalizes the returned vectors', async () => {

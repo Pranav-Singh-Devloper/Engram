@@ -36,3 +36,29 @@ export async function ingest(
     createdAt: options.clock?.now(),
   });
 }
+
+/**
+ * Bulk ingest (imports, bench replays): one embedding request for many
+ * episodes (the provider batches 100 a request) instead of one per turn.
+ * Each input may carry its own record time.
+ */
+export async function ingestMany(
+  db: Queryable,
+  provider: Pick<Provider, 'embed'>,
+  inputs: readonly (IngestInput & { createdAt?: Date })[],
+): Promise<Episode[]> {
+  for (const input of inputs) {
+    if (input.content.trim() === '') throw new Error('Episode content is empty.');
+    if (input.sessionId.trim() === '') throw new Error('Episode session id is empty.');
+  }
+  if (inputs.length === 0) return [];
+  const vectors = await provider.embed(
+    inputs.map((i) => i.content),
+    { purpose: 'document' },
+  );
+  const out: Episode[] = [];
+  for (const [i, input] of inputs.entries()) {
+    out.push(await insertEpisode(db, { ...input, embedding: vectors[i] ?? null }));
+  }
+  return out;
+}
