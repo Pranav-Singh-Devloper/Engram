@@ -155,6 +155,17 @@ describe('decay sweep', () => {
     });
   });
 
+  it('survives scores that underflow: a sweep a millennium later still runs', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const low = await factFor(ns, { importance: 0.3, accessScore: 5, lastAccessedAt: t0 });
+      const kept = await factFor(ns, { importance: 0.9 });
+      await sweep(ns, 1);
+      // exp(−365000/14) underflows a double; Postgres raises instead of returning 0.
+      expect(await sweep(ns, 365_000)).toEqual({ archived: 1 });
+      expect([await tier(low.id), await tier(kept.id)]).toEqual(['archived', 'working']);
+    });
+  });
+
   it('sweeps only the namespace asked for', async () => {
     // A sweep with no namespace covers all of them (pg_cron); tests share a
     // database, so they only ever sweep their own.
