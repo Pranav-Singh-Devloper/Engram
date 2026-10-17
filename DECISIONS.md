@@ -206,3 +206,27 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 - The first query after an idle spell pays Neon's wake-up latency (verify the effect on Vercel in P09a).
 - Exceeding the monthly compute suspends the database until the next month, so bench runs stay on the local database, never Neon.
 - Probing also exposed a latent bug unrelated to the host: untyped `db.array()` fails in a fresh connection's first query. Fixed with typed helpers and a guard test.
+
+---
+
+## ADR-015 — Batched extraction for bulk history
+
+**Date:** 2026-10-18 · **Status:** Accepted
+
+**Context.** Per-turn extraction makes one generate call and one embedding call per turn. P08 needs a 200-item test split (~2,800 turns) and a ~100-item LongMemEval-S subset, which measures at 46,400 turns, 4,464 unique sessions and 11M tokens. Two free Gemini keys allow ~950 generate calls a day. Alternatives researched on 2026-10-17 (P08 plan):
+
+- **Gemini Batch API:** not on the free tier.
+- **Groq:** ~200K tokens a day on its free models.
+- **Local Ollama (qwen3.5:9b on an M3 Pro):** ~31 tokens/s, output-bound, so 4+ minutes for even a small packed history.
+- **Gemma 4:** a separate quota, but 29 s for a tiny prompt.
+- **Shrinking LongMemEval to 50 items:** the spec's last resort.
+
+**Decision.**
+
+- **`processSessions`:** sessions are packed into structured calls that return candidates citing their turns, which then go through the unchanged candidate pipeline.
+- **Test split:** one session per call, about 720 calls. Record time comes from the cited turn, keeping `known_at` items exact.
+- **LongMemEval:** packed at 20k tokens, about 600 calls instead of 4,464, because it asks no record-time questions.
+- **Parity gate:** on dev and dev-long first.
+- **Unchanged:** live writes stay per turn; the local model is used for free iteration and test-split filler, never for reported numbers.
+
+**Consequences.** The reports state the extraction mode. Packing risks missing small details. Raw turns stay embedded for episode recall, which is the main path for LongMemEval's detail questions, and the parity gate measures any loss.

@@ -294,6 +294,15 @@ The write path is split into a fast step and a slow step so interactive clients 
 - MCP `engram_remember`: awaits by default so the agent sees what was stored (`wait: false` opts out).
 - Bench: always awaits.
 
+**Bulk extraction (P08, ADR-015).** History replays and imports can call `processSessions(episodeIds, { maxSessions, maxTokens, recordTime })` instead of `process` per turn. Consecutive sessions are packed into one structured call each (one session per call with `maxSessions: 1`, or up to `maxTokens`, default 20k). The call returns per-turn importance and candidates that cite their turns, and steps 2–4 run unchanged on them in learned order:
+- **Provenance** is the cited turns.
+- **Assistant-only facts are dropped:** a candidate that cites no user turn is not a fact about the user.
+- **Tool output and summaries** never reach the model.
+- **Record time:** with `recordTime: 'cited'`, each fact is recorded when its newest cited turn was learned, so `knownAt` stays exact.
+- **Embeddings:** bulk ingest (`ingestMany`) embeds a session's turns in one request.
+
+Live writes (MCP, chat) stay per turn.
+
 ### 6.2 Read path — `recall(namespace, query, k=8, validAt?, knownAt?, includeArchived=false, trackAccess=true)`
 
 1. Embed the query.
