@@ -13,7 +13,9 @@
     "demo:offline": "tsx demo-offline.ts",
     "consolidate": "tsx consolidate.ts",
     "maintain": "tsx maintain.ts",
-    "reembed": "tsx reembed.ts"
+    "reembed": "tsx reembed.ts",
+    "local:setup": "tsx local.ts setup",
+    "local:doctor": "tsx local.ts doctor"
   },
   "devDependencies": {
     "tsx": "^4.23.15"
