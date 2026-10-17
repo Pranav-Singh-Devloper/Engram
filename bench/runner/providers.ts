@@ -4,9 +4,11 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import {
   DEFAULT_JUDGE_MODEL,
+  DEFAULT_OLLAMA_EMBED_MODEL,
   DEFAULT_OLLAMA_MODEL,
   GeminiProvider,
   GroqProvider,
+  OllamaEmbedder,
   OllamaProvider,
   geminiKeysFromEnv,
 } from '@engram/core';
@@ -41,6 +43,11 @@ export interface ProviderOptions {
   fallbackCacheDir?: string;
   /** 'ollama' runs generation on a local model, free (OLLAMA_MODEL, default qwen3.5:9b). */
   system?: 'gemini' | 'ollama';
+  /**
+   * With system 'ollama': 'local' embeds with OLLAMA_EMBED_MODEL (fully local,
+   * the default); 'gemini' keeps Gemini embeddings (the P08b ablation's row B).
+   */
+  embeddings?: 'local' | 'gemini';
 }
 
 export function makeProviders(options: ProviderOptions = {}): Providers {
@@ -82,7 +89,13 @@ export function makeProviders(options: ProviderOptions = {}): Providers {
     options.system === 'ollama'
       ? new OllamaProvider({
           model: process.env.OLLAMA_MODEL || DEFAULT_OLLAMA_MODEL,
-          embedder: gemini,
+          embedder:
+            options.embeddings === 'gemini'
+              ? gemini
+              : new OllamaEmbedder({
+                  model: process.env.OLLAMA_EMBED_MODEL || DEFAULT_OLLAMA_EMBED_MODEL,
+                  http,
+                }),
           http,
         })
       : gemini;

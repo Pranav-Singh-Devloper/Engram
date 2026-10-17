@@ -120,6 +120,13 @@ export type { SessionsOptions, SessionsSummary } from './ingest/sessions.js';
 export { SESSION_PROMPT_VERSION } from './providers/promptVersion.js';
 export { ingestMany } from './ingest/ingest.js';
 export {
+  PROVIDER_KINDS,
+  isLoopbackUrl,
+  providerFromEnv,
+  providerKind,
+} from './providers/factory.js';
+export type { FactoryOptions, ProviderKind } from './providers/factory.js';
+export {
   DEFAULT_OLLAMA_EMBED_MODEL,
   LOCAL_EMBED_MAX_CHARS,
   OllamaEmbedder,

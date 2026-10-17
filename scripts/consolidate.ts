@@ -4,13 +4,12 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import {
-  GeminiProvider,
   config,
   consolidate,
   createDb,
-  geminiKeysFromEnv,
   getNamespaceBySlug,
   pendingClusters,
+  providerFromEnv,
 } from '@engram/core';
 import { parseConsolidateArgs } from './jobs.js';
 
@@ -44,15 +43,8 @@ async function main(): Promise<void> {
     );
     if (args.estimate || (calls === 0 && clusters.length === worth)) return;
 
-    const model = process.env.GEMINI_CHAT_MODEL;
-    const keys = geminiKeysFromEnv(process.env);
-    if (calls > 0 && (!model || !keys.apiKey)) {
-      throw new Error('Set GEMINI_API_KEY and GEMINI_CHAT_MODEL to consolidate.');
-    }
-    const provider = new GeminiProvider({
-      ...keys,
-      chatModel: model,
-      embedModel: process.env.GEMINI_EMBED_MODEL || undefined,
+    // ENGRAM_PROVIDER picks Gemini (needs GEMINI_API_KEY) or local Ollama (P08b).
+    const provider = providerFromEnv(process.env, {
       onKeySwitch: (i) => {
         console.error(`gemini: main key's quota is exhausted; switched to fallback key ${i}`);
       },

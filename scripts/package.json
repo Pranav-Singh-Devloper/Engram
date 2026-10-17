@@ -12,7 +12,8 @@
     "fixtures:record": "tsx record-fixtures.ts",
     "demo:offline": "tsx demo-offline.ts",
     "consolidate": "tsx consolidate.ts",
-    "maintain": "tsx maintain.ts"
+    "maintain": "tsx maintain.ts",
+    "reembed": "tsx reembed.ts"
   },
   "devDependencies": {
     "tsx": "^4.23.15"

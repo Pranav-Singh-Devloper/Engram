@@ -6,11 +6,10 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import {
   DEFAULT_DATABASE_URL,
-  GeminiProvider,
   createDb,
   ensureNamespace,
-  geminiKeysFromEnv,
   processPending,
+  providerFromEnv,
 } from '@engram/core';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { namespaceSlug } from './env.js';
@@ -25,16 +24,13 @@ async function main(): Promise<void> {
   if (existsSync(envFile)) process.loadEnvFile(envFile);
   const env = process.env;
 
-  const keys = geminiKeysFromEnv(env);
-  if (!keys.apiKey) throw new Error('GEMINI_API_KEY is not set (in the client config or .env).');
-  const provider = new GeminiProvider({
-    ...keys,
-    chatModel: env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash-lite',
-    embedModel: env.GEMINI_EMBED_MODEL || undefined,
+  // ENGRAM_PROVIDER=ollama runs Engram's own processing locally (P08b).
+  const provider = providerFromEnv(env, {
     onKeySwitch: (i) => {
       log(`main key's quota is exhausted; switched to fallback key ${i}`);
     },
   });
+  log(`provider: ${provider.name}, embeddings: ${await provider.embeddingSpace()}`);
   const db = createDb(env.DATABASE_URL || DEFAULT_DATABASE_URL, { max: 4 });
   const slug = namespaceSlug(env);
   const { namespace } = await ensureNamespace(db, { slug, kind: 'user' });

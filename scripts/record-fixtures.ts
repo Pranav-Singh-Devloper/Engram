@@ -69,6 +69,10 @@ async function isStale(db: Sql, conversation: FixtureConversation): Promise<bool
 }
 
 async function main(): Promise<void> {
+  // These are Gemini's goldens; local-model snapshots belong in expected-local/ (P11, ledger row 39).
+  if ((process.env.ENGRAM_PROVIDER ?? 'gemini') !== 'gemini') {
+    throw new Error('fixtures:record records the Gemini goldens; unset ENGRAM_PROVIDER.');
+  }
   const model = process.env.GEMINI_CHAT_MODEL;
   if (!model) throw new Error('Set GEMINI_CHAT_MODEL to record fixtures.');
   const gemini = new GeminiProvider({

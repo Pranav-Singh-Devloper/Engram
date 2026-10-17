@@ -78,8 +78,13 @@ async function main(): Promise<void> {
     if (flag('estimate')) return;
     const system = arg('system') ?? 'gemini';
     if (system !== 'gemini' && system !== 'ollama') throw new Error(`Unknown system ${system}`);
+    const embeddings = arg('embeddings') ?? 'local';
+    if (embeddings !== 'local' && embeddings !== 'gemini') {
+      throw new Error(`Unknown embeddings ${embeddings}`);
+    }
     const providers = makeProviders({
       system,
+      embeddings,
       cacheDir,
       mode: offline ? 'readonly' : 'readwrite',
       fallbackCacheDir: recordSmoke ? DEFAULT_CACHE_DIR : undefined,
