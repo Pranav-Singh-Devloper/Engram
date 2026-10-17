@@ -7,6 +7,7 @@ import type { Clock } from '../config/clock.js';
 import { config } from '../config/index.js';
 import type { Queryable, Sql } from '../db/client.js';
 import { insertEpisode } from '../db/episodes.js';
+import { bindEmbeddingSpace } from '../db/namespaces.js';
 import { setFactTier } from '../db/facts.js';
 import { toSql } from '../db/vector.js';
 import { PREDICATE_NAMES } from '../conflict/predicates.js';
@@ -49,12 +50,15 @@ async function reembedTurns(
   provider: Provider,
   namespaceId: string | undefined,
 ): Promise<number> {
-  const rows = await db<{ id: string; content: string }[]>`
-    select id, content from episodes
+  const rows = await db<{ id: string; namespaceId: string; content: string }[]>`
+    select id, namespace_id, content from episodes
     where embedding is null
       ${namespaceId ? db`and namespace_id = ${namespaceId}` : db``}
     order by id`;
   if (rows.length === 0) return 0;
+  for (const ns of new Set(rows.map((r) => r.namespaceId))) {
+    await bindEmbeddingSpace(db, ns, provider);
+  }
   const vectors = await provider.embed(
     rows.map((r) => r.content),
     { purpose: 'document' },
@@ -95,6 +99,9 @@ export async function consolidate(
   };
 
   const clusters = await pendingClusters(db, { namespaceId: options.namespaceId }, cfg);
+  for (const ns of new Set(clusters.map((c) => c.namespaceId))) {
+    await bindEmbeddingSpace(db, ns, provider);
+  }
   let calls = 0;
   for (const cluster of clusters) {
     // Small talk has nothing to consolidate; don't spend a call on it.

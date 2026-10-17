@@ -4,6 +4,7 @@
 import { config } from '../config/index.js';
 import type { Queryable } from '../db/client.js';
 import { findSimilarEntities, parseEntity } from '../db/entities.js';
+import { bindEmbeddingSpace } from '../db/namespaces.js';
 import type { EntityRow } from '../db/entities.js';
 import { normalizeName } from '../extract/normalize.js';
 import type { Provider } from '../providers/provider.js';
@@ -32,7 +33,7 @@ const escapeLike = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
 
 export async function searchEntities(
   db: Queryable,
-  provider: Pick<Provider, 'embed'>,
+  provider: Pick<Provider, 'embed' | 'embeddingSpace'>,
   options: SearchEntitiesOptions,
 ): Promise<EntityHit[]> {
   const limit = options.limit ?? 10;
@@ -45,6 +46,7 @@ export async function searchEntities(
       and (lower(name) like ${like} or exists (select 1 from unnest(aliases) a where lower(a) like ${like}))
     order by lower(name), id
     limit ${limit}`;
+  await bindEmbeddingSpace(db, options.namespaceId, provider);
   const [query] = await provider.embed([options.query], { purpose: 'query' });
   const similar = query
     ? await findSimilarEntities(

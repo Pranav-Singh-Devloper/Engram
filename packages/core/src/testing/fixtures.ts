@@ -85,6 +85,7 @@ export function recordingProvider(real: Provider, calls: RecordedCall[]): Provid
   return {
     name: `recording(${real.name})`,
     embed: (texts) => Promise.resolve(texts.map(fakeEmbedding)),
+    embeddingSpace: () => Promise.resolve('fake'),
     processEpisode: async (input) => {
       const output = await real.processEpisode(input);
       calls.push({

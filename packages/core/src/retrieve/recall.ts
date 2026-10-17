@@ -11,7 +11,7 @@ import type { Provider } from '../providers/provider.js';
 import type { FactStatus, EpisodeRole } from '../types/index.js';
 import { trackUse } from './access.js';
 import { aboutUser, minMax, recency, rrf, withPriors } from './fuse.js';
-import { getSelfEntity } from '../db/namespaces.js';
+import { bindEmbeddingSpace, getSelfEntity } from '../db/namespaces.js';
 import {
   graphNeighbours,
   prepareVectorSearch,
@@ -80,7 +80,7 @@ function byContent(
 
 export async function recall(
   db: Sql,
-  provider: Pick<Provider, 'embed'>,
+  provider: Pick<Provider, 'embed' | 'embeddingSpace'>,
   options: RecallOptions,
   clock: Clock = systemClock,
 ): Promise<RecallResult> {
@@ -91,6 +91,7 @@ export async function recall(
     knownAt: options.knownAt ?? now,
     includeArchived: options.includeArchived ?? false,
   };
+  await bindEmbeddingSpace(db, options.namespaceId, provider);
   const [query] = await provider.embed([options.query], { purpose: 'query' });
   if (!query) throw new Error('Query embedding failed.');
 

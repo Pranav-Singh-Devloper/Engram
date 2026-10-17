@@ -82,6 +82,10 @@ export class FakeProvider implements Provider {
     return this.calls.filter((c) => c.method === method).map((c) => c.input);
   }
 
+  embeddingSpace(): Promise<string> {
+    return Promise.resolve('fake');
+  }
+
   embed(texts: readonly string[], options: { purpose: EmbedPurpose }): Promise<number[][]> {
     this.calls.push({ method: 'embed', input: { texts: [...texts], purpose: options.purpose } });
     return Promise.resolve(texts.map(fakeEmbedding));

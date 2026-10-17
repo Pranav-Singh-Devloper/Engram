@@ -67,9 +67,12 @@ export function geminiKeysFromEnv(env: Record<string, string | undefined>): {
  */
 export const EMBED_MAX_CHARS = 24_000;
 
-/** gemini-embedding-2's documented task prefixes. */
-export function embedText(text: string, purpose: EmbedPurpose): string {
-  const body = text.length > EMBED_MAX_CHARS ? text.slice(0, EMBED_MAX_CHARS) : text;
+/**
+ * gemini-embedding-2's documented task prefixes (embeddinggemma uses the
+ * same ones). Texts over `maxChars` are cut to their start.
+ */
+export function embedText(text: string, purpose: EmbedPurpose, maxChars = EMBED_MAX_CHARS): string {
+  const body = text.length > maxChars ? text.slice(0, maxChars) : text;
   return purpose === 'query'
     ? `task: search result | query: ${body}`
     : `title: none | text: ${body}`;
@@ -119,7 +122,15 @@ export class GeminiProvider extends PromptedProvider {
     }
   }
 
+  /** Texts cut to EMBED_MAX_CHARS so far (reported by the bench as a truncation rate). */
+  truncated = 0;
+
+  embeddingSpace(): Promise<string> {
+    return Promise.resolve(this.embedModel);
+  }
+
   async embed(texts: readonly string[], options: { purpose: EmbedPurpose }): Promise<number[][]> {
+    this.truncated += texts.filter((t) => t.length > EMBED_MAX_CHARS).length;
     const vectors: number[][] = [];
     for (let i = 0; i < texts.length; i += EMBED_BATCH) {
       const batch = texts.slice(i, i + EMBED_BATCH);

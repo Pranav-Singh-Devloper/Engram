@@ -147,6 +147,10 @@ export class GroqProvider implements Provider {
       schemaName: 'judgement',
     });
 
+  embeddingSpace(): Promise<string> {
+    return Promise.reject(new ProviderError('GroqProvider has no embeddings.'));
+  }
+
   embed(): Promise<number[][]> {
     return Promise.reject(new ProviderError('GroqProvider has no embeddings.'));
   }

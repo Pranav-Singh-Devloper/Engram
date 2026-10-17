@@ -9,6 +9,12 @@ import type { EmbedPurpose, MethodInput, MethodOutput, StructuredMethod } from '
 export type Provider = {
   readonly name: string;
   embed(texts: readonly string[], options: { purpose: EmbedPurpose }): Promise<number[][]>;
+  /**
+   * The vector space `embed` produces, e.g. "gemini-embedding-2" or
+   * "embeddinggemma:300m@<digest>". Vectors from different spaces can't be
+   * compared, so a namespace is bound to one (P08b, ADR-017).
+   */
+  embeddingSpace(): Promise<string>;
 } & {
   readonly [M in StructuredMethod]: (input: MethodInput<M>) => Promise<MethodOutput<M>>;
 };

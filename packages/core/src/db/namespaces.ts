@@ -74,3 +74,39 @@ export async function cleanupDemoNamespaces(db: Queryable, now: Date): Promise<n
   );
   return row.deleted;
 }
+
+export class EmbeddingSpaceError extends Error {
+  override name = 'EmbeddingSpaceError';
+}
+
+/**
+ * Binds the namespace to the provider's embedding space on first use, and
+ * refuses a different one afterwards (P08b, ADR-017): comparing vectors from
+ * two models silently ruins recall and entity resolution.
+ */
+export async function bindEmbeddingSpace(
+  db: Queryable,
+  namespaceId: string,
+  provider: { embeddingSpace(): Promise<string> },
+): Promise<void> {
+  const space = await provider.embeddingSpace();
+  const [row] = await db<{ embeddingModel: string | null }[]>`
+    update namespaces set embedding_model = coalesce(embedding_model, ${space})
+    where id = ${namespaceId}
+    returning embedding_model`;
+  if (!row) throw new Error(`Namespace ${namespaceId} not found.`);
+  if (row.embeddingModel !== space) {
+    // Bound but never written (an embed failed after binding): nothing to protect.
+    const [held] = await db<{ any: boolean }[]>`
+      select exists (select 1 from episodes where namespace_id = ${namespaceId} and embedding is not null)
+          or exists (select 1 from facts where namespace_id = ${namespaceId} and embedding is not null)
+          or exists (select 1 from entities where namespace_id = ${namespaceId} and embedding is not null) as any`;
+    if (!held?.any) {
+      await db`update namespaces set embedding_model = ${space} where id = ${namespaceId}`;
+      return;
+    }
+    throw new EmbeddingSpaceError(
+      `This namespace's vectors are in ${row.embeddingModel ?? 'no'} space, but the configured embedder produces ${space}. Use the original embedder, or convert with \`pnpm db:reembed --namespace=<slug>\`.`,
+    );
+  }
+}

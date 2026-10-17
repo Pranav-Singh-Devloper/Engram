@@ -46,6 +46,8 @@ export interface Namespace {
   kind: NamespaceKind;
   expiresAt: Date | null;
   createdAt: Date;
+  /** The embedding space of its vectors; null until the first embedding write (ADR-017). */
+  embeddingModel: string | null;
 }
 
 export interface Episode {

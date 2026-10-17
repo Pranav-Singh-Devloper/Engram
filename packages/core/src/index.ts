@@ -119,3 +119,12 @@ export { packSessions, processSessions } from './ingest/sessions.js';
 export type { SessionsOptions, SessionsSummary } from './ingest/sessions.js';
 export { SESSION_PROMPT_VERSION } from './providers/promptVersion.js';
 export { ingestMany } from './ingest/ingest.js';
+export {
+  DEFAULT_OLLAMA_EMBED_MODEL,
+  LOCAL_EMBED_MAX_CHARS,
+  OllamaEmbedder,
+} from './providers/ollamaEmbed.js';
+export type { OllamaEmbedderOptions } from './providers/ollamaEmbed.js';
+export { EmbeddingSpaceError, bindEmbeddingSpace } from './db/namespaces.js';
+export { reembedNamespace } from './db/reembed.js';
+export type { ReembedReport } from './db/reembed.js';

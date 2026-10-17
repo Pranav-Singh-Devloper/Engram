@@ -1,6 +1,7 @@
 import type { Clock } from '../config/clock.js';
 import type { Queryable } from '../db/client.js';
 import { insertEpisode } from '../db/episodes.js';
+import { bindEmbeddingSpace } from '../db/namespaces.js';
 import type { Provider } from '../providers/provider.js';
 import type { Episode, EpisodeRole } from '../types/index.js';
 
@@ -21,13 +22,14 @@ export interface IngestInput {
  */
 export async function ingest(
   db: Queryable,
-  provider: Pick<Provider, 'embed'>,
+  provider: Pick<Provider, 'embed' | 'embeddingSpace'>,
   input: IngestInput,
   options: { clock?: Clock } = {},
 ): Promise<Episode> {
   if (input.content.trim() === '') throw new Error('Episode content is empty.');
   if (input.sessionId.trim() === '') throw new Error('Episode session id is empty.');
 
+  await bindEmbeddingSpace(db, input.namespaceId, provider);
   const [embedding] = await provider.embed([input.content], { purpose: 'document' });
   // created_at is the episode's record time (SPEC §5.1): when the system learned it.
   return insertEpisode(db, {
@@ -44,7 +46,7 @@ export async function ingest(
  */
 export async function ingestMany(
   db: Queryable,
-  provider: Pick<Provider, 'embed'>,
+  provider: Pick<Provider, 'embed' | 'embeddingSpace'>,
   inputs: readonly (IngestInput & { createdAt?: Date })[],
 ): Promise<Episode[]> {
   for (const input of inputs) {
@@ -52,6 +54,8 @@ export async function ingestMany(
     if (input.sessionId.trim() === '') throw new Error('Episode session id is empty.');
   }
   if (inputs.length === 0) return [];
+  for (const ns of new Set(inputs.map((i) => i.namespaceId)))
+    await bindEmbeddingSpace(db, ns, provider);
   const vectors = await provider.embed(
     inputs.map((i) => i.content),
     { purpose: 'document' },

@@ -43,6 +43,7 @@ const EXTRACT_SESSIONS_JSON_SCHEMA = jsonSchemaFor(WireExtractSessions);
 export abstract class PromptedProvider implements Provider {
   abstract readonly name: string;
   abstract embed(texts: readonly string[], options: { purpose: EmbedPurpose }): Promise<number[][]>;
+  abstract embeddingSpace(): Promise<string>;
   /** The transport, or a rejection explaining why there is none (no model configured). */
   protected abstract chat(): ChatSend | Error;
 

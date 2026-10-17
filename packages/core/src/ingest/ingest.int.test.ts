@@ -106,7 +106,10 @@ describe('ingest', () => {
 
   it('stores nothing when embedding fails', async () => {
     await withTestNamespace(db, async ({ namespace }) => {
-      const failing = { embed: () => Promise.reject(new Error('quota exhausted')) };
+      const failing = {
+        embed: () => Promise.reject(new Error('quota exhausted')),
+        embeddingSpace: () => Promise.resolve('test'),
+      };
       await expect(
         ingest(db, failing, {
           namespaceId: namespace.id,

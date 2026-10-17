@@ -23,8 +23,8 @@ export const DEFAULT_OLLAMA_MODEL = 'qwen3.5:9b';
 export interface OllamaOptions {
   model?: string;
   baseUrl?: string;
-  /** Where embeddings come from; the engine's vectors must share one space. */
-  embedder: Pick<Provider, 'embed'>;
+  /** Where embeddings come from: Gemini, or a local OllamaEmbedder. */
+  embedder: Pick<Provider, 'embed' | 'embeddingSpace'>;
   /** Context window. 32k fits a 20k-token packed session plus the reply. */
   numCtx?: number;
   /** Fixed, so runs are repeatable (and cacheable) at temperature 0. */
@@ -93,6 +93,10 @@ export class OllamaProvider extends PromptedProvider {
 
   embed(texts: readonly string[], options: { purpose: EmbedPurpose }): Promise<number[][]> {
     return this.options.embedder.embed(texts, options);
+  }
+
+  embeddingSpace(): Promise<string> {
+    return this.options.embedder.embeddingSpace();
   }
 
   /** How structured replies are being obtained (after any automatic switch). */

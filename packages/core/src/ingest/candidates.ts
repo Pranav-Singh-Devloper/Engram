@@ -5,7 +5,7 @@ import type { Clock } from '../config/clock.js';
 import { lookupPredicate } from '../conflict/predicates.js';
 import { UNKNOWN_START } from '../db/client.js';
 import type { Sql } from '../db/client.js';
-import { getSelfEntity } from '../db/namespaces.js';
+import { bindEmbeddingSpace, getSelfEntity } from '../db/namespaces.js';
 import { normalizePredicate } from '../extract/normalize.js';
 import { resolveHint } from '../extract/temporal.js';
 import type { EntityRef, FactCandidate } from '../providers/contracts.js';
@@ -121,6 +121,7 @@ export async function resolveCandidates(
     resolutions: [],
   };
   if (sources.length === 0) return result;
+  await bindEmbeddingSpace(db, namespaceId, provider);
 
   // One embedding call for the batch: entity labels and statements together.
   const refs = mentions(sources.map((s) => s.raw));
