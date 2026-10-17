@@ -61,6 +61,18 @@ export interface RecallResult {
   bestSimilarity: number;
 }
 
+/** A deterministic tie-break that doesn't depend on ids. */
+function byContent(
+  a: { text: string; validFrom: Date; kind: string },
+  b: { text: string; validFrom: Date; kind: string },
+): number {
+  return (
+    a.text.localeCompare(b.text) ||
+    a.validFrom.getTime() - b.validFrom.getTime() ||
+    a.kind.localeCompare(b.kind)
+  );
+}
+
 export async function recall(
   db: Sql,
   provider: Pick<Provider, 'embed'>,
@@ -89,9 +101,20 @@ export async function recall(
       ...episodes.slice(0, cfg.graphSeeds),
     ];
     const graph = await graphNeighbours(ctx, seeds, cfg.graphLimit);
-    // Graph neighbours are ranked by similarity: the list's order is otherwise arbitrary.
-    graph.sort((a, b) => cosine(query, b.embedding) - cosine(query, a.embedding));
-    return { facts, episodes, text, graph } satisfies Record<ListName, Candidate[]>;
+    // Vector lists are re-ranked by exact similarity (the HNSW iterative scan
+    // returns near-ties in no fixed order) and graph neighbours by similarity
+    // too. Ties break on content, never on ids, which differ between otherwise
+    // identical stores: the same history must give the same recall.
+    const bySimilarity = (list: Candidate[]) =>
+      list.sort(
+        (a, b) => cosine(query, b.embedding) - cosine(query, a.embedding) || byContent(a, b),
+      );
+    return {
+      facts: bySimilarity(facts),
+      episodes: bySimilarity(episodes),
+      text,
+      graph: bySimilarity(graph),
+    } satisfies Record<ListName, Candidate[]>;
   });
 
   const byKey = new Map<string, Candidate>();
@@ -161,7 +184,7 @@ export async function recall(
       sourceEpisodeIds: c.sourceEpisodeIds,
       lists: foundIn.get(c.key) ?? [],
     }))
-    .sort((a, b) => b.score - a.score || b.similarity - a.similarity)
+    .sort((a, b) => b.score - a.score || b.similarity - a.similarity || byContent(a, b))
     .slice(0, options.k ?? cfg.k);
 
   if (options.trackAccess ?? true) {

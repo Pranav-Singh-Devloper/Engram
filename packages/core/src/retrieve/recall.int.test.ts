@@ -191,3 +191,27 @@ describe('recall', () => {
     });
   });
 });
+
+describe('determinism', () => {
+  it('returns the same memories in the same order for identical histories in different namespaces', async () => {
+    const build = async () =>
+      withTestNamespace(db, async (ns) => {
+        const s = new Scenario(db, ns);
+        await moved(s);
+        for (const [i, food] of ['ramen', 'sushi', 'tacos', 'pho'].entries()) {
+          await s.tell({
+            at: `2024-07-0${i + 1}T09:00:00Z`,
+            content: `I like ${food}.`,
+            candidates: [
+              aboutSelf('likes', food, { type: 'thing', statement: `The user likes ${food}.` }),
+            ],
+          });
+        }
+        const r = await ask(s, 'What does the user like and where does the user live?');
+        return r.memories.map((m) => `${m.kind}:${m.text}`);
+      });
+    const [a, b] = [await build(), await build()];
+    expect(a.length).toBeGreaterThan(3);
+    expect(b).toEqual(a);
+  });
+});

@@ -45,6 +45,7 @@ export function makeProviders(options: ProviderOptions = {}): Providers {
   const fetch = cachingFetch({
     dir: options.cacheDir ?? DEFAULT_CACHE_DIR,
     mode,
+    missFile: path.join(BENCH_DIR, 'runs', 'last-miss.json'),
     meter,
     pacer: network ? undefined : pacer,
     fetch: network,

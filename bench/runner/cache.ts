@@ -71,6 +71,8 @@ export interface CachingFetchOptions {
   meter?: UsageMeter;
   pacer?: Pacer;
   fetch?: typeof fetch;
+  /** Read-only mode: where to write the last request that missed. */
+  missFile?: string;
 }
 
 export function cachingFetch(options: CachingFetchOptions): typeof fetch {
@@ -87,6 +89,14 @@ export function cachingFetch(options: CachingFetchOptions): typeof fetch {
       return new Response(JSON.stringify(entry.body), { status: 200 });
     }
     if (options.mode === 'readonly') {
+      // Kept for debugging: which request had no recording, and why.
+      if (options.missFile) {
+        mkdirSync(path.dirname(options.missFile), { recursive: true });
+        writeFileSync(
+          options.missFile,
+          `${JSON.stringify({ url, key, body: JSON.parse(body || 'null') as unknown }, null, 2)}\n`,
+        );
+      }
       // Not retryable: a miss is a missing recording, not a flaky network.
       return new Response(JSON.stringify({ error: `cache miss for ${url}` }), { status: 404 });
     }

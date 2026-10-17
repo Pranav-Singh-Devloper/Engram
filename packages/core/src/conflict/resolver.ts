@@ -29,7 +29,7 @@ export async function currentBeliefs(
     from facts f left join entities o on o.id = f.object_id
     where f.namespace_id = ${c.namespaceId} and f.subject_id = ${c.subjectId}
       and f.predicate = ${c.predicate} and f.invalidated_at is null
-    order by f.valid_from, f.id`;
+    order by f.valid_from, f.recorded_at, f.statement`;
   return rows.map(({ objectName, ...row }) => ({ ...parseFact(row), objectName }));
 }
 

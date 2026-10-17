@@ -133,7 +133,7 @@ export async function textSearch(
         and ${episodesAsOfPredicate(tx, ctx.asOf)}
         and to_tsvector('english', e.content) @@ q.tsq
     ) hits
-    order by rank desc, id limit ${limit}`;
+    order by rank desc, text, valid_from limit ${limit}`;
   return rows.map(toCandidate);
 }
 
@@ -169,6 +169,7 @@ export async function graphNeighbours(
     where f.namespace_id = ${ctx.namespaceId} and f.embedding is not null
       and ${asOfPredicate(tx, ctx.asOf)}
       and (f.subject_id in (select id from hub) or f.object_id in (select id from hub))
+    order by f.statement, f.valid_from
     limit ${limit}`;
   return rows.map(toCandidate);
 }
