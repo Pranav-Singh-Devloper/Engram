@@ -22,6 +22,9 @@ export interface NewFact {
   confidence?: number;
   importance?: number;
   pinned?: boolean;
+  /** Carried across versions so a revision doesn't reset retention. */
+  accessScore?: number;
+  lastAccessedAt?: Date | null;
   validFrom: Date;
   validFromSource?: ValidFromSource;
   validTo?: Date | null;

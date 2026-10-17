@@ -90,3 +90,7 @@ export { DONT_KNOW } from './compose/prompt.js';
 export { recall } from './retrieve/recall.js';
 export type { ListName, RecallOptions, RecallResult, RecalledMemory } from './retrieve/recall.js';
 export { trackUse } from './retrieve/access.js';
+export { crossingDays, decayedAccess, retentionScore, tauDays } from './decay/score.js';
+export type { RetentionInput } from './decay/score.js';
+export { STATIC_PREDICATES, decaySweep, lastSweep } from './decay/sweep.js';
+export type { SweepOptions } from './decay/sweep.js';
