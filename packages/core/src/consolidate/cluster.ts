@@ -23,7 +23,9 @@ export interface Cluster {
   maxImportance: number;
 }
 
-type Cfg = typeof config.consolidation;
+/** The consolidation settings, widened so tests and jobs can override them. */
+export type ConsolidationConfig = { readonly [K in keyof typeof config.consolidation]: number };
+type Cfg = ConsolidationConfig;
 
 /** Splits one session's turns (in time order) on embedding drift and size. */
 export function splitSession(

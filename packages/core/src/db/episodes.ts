@@ -22,6 +22,9 @@ export interface NewEpisode {
   /** Record time; defaults to the database's now(). The engine passes its clock. */
   createdAt?: Date;
   summarizes?: string[];
+  /** Set for episodes that are never extracted, such as consolidation summaries. */
+  processedAt?: Date;
+  consolidated?: boolean;
 }
 
 export async function insertEpisode(db: Queryable, episode: NewEpisode): Promise<Episode> {
