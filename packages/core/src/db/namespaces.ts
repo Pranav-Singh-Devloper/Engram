@@ -64,3 +64,13 @@ export async function getSelfEntity(db: Queryable, namespaceId: string): Promise
     ),
   );
 }
+
+/** Deletes demo namespaces expired at `now`, with everything in them. Returns how many. */
+export async function cleanupDemoNamespaces(db: Queryable, now: Date): Promise<number> {
+  const row = one(
+    await db<
+      { deleted: number }[]
+    >`select engram.engram_cleanup_demo(${now}::timestamptz) as deleted`,
+  );
+  return row.deleted;
+}

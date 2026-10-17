@@ -30,6 +30,7 @@ export {
 export type { NewFact } from './db/facts.js';
 export {
   SELF_ENTITY_NAME,
+  cleanupDemoNamespaces,
   ensureNamespace,
   getNamespace,
   getNamespaceBySlug,
