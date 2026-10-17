@@ -136,3 +136,18 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 - **Targets (dev-long, regressions fail):** engram accuracy ≥ 95% (now 100%), recall@8 ≥ 95% (now 97%).
 
 **Consequences.** On histories this short, rag and full_context also score 100%; only buffer degrades, to 71% on 35 of 40 items so far (cross-session 45%, multi-hop 0%). Showing engram's advantages needs far longer histories (P08), and at one extraction call per turn that would exceed free quotas, so P08 must reconsider extraction batching.
+
+---
+
+## ADR-011 — Decay bookkeeping and span redaction in the hard purge
+
+**Date:** 2026-10-17 · **Status:** Accepted
+
+**Context.** SPEC §9 left two things open: where the sweep's Δt for access decay comes from, and how to "redact the relevant content" of an episode. The no-trace purge test also showed that information survives in episodes that merely _mention_ the purged value ("Before Paris I lived in Lyon"), not just in source episodes.
+
+**Decision.**
+
+- **Δt:** each sweep is recorded in `engram.decay_sweeps`, and Δt is the time since the previous sweep covering the namespace.
+- **Redaction:** the hard purge redacts _terms_: literals no remaining fact uses, and the names and aliases of entities left without facts. Mentions of those terms in any episode of the namespace are replaced in place with `[redacted]`. A source episode that backs no other fact is deleted. Changed episodes drop their embeddings, and summaries over them are deleted until P06b regenerates them.
+
+**Consequences.** A full-text search for the purged value finds nothing, and the rest of each turn survives. A name still used by other facts is kept, so purging "lives in Paris" doesn't erase a friend who also lives in Paris. Episodes that lost their embeddings are reachable by full text only until re-embedded.
