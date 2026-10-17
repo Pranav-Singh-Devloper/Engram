@@ -12,7 +12,7 @@ import { emptyUsage } from './cache.js';
 import { judgeAnswer } from './judge.js';
 import type { Verdict } from './judge.js';
 import { runMode } from './modes.js';
-import type { Mode, ModeAnswer, ModeDeps } from './modes.js';
+import type { Extraction, Mode, ModeAnswer, ModeDeps } from './modes.js';
 
 export interface ItemResult {
   itemId: string;
@@ -33,6 +33,7 @@ export interface RunOptions {
   provider: Provider;
   recall?: ModeDeps['recall'];
   retrievalOnly?: boolean;
+  extraction?: Extraction;
   judge?: Pick<Provider, 'judge'>;
   meter?: UsageMeter;
   dir: string;
@@ -68,6 +69,7 @@ export async function runItems(
           provider: options.provider,
           recall: options.recall,
           retrievalOnly: options.retrievalOnly,
+          extraction: options.extraction,
         });
       } catch (err) {
         if (err instanceof ProviderHttpError && err.status === 429) {

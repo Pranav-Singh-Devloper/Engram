@@ -11,8 +11,8 @@ import { PORTABLE, migrate } from '@engram/core/migrate';
 import { SplitFile } from '../dataset/schema.js';
 import type { BenchItem } from '../dataset/schema.js';
 import { describeEstimate, estimate } from './estimate.js';
-import { ALL_MODES, MODES } from './modes.js';
-import type { Mode } from './modes.js';
+import { ALL_MODES, EXTRACTIONS, MODES } from './modes.js';
+import type { Extraction, Mode } from './modes.js';
 import { BENCH_DIR, DEFAULT_CACHE_DIR, loadEnv, makeProviders } from './providers.js';
 import { renderReport, summarizeRun } from './report.js';
 import { QuotaStop, loadResults, resultFiles, runItems } from './run.js';
@@ -55,6 +55,8 @@ async function main(): Promise<void> {
   const memory = arg('memory') ?? 'all';
   const modes = (memory === 'all' ? [...MODES] : memory.split(',')) as Mode[];
   for (const m of modes) if (!ALL_MODES.includes(m)) throw new Error(`Unknown mode ${m}`);
+  const extraction = (arg('extraction') ?? 'turn') as Extraction;
+  if (!EXTRACTIONS.includes(extraction)) throw new Error(`Unknown extraction ${extraction}`);
 
   const runId =
     arg('run') ?? `${new Date().toISOString().slice(0, 10)}-${split}${smoke ? '-smoke' : ''}`;
@@ -68,7 +70,7 @@ async function main(): Promise<void> {
     console.log(
       `${items.length} items × ${modes.length} modes, run ${runId}${offline ? ' (offline replay)' : ''}`,
     );
-    console.log(describeEstimate(estimate(items, modes, llmJudge), geminiRpm));
+    console.log(describeEstimate(estimate(items, modes, llmJudge, extraction), geminiRpm));
     const providers = makeProviders({
       cacheDir,
       mode: offline ? 'readonly' : 'readwrite',
@@ -89,6 +91,7 @@ async function main(): Promise<void> {
           ...(process.env.BENCH_FLOOR ? { floor: Number(process.env.BENCH_FLOOR) } : {}),
         },
         retrievalOnly: flag('retrieval-only'),
+        extraction,
         dir: runDir,
         log: (line) => {
           console.log(line);

@@ -2,7 +2,8 @@
 // run starts. Items sharing a persona replay identical turns, which the cache
 // answers once, so extraction is counted per unique turn.
 import type { BenchItem } from '../dataset/schema.js';
-import type { Mode } from './modes.js';
+import { PACK_TOKENS } from './modes.js';
+import type { Extraction, Mode } from './modes.js';
 
 export interface Estimate {
   extractionCalls: number;
@@ -19,8 +20,11 @@ export function estimate(
   items: readonly BenchItem[],
   modes: readonly Mode[],
   llmJudge: boolean,
+  extraction: Extraction = 'turn',
 ): Estimate {
   const uniqueTurns = new Set<string>();
+  const uniqueExtractSessions = new Set<string>();
+  const packedHistories = new Map<string, number>();
   const uniqueSessions = new Set<string>();
   let composeChars = 0;
   for (const item of items) {
@@ -31,6 +35,14 @@ export function estimate(
     for (const mode of modes) {
       if (mode === 'engram' || mode === 'engram_consolidated') {
         turns.forEach((t) => uniqueTurns.add(t));
+        for (const s of item.setup_sessions) {
+          uniqueExtractSessions.add(`${s.session_id}:${s.turns.join('|')}`);
+        }
+        // Packs depend on the whole history, so identical histories share them.
+        packedHistories.set(
+          turns.join('\n'),
+          Math.max(1, Math.ceil(historyChars / 4 / PACK_TOKENS)),
+        );
       }
       if (mode === 'engram_consolidated') {
         for (const s of item.setup_sessions)
@@ -40,7 +52,12 @@ export function estimate(
       composeChars += 1200 + (mode === 'full_context' || mode === 'buffer' ? historyChars : 1500);
     }
   }
-  const extractionCalls = uniqueTurns.size;
+  const extractionCalls =
+    extraction === 'turn'
+      ? uniqueTurns.size
+      : extraction === 'session'
+        ? uniqueExtractSessions.size
+        : [...packedHistories.values()].reduce((n, k) => n + k, 0);
   return {
     extractionCalls,
     summarizeCalls: uniqueSessions.size,

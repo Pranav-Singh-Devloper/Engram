@@ -6,6 +6,7 @@ import { FakeProvider, ProviderHttpError, SELF_REF } from '@engram/core';
 import type { ConsolidatedCandidate, MethodInput } from '@engram/core';
 import { testDb } from '@engram/core/testing';
 import type { BenchItem } from '../dataset/schema.js';
+import { estimate } from './estimate.js';
 import { runMode } from './modes.js';
 import { QuotaStop, loadResults, runItems } from './run.js';
 
@@ -161,6 +162,59 @@ describe('memory modes', () => {
     // Osaka, and the closed Krakow history row the update copied from a long_term fact.
     expect(answer.consolidation?.longTermFacts).toBe(2);
     expect(answer.answer).toContain('Krakow');
+  });
+
+  it('session and packed extraction answer like per-turn extraction, in fewer calls', async () => {
+    for (const extraction of ['session', 'packed'] as const) {
+      const self = { name: SELF_REF, type: 'person', description: null } as const;
+      const provider = fake().when(
+        'extractSessions',
+        () => true,
+        (input) => ({
+          importance: input.turns.map((t) => ({ episodeId: t.id, importance: 0.6 })),
+          candidates: input.turns.map((t): ConsolidatedCandidate => {
+            const city = t.content.includes('Krakow') ? 'Krakow' : 'Osaka';
+            return {
+              subject: self,
+              predicate: 'lives_in',
+              object: { kind: 'entity', entity: { name: city, type: 'place', description: null } },
+              statement: `The user lives in ${city}.`,
+              validFrom:
+                city === 'Osaka'
+                  ? { kind: 'named_period', year: null, month: 5, season: null }
+                  : { kind: 'none' },
+              validTo: { kind: 'none' },
+              isCorrection: false,
+              confidence: 0.9,
+              sourceEpisodeIds: [t.id],
+            };
+          }),
+        }),
+      );
+      const answer = await runMode('engram', item, {
+        db,
+        provider,
+        recall: { floor: 0 },
+        extraction,
+      });
+      expect(answer.answer, extraction).toContain('Krakow');
+      expect(answer.answer, extraction).not.toContain('Osaka');
+      expect(provider.callsTo('processEpisode'), extraction).toHaveLength(0);
+      // Two sessions: two calls per session, one when packed.
+      expect(provider.callsTo('extractSessions'), extraction).toHaveLength(
+        extraction === 'session' ? 2 : 1,
+      );
+      // Turns are embedded once per session, not once per turn.
+      expect(provider.callsTo('embed').length, extraction).toBeGreaterThan(0);
+    }
+  });
+
+  it('the estimate counts extraction calls by batching mode', () => {
+    const items = [item, { ...item, id: 'dev-test-2' }];
+    expect(estimate(items, ['engram'], false, 'turn').extractionCalls).toBe(2);
+    expect(estimate(items, ['engram'], false, 'session').extractionCalls).toBe(2);
+    // Both items share one short history: one pack.
+    expect(estimate(items, ['engram'], false, 'packed').extractionCalls).toBe(1);
   });
 
   it('the baselines see dated turns and no facts', async () => {

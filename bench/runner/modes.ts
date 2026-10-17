@@ -15,7 +15,9 @@ import {
   cosine,
   ensureNamespace,
   ingest,
+  ingestMany,
   processEpisode,
+  processSessions,
   recall,
 } from '@engram/core';
 import type { Provider, RecallOptions, Sql } from '@engram/core';
@@ -28,6 +30,15 @@ export const MODES = ['buffer', 'rag', 'full_context', 'engram'] as const;
 export const EXTRA_MODES = ['engram_consolidated'] as const;
 export type Mode = (typeof MODES)[number] | (typeof EXTRA_MODES)[number];
 export const ALL_MODES: readonly Mode[] = [...MODES, ...EXTRA_MODES];
+
+/**
+ * How engram extracts (P08, ADR-015): one call per turn (the live path), one
+ * per session, or sessions packed into calls of PACK_TOKENS. Packing blurs
+ * record time within a pack, so it's only for splits without known_at items.
+ */
+export const EXTRACTIONS = ['turn', 'session', 'packed'] as const;
+export type Extraction = (typeof EXTRACTIONS)[number];
+export const PACK_TOKENS = 20_000;
 
 /** Consolidation runs this long after a session's last turn ("that night"). */
 export const CONSOLIDATE_AFTER_MS = 60 * 60 * 1000;
@@ -105,6 +116,8 @@ export interface ModeDeps {
    * compared on recall@8 at no generation cost (embeddings have their own quota).
    */
   retrievalOnly?: boolean;
+  /** Engram modes: how extraction batches turns (default: one call per turn). */
+  extraction?: Extraction;
 }
 
 export async function runMode(mode: Mode, item: BenchItem, deps: ModeDeps): Promise<ModeAnswer> {
@@ -172,25 +185,73 @@ async function engram(
         consolidation.outcomes[k] = (consolidation.outcomes[k] ?? 0) + n;
       }
     };
-    for (const [i, t] of turns.entries()) {
-      const prev = turns[i - 1];
-      if (options.consolidate && prev && sessionOf(prev) !== sessionOf(t)) {
-        await consolidateSession(prev);
+    const extraction = deps.extraction ?? 'turn';
+    if (extraction === 'turn') {
+      for (const [i, t] of turns.entries()) {
+        const prev = turns[i - 1];
+        if (options.consolidate && prev && sessionOf(prev) !== sessionOf(t)) {
+          await consolidateSession(prev);
+        }
+        clock.set(t.at);
+        const episode = await ingest(
+          db,
+          provider,
+          {
+            namespaceId: namespace.id,
+            sessionId: sessionOf(t),
+            role: 'user',
+            content: t.text,
+            occurredAt: t.at,
+          },
+          { clock },
+        );
+        await processEpisode(db, provider, episode.id, { clock });
       }
-      clock.set(t.at);
-      const episode = await ingest(
-        db,
-        provider,
-        {
-          namespaceId: namespace.id,
-          sessionId: sessionOf(t),
-          role: 'user',
-          content: t.text,
-          occurredAt: t.at,
-        },
-        { clock },
-      );
-      await processEpisode(db, provider, episode.id, { clock });
+    } else {
+      // Each turn is learned when it was said; facts are recorded at their cited turn.
+      const sessions: Turn[][] = [];
+      for (const t of turns) {
+        const open = sessions.at(-1);
+        if (open?.[0] && sessionOf(open[0]) === sessionOf(t)) open.push(t);
+        else sessions.push([t]);
+      }
+      const pending: string[] = [];
+      for (const session of sessions) {
+        const episodes = await ingestMany(
+          db,
+          provider,
+          session.map((t) => ({
+            namespaceId: namespace.id,
+            sessionId: sessionOf(t),
+            role: 'user' as const,
+            content: t.text,
+            occurredAt: t.at,
+            createdAt: t.at,
+          })),
+        );
+        pending.push(...episodes.map((e) => e.id));
+        if (extraction === 'session') {
+          const last = session.at(-1);
+          if (last) clock.set(last.at);
+          await processSessions(db, provider, pending.splice(0), {
+            maxSessions: 1,
+            recordTime: 'cited',
+            clock,
+          });
+          if (options.consolidate && last && session !== sessions.at(-1)) {
+            await consolidateSession(last);
+          }
+        }
+      }
+      if (pending.length > 0) {
+        const last = turns.at(-1);
+        if (last) clock.set(last.at);
+        await processSessions(db, provider, pending, {
+          maxTokens: PACK_TOKENS,
+          recordTime: 'cited',
+          clock,
+        });
+      }
     }
     const last = turns.at(-1);
     if (options.consolidate && last) {
