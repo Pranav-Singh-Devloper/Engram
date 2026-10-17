@@ -151,3 +151,15 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 - **Redaction:** the hard purge redacts _terms_: literals no remaining fact uses, and the names and aliases of entities left without facts. Mentions of those terms in any episode of the namespace are replaced in place with `[redacted]`. A source episode that backs no other fact is deleted. Changed episodes drop their embeddings, and summaries over them are deleted until P06b regenerates them.
 
 **Consequences.** A full-text search for the purged value finds nothing, and the rest of each turn survives. A name still used by other facts is kept, so purging "lives in Paris" doesn't erase a friend who also lives in Paris. Episodes that lost their embeddings are reachable by full text only until re-embedded.
+
+---
+
+## ADR-012 — Repeatable migrations for generated hosted SQL
+
+**Date:** 2026-10-17 · **Status:** Accepted
+
+**Context.** The pg_cron schedules in `supabase/hosted/` are generated from `config` (P06b), so they change whenever a decay parameter or the static-predicate list does. The migration runner refuses an applied file whose content changed, which keeps numbered migrations honest but would make every regenerated schedule break `db:migrate:hosted`.
+
+**Decision.** A file named `R__*.sql` is _repeatable_, in the Flyway sense: it's re-applied whenever its checksum changes, after the numbered files of its source, and its SQL must be idempotent. Numbered files keep the strict rule. The schedule file is `supabase/hosted/R__cron_schedules.sql`, and `cron.schedule` replaces a job of the same name, so re-applying it is safe.
+
+**Consequences.** Changing `config.decay` or `config.schedules` means running `pnpm db:hosted-cron` and committing the result (a drift test enforces it). The next `db:migrate:hosted` then updates the hosted jobs in place.

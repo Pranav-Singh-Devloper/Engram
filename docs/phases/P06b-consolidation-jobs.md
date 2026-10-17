@@ -1,6 +1,6 @@
 # P06b — Consolidation + jobs
 
-**Status:** planned (expanded 2026-10-17)
+**Status:** done (2026-10-17)
 
 ## Goal
 Add the "sleep" phase (SPEC §8). Recent turns are clustered and summarized. Their fact candidates go back through the normal write path with provenance-aware merging, so facts already extracted are *confirmed*, not double-counted. Facts that consolidation creates or confirms move to `long_term`, the only path there. Schedules: consolidation nightly from GitHub Actions; the decay sweep and demo cleanup through pg_cron on the hosted database.
@@ -24,7 +24,7 @@ Add the "sleep" phase (SPEC §8). Recent turns are clustered and summarized. The
    - the job re-embeds turns whose embeddings the purge removed.
 7. **Demo cleanup** is a portable SQL function, `engram.engram_cleanup_demo(now)`, tested locally.
 8. **Schedules are generated, not hand-written.**
-   - `pnpm db:hosted-cron` writes `supabase/hosted/0002_cron_schedules.sql` from `config` (the decay parameters and static predicates).
+   - `pnpm db:hosted-cron` writes `supabase/hosted/R__cron_schedules.sql` from `config` (the decay parameters and static predicates).
    - A unit test fails if the committed file drifts from the generator.
    - pg_cron uses `create extension if not exists pg_cron with schema pg_catalog`, and named jobs replace themselves on re-run.
 9. **`pnpm jobs:consolidate`** runs against `DATABASE_URL`. It caps clusters per run, prints an estimate first, and uses the key failover.
@@ -47,7 +47,7 @@ packages/core/src/consolidate/{cluster,prompt,consolidate}.ts (+ tests)
 packages/core/src/providers/gemini.ts        # + summarize
 packages/core/src/forget/purge.ts            # deleted summaries → turns unconsolidated
 supabase/migrations/0005_demo_cleanup.sql    # engram_cleanup_demo(now)
-supabase/hosted/0002_cron_schedules.sql      # generated
+supabase/hosted/R__cron_schedules.sql        # generated (repeatable)
 scripts/{consolidate,hosted-cron}.ts         # jobs:consolidate, db:hosted-cron
 .github/workflows/consolidate.yml
 bench/runner/modes.ts                        # + engram_consolidated (opt-in, not in "all")
@@ -71,15 +71,15 @@ bench/runner/modes.ts                        # + engram_consolidated (opt-in, no
 - **Workflow:** it skips without the secret (checked by inspecting the workflow file).
 
 ## Definition of done
-- [ ] Clustering and prioritization, with the budget skip.
-- [ ] `summarize()` with cited turns. Summary episodes written, source turns marked.
-- [ ] Candidates resolve through the unchanged pipeline; the provenance merge test passes; consolidation is the only path to `long_term`.
-- [ ] `pnpm jobs:consolidate` runs end to end on the local Docker DB.
-- [ ] `consolidate.yml`: nightly and on dispatch, skips without the secret.
-- [ ] `supabase/hosted/0002_cron_schedules.sql` is generated from config, applied only by `db:migrate:hosted`, and drift-tested.
-- [ ] The demo-cleanup function is portable and tested.
-- [ ] Purge-deleted summaries regenerate on the next run.
-- [ ] A dev-long bench report with consolidation, within the budget above.
+- [x] Clustering and prioritization, with the budget skip.
+- [x] `summarize()` with cited turns. Summary episodes written, source turns marked.
+- [x] Candidates resolve through the unchanged pipeline; the provenance merge test passes; consolidation is the only path to `long_term`.
+- [x] `pnpm jobs:consolidate` runs end to end on the local Docker DB.
+- [x] `consolidate.yml`: nightly and on dispatch, skips without the secret.
+- [x] `supabase/hosted/R__cron_schedules.sql` is generated from config, applied only by `db:migrate:hosted`, and drift-tested. (Applying it on Supabase is verified in P10.)
+- [x] The demo-cleanup function is portable and tested.
+- [x] Purge-deleted summaries regenerate on the next run.
+- [x] A dev-long bench report with consolidation, within the budget above.
 
 ## Planned commits
 1. `feat(consolidate): cluster unconsolidated turns by session`
@@ -94,3 +94,37 @@ bench/runner/modes.ts                        # + engram_consolidated (opt-in, no
 - **Recall and summaries:** summaries compete with facts in recall; watch recall@8 on dev-long.
 - **pg_cron** can't run locally (plain pgvector image). The schedule SQL is checked for drift, and verified on Supabase in P10.
 - **GitHub scheduled workflows** pause after 60 days of repo inactivity (README, P10).
+
+## Summary
+
+Done 2026-10-17, using about 96 Gemini generate calls on the fallback key (budget: ~95), plus embeddings, which have their own quota.
+
+- **Consolidation** clusters each session's extracted turns, skips small talk without a call, and summarizes the rest with candidates that cite their turns. The candidates go through `resolveCandidates`, the pipeline now shared with extraction. A fact confirmed from its own turns merges with confidence unchanged, and a newly cited turn raises it. Everything consolidation creates or confirms becomes `long_term`; a source-scan test keeps it the only path there.
+- **Summaries** are embedded, recallable and never extracted. A purge that deletes one unconsolidates its turns, and the next run re-embeds redacted turns and writes it again.
+- **Jobs:**
+  - `pnpm jobs:consolidate` (local, or `--hosted`; `--estimate` costs nothing) ran end to end on the local DB against real Gemini;
+  - `consolidate.yml` runs nightly just after the quota reset and skips without `HOSTED_DATABASE_URL`;
+  - `engram_cleanup_demo(now)` is portable and tested;
+  - `pnpm db:hosted-cron` generates the pg_cron schedules from config, with a drift test.
+- **Bench (dev-long, `engram_consolidated`):**
+
+  | | accuracy | recall@8 | duplicate inserts from consolidation |
+  |---|---|---|---|
+  | engram | 100% | 97% | — |
+  | engram_consolidated, first run | 100% | 100% | 38 |
+  | engram_consolidated, after the fix | 100% | **100%** | 4 (new `visited` facts, not duplicates) |
+
+  Per item there were 3.8 clusters summarized, 6.9 filler clusters skipped without a call, and 14.6 current long_term facts. Reports: `bench/reports/2026-10-17-devlong-consolidated{,-r2}.md`.
+- **CI** replays the smoke subset through `engram_consolidated` too, from recorded summaries (the recording cost 3 calls).
+
+Deviations from the plan above:
+- **`R__cron_schedules.sql` instead of `0002_cron_schedules.sql`.** The migration runner refuses edited files, so a regenerated schedule would have broken `db:migrate:hosted`. The runner now supports Flyway-style repeatable `R__` files, re-applied whenever their content changes.
+- **A CI smoke replay instead of three recorded summarize fixtures.** The P02 fixture harness only records extraction. The smoke replay checks the real summarize responses on every push, through the whole pipeline, for less than the planned ~3 calls.
+- **An engine fix the bench found:** restatements in the past tense (`lived_in`) or the other way round (Riley `partner_of` the user) didn't merge. The registry gained past-tense synonyms and a `symmetric` flag, and symmetric facts are stored one way round. Two golden snapshots changed only in direction or order.
+- **The bench consolidates each session an hour after it ends**, rather than once at the end, so knowledge-at-time questions see only the summaries that existed then.
+
+Follow-ups:
+- **Summaries guess the user's gender** ("introduced himself as Tomás"). In the next prompt pass, tell the summarizer to say "the user" (it bumps `CONSOLIDATION_PROMPT_VERSION`, which re-summarizes ~32 clusters).
+- **Summaries infer weak facts,** e.g. `visited` a former home city. That's harmless on dev-long. Watch the inserted counts on the test split.
+- **pg_cron on Supabase** is applied and checked in P10 (`select * from cron.job`).
+

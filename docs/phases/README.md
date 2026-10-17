@@ -13,7 +13,7 @@ The plan for building Engram, one file per phase. [`docs/SPEC.md`](../SPEC.md) i
 | P04 Bench harness v0 | [P04-bench-harness.md](P04-bench-harness.md) | done | P03 | all four modes produce a dev report |
 | P05 Retrieval | [P05-retrieval.md](P05-retrieval.md) | done | P04 | retrieval fixtures pass; dev targets are recorded in DECISIONS.md |
 | P06a Decay + purge | [P06a-decay-purge.md](P06a-decay-purge.md) | done | P05 | the time-travel and purge tests pass |
-| P06b Consolidation + jobs | [P06b-consolidation-jobs.md](P06b-consolidation-jobs.md) | in progress | P06a | consolidation runs end-to-end on the local DB; the merge test passes |
+| P06b Consolidation + jobs | [P06b-consolidation-jobs.md](P06b-consolidation-jobs.md) | done | P06a | consolidation runs end-to-end on the local DB; the merge test passes |
 | P07 MCP | [P07-mcp.md](P07-mcp.md) | outline | P06b | the SDK-client integration test passes; Claude Code can remember and recall |
 | P08 Bench full | [P08-bench-full.md](P08-bench-full.md) | outline | P07 | test and LongMemEval reports exist; the README table shows judge agreement |
 | P09a Web API | [P09a-web-api.md](P09a-web-api.md) | outline | P07 | route handlers, auth, demo sessions and rate limits are tested |

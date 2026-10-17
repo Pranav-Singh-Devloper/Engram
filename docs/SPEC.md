@@ -73,6 +73,7 @@ Long-running work never runs inside Vercel functions: decay is a SQL function sc
 **Database targets.**
 - *Local dev, tests, CI:* the plain `pgvector/pgvector` Docker image via `docker-compose.yml` (CI uses the same image as a service container). It has no pg_cron, and nothing local needs it: decay tests call the SQL function directly with a simulated clock.
 - *Hosted:* Supabase free tier. `pnpm db:migrate` applies `supabase/migrations/` to either target; `pnpm db:migrate:hosted` additionally applies `supabase/hosted/`. The local runner never reads `supabase/hosted/`.
+- *Repeatable files:* a file named `R__*.sql` is re-applied whenever its content changes, after the numbered files; numbered files are immutable once applied. Generated SQL (the pg_cron schedules) uses this.
 
 ---
 
@@ -317,9 +318,10 @@ The composer returns zod-validated `{ answer, supported: boolean, used_memory_id
 
 ### 6.4 Background jobs
 
-- **Decay sweep:** the SQL function `engram_decay_sweep(now timestamptz)`, scheduled daily by `pg_cron`. Because `now` is a parameter, simulated-clock tests call it directly.
-- **Demo cleanup:** a `pg_cron` job deletes expired demo namespaces (cascade) hourly.
-- **Consolidation:** `pnpm jobs:consolidate`, run nightly by `.github/workflows/consolidate.yml` against `DATABASE_URL`, and on demand via `engram_consolidate`. Never runs inside a Vercel function.
+- **Decay sweep:** the SQL function `engram_decay_sweep(now, …params)`, scheduled daily by `pg_cron`. Because `now` is a parameter, simulated-clock tests call it directly.
+- **Demo cleanup:** the SQL function `engram_cleanup_demo(now)` deletes expired demo namespaces (cascade); `pg_cron` runs it hourly.
+- **Schedules are generated:** `pnpm db:hosted-cron` writes `supabase/hosted/R__cron_schedules.sql` from `config` (decay parameters, static predicates, cron expressions). A test fails if the committed file drifts from the generator. Named jobs replace themselves on re-run.
+- **Consolidation:** `pnpm jobs:consolidate` (`--hosted` for `HOSTED_DATABASE_URL`, `--estimate` to print the call estimate and stop), run nightly by `.github/workflows/consolidate.yml` just after the Gemini quota resets, and on demand via `engram_consolidate`. The workflow skips cleanly without the secret, and doubles as the Supabase keep-alive. Never runs inside a Vercel function.
 
 ---
 
@@ -331,15 +333,25 @@ The composer returns zod-validated `{ answer, supported: boolean, used_memory_id
 - `cardinality: 'one' | 'many'`
 - `mutability: 'static' | 'dynamic'`
 - `synonyms: string[]`
+- `symmetric?: boolean`: `a p b` means `b p a`. Such facts are stored one way round (the user as subject, else the lower entity id), so a restatement in the other direction merges.
 
-| predicate | cardinality | mutability | synonyms |
-|---|---|---|---|
-| `lives_in` | one | dynamic | resides_in, based_in, moved_to, home_city |
-| `works_at` | one | dynamic | employed_by, job_at |
-| `birth_date` | one | static | born_on |
-| `is_named` | one | static | — |
-| `likes` | many | dynamic | — |
-| `visited` | many | dynamic | — |
+| predicate | cardinality | mutability | symmetric | synonyms |
+|---|---|---|---|---|
+| `lives_in` | one | dynamic | — | resides_in, based_in, moved_to, home_city, lived_in, resided_in |
+| `works_at` | one | dynamic | — | employed_by, job_at, worked_at |
+| `birth_date` | one | static | — | born_on |
+| `is_named` | one | static | — | — |
+| `likes` | many | dynamic | — | — |
+| `visited` | many | dynamic | — | — |
+| `occupation` | one | dynamic | — | has_occupation, job_title, profession, works_as, job, role, has_job |
+| `sibling_of` | many | static | yes | sister_of, brother_of, has_sister, has_brother, sibling, has_sibling |
+| `partner_of` | one | dynamic | yes | has_partner, partner, in_relationship_with, dating, married_to, spouse_of |
+| `allergic_to` | many | dynamic | — | is_allergic_to, has_allergy, allergy |
+| `has_pet` | many | dynamic | — | pet, owns_pet, has_dog, has_cat |
+| `plays` | many | dynamic | — | plays_instrument, plays_the |
+| `learning` | many | dynamic | — | is_learning, studying, studies, learning_language |
+
+Past-tense synonyms are safe: the validity window, not the predicate, says when a fact held.
 
 Extraction is constrained to registry names, and ad-hoc predicates are normalized through the synonym map before storage. The **ad-hoc rate** (share of facts with `predicate_ad_hoc`) is a tracked metric. If it climbs, the registry is missing something.
 
@@ -399,13 +411,15 @@ Let the candidate be `c` with window `[c.from, c.to)`. `c.from` defaults to the 
 
 Purpose: compress episodic memory into durable semantic memory on a schedule — the "sleep" phase.
 
-- **Trigger:** nightly job, plus a manual tool. Sessions with ≥ 12 unconsolidated episodes are prioritized.
-- **Grouping:** cluster unconsolidated `kind = 'turn'` episodes by namespace, session, shared entities, and embedding proximity.
+- **Trigger:** nightly job, plus a manual tool. Sessions with ≥ 12 unconsolidated episodes are prioritized, then the oldest first. A run summarizes at most `maxClustersPerRun` clusters (20) to bound quota use; the rest wait for the next run.
+- **Grouping:** unconsolidated, already-extracted `kind = 'turn'` episodes (never tool output) are grouped by namespace and session, split where consecutive embeddings drift apart (cosine < 0.5), and capped at 12 turns.
+- **Budget skip:** a cluster whose turns all score below `minImportance` (0.3) is small talk: it's marked `consolidated` without a model call.
 - **Summarize:** the LLM produces two things per cluster:
-  - fact candidates with validity hints;
-  - a one-paragraph summary, stored as a `kind = 'summary'` episode with `summarizes` set. Source episodes are marked `consolidated`.
-- **Reuse:** every candidate goes through the normal write path (§6.1 steps 2–4). Provenance-aware merge (§7.2.3) ensures facts already extracted at write time are confirmed, not double-counted.
-- **Tiering:** facts created or confirmed by consolidation move from `working` to `long_term`. This is the **only** path into `long_term`.
+  - fact candidates with validity hints, each **citing the turns that support it** (turns are labelled `t1…tn`; ids never reach the prompt). A candidate's provenance is exactly its cited turns, and its hints resolve against the latest cited turn;
+  - a one-paragraph summary, stored as an embedded, recallable `kind = 'summary'` episode with `summarizes` set. Summaries are never extracted. Source episodes are marked `consolidated`.
+- **Reuse:** every candidate goes through the normal write path (§6.1 steps 2–4), the same `resolveCandidates` pipeline extraction uses. Provenance-aware merge (§7.2.3) means a fact re-extracted from its own turns merges with confidence unchanged; only a newly cited turn raises it.
+- **Tiering:** facts created or confirmed by consolidation move from `working` to `long_term`. This is the **only** path into `long_term` (a test scans the source to enforce it). Versions copy their tier, so the history of a long-term fact stays long-term.
+- **After a purge:** a summary deleted by a hard purge (§9.3) leaves its surviving turns unconsolidated, so the next run regenerates it; the run first re-embeds turns whose embeddings a redaction removed.
 
 ---
 
@@ -592,6 +606,7 @@ Per item:
 | `rag` | vector search over episodes only; no facts, conflicts, or time |
 | `full_context` | the entire item history in the model's long context — the honest baseline |
 | `engram` | the full system |
+| `engram_consolidated` | opt-in (not in `all`): `engram`, plus a consolidation run an hour after each session ends |
 
 Engram is expected to beat `rag` broadly. The interesting claim is *where* it beats or loses to `full_context` (updates, as-of questions, cost, latency) and by how much. Report that honestly either way.
 
@@ -628,7 +643,7 @@ LongMemEval-S histories are long (on the order of 115k tokens per item), so `ful
 
 ### 13.7 CI
 
-- Every PR: a 20-item smoke subset from **dev** through all four modes, `exact`/`contains` judges only, replayed from committed recorded HTTP responses (`bench/fixtures/smoke-cache/`) by the real providers in read-only cache mode — no network, no keys, no cost. Providers keep database ids out of prompts so request bodies are deterministic.
+- Every PR: a 20-item smoke subset from **dev** through all four modes, and again through `engram_consolidated` (opt-in elsewhere), `exact`/`contains` judges only, replayed from committed recorded HTTP responses (`bench/fixtures/smoke-cache/`) by the real providers in read-only cache mode — no network, no keys, no cost. Providers keep database ids out of prompts so request bodies are deterministic.
 - `bench.yml`: full test and LongMemEval runs, manually triggered or nightly, with API keys from secrets.
 
 ---
@@ -789,7 +804,8 @@ Exposed over MCP; measured by bench/. Source of truth: docs/SPEC.md.
 - pnpm demo:offline                                 (FakeProvider, no API keys)
 - pnpm bench --split=dev|test --memory=engram|rag|full_context|buffer
 - pnpm bench:longmemeval
-- pnpm jobs:consolidate                             (decay runs in pg_cron)
+- pnpm jobs:consolidate [--hosted] [--estimate]     (decay runs in pg_cron)
+- pnpm db:hosted-cron                               (regenerate supabase/hosted/R__cron_schedules.sql)
 
 ## Working rules
 - One phase from docs/SPEC.md §15 at a time. Plan first, wait for approval, then build.

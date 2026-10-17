@@ -30,7 +30,8 @@ P07, so the engine is feature-complete before anything is measured. It can overl
   - shrink LongMemEval to a subset that fits the budget (SPEC §13.6 rule); or
   - both.
 - **Budget 10% above the cache-based count:** failed requests count against the quota too.
-- **The smoke cache is 2.7 MB**, mostly embedding vectors. If it grows, store embeddings more compactly.
+- **The smoke cache is 4.2 MB** after P06b added the consolidated replay, mostly embedding vectors. If it grows, store embeddings more compactly.
+- **From P06b:** run `engram_consolidated` alongside the four modes on test (it's opt-in, so name it), and report consolidation's inserted and duplicate counts. Do the summarizer's "the user, not he/she" prompt fix before that run, so the summaries are cached once.
 
 ## Risks and verify-at-build-time
 - **Verify:** the LongMemEval repo, license, format and question types. Record the license in the README.
