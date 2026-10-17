@@ -4,6 +4,20 @@ import { ProviderOutputError } from './provider.js';
 /** Sends a generateContent request body and returns the parsed response JSON. */
 export type GeneratePost = (body: unknown) => Promise<unknown>;
 
+/** One turn of a structured exchange; `model` is the assistant. */
+export interface ChatTurn {
+  role: 'user' | 'model';
+  text: string;
+}
+
+/** A transport for structured generation: sends the exchange, returns the reply text. */
+export type ChatSend = (request: {
+  system: string;
+  turns: readonly ChatTurn[];
+  jsonSchema?: Record<string, unknown>;
+  temperature: number;
+}) => Promise<string>;
+
 export interface StructuredRequest<T> {
   system: string;
   user: string;
@@ -31,11 +45,6 @@ const GenerateResponse = z.object({
     })
     .optional(),
 });
-
-interface Content {
-  role: 'user' | 'model';
-  parts: { text: string }[];
-}
 
 function replyText(json: unknown): string {
   const res = GenerateResponse.parse(json);
@@ -72,42 +81,52 @@ export function check<T>(
     : { ok: false, issues: z.prettifyError(result.error) };
 }
 
+/** Gemini's generateContent as a ChatSend. The body shape is fixed: recorded responses are keyed by it. */
+export function geminiChat(post: GeneratePost): ChatSend {
+  return async ({ system, turns, jsonSchema, temperature }) =>
+    replyText(
+      await post({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: turns.map((t) => ({ role: t.role, parts: [{ text: t.text }] })),
+        generationConfig: {
+          responseMimeType: 'application/json',
+          ...(jsonSchema && { responseJsonSchema: jsonSchema }),
+          temperature,
+        },
+      }),
+    );
+}
+
 /**
  * Asks for JSON and validates it with zod. On a bad reply it shows the model
  * its own output and the validation errors once, then gives up with a typed
  * error. Callers decide whether to retry the whole operation.
  */
 export async function generateStructured<T>(
-  post: GeneratePost,
+  send: ChatSend,
   request: StructuredRequest<T>,
 ): Promise<T> {
-  const contents: Content[] = [{ role: 'user', parts: [{ text: request.user }] }];
-  const body = (): unknown => ({
-    systemInstruction: { parts: [{ text: request.system }] },
-    contents,
-    generationConfig: {
-      responseMimeType: 'application/json',
-      ...(request.jsonSchema && { responseJsonSchema: request.jsonSchema }),
+  const turns: ChatTurn[] = [{ role: 'user', text: request.user }];
+  const ask = () =>
+    send({
+      system: request.system,
+      turns,
+      jsonSchema: request.jsonSchema,
       temperature: request.temperature ?? 0,
-    },
-  });
+    });
 
-  const first = replyText(await post(body()));
+  const first = await ask();
   const firstCheck = check(request.schema, first);
   if (firstCheck.ok) return firstCheck.value;
 
-  contents.push(
-    { role: 'model', parts: [{ text: first }] },
+  turns.push(
+    { role: 'model', text: first },
     {
       role: 'user',
-      parts: [
-        {
-          text: `That reply was invalid:\n${firstCheck.issues}\nReply again with only the corrected JSON.`,
-        },
-      ],
+      text: `That reply was invalid:\n${firstCheck.issues}\nReply again with only the corrected JSON.`,
     },
   );
-  const second = replyText(await post(body()));
+  const second = await ask();
   const secondCheck = check(request.schema, second);
   if (secondCheck.ok) return secondCheck.value;
   throw new ProviderOutputError(

@@ -50,7 +50,13 @@ function retryAfterMs(header: string | null): number | undefined {
 export async function postJson(
   url: string,
   body: unknown,
-  options: { headers: Record<string, string>; retry: RetryOptions; deps: HttpDeps },
+  options: {
+    headers: Record<string, string>;
+    retry: RetryOptions;
+    deps: HttpDeps;
+    /** Reads a successful response; JSON by default (Ollama streams NDJSON). */
+    parse?: (res: Response) => Promise<unknown>;
+  },
 ): Promise<unknown> {
   const { retry, deps } = options;
   for (let attempt = 0; ; attempt++) {
@@ -75,7 +81,7 @@ export async function postJson(
       continue;
     }
 
-    if (res.ok) return res.json();
+    if (res.ok) return options.parse ? options.parse(res) : res.json();
 
     const text = await res.text();
     const detail = text.slice(0, 500);

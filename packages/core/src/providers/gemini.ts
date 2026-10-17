@@ -1,47 +1,21 @@
 // Gemini over its REST API with plain fetch; no SDK dependency.
 // Embeddings use gemini-embedding-2, which takes task prefixes instead of a
 // taskType field and is truncated to 768 dims via outputDimensionality.
-// Structured methods are added in the phases that write their prompts; the
-// prompts and model-facing schemas live next to the code that uses the results.
+// The structured methods' prompts and validation live in PromptedProvider;
+// this class supplies the transport, key failover and embeddings.
 import { z } from 'zod';
 import { EMBEDDING_DIM } from '../config/index.js';
 import { assertVector, l2Normalize } from '../db/vector.js';
-import {
-  DISAMBIGUATE_SYSTEM,
-  PROCESS_EPISODE_SYSTEM,
-  WireDisambiguate,
-  WireProcessEpisode,
-  disambiguateUser,
-  jsonSchemaFor,
-  processEpisodeUser,
-} from '../extract/prompt.js';
-import { ADJUDICATE_SYSTEM, WireAdjudicate, adjudicateUser } from '../conflict/prompt.js';
-import { COMPOSE_SYSTEM, WireCompose, composeUser, normalizeCompose } from '../compose/prompt.js';
-import {
-  AdjudicateInput,
-  ComposeInput,
-  DisambiguateInput,
-  ProcessEpisodeInput,
-  SummarizeInput,
-} from './contracts.js';
-import { SUMMARIZE_SYSTEM, WireSummarize, summarizeUser } from '../consolidate/prompt.js';
-import type { EmbedPurpose, MethodInput, MethodOutput, StructuredMethod } from './contracts.js';
-import { aliasIds } from './aliases.js';
+import type { EmbedPurpose } from './contracts.js';
 import { DEFAULT_RETRY, defaultHttpDeps, postJson } from './http.js';
 import type { HttpDeps, RetryOptions } from './http.js';
-import type { Provider } from './provider.js';
 import { ProviderError, ProviderHttpError, ProviderOutputError } from './provider.js';
-import { generateStructured } from './structured.js';
-import type { StructuredRequest } from './structured.js';
+import { PromptedProvider } from './prompted.js';
+import { geminiChat } from './structured.js';
+import type { ChatSend } from './structured.js';
 
 export const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 export const DEFAULT_EMBED_MODEL = 'gemini-embedding-2';
-
-const PROCESS_EPISODE_JSON_SCHEMA = jsonSchemaFor(WireProcessEpisode);
-const DISAMBIGUATE_JSON_SCHEMA = jsonSchemaFor(WireDisambiguate);
-const ADJUDICATE_JSON_SCHEMA = jsonSchemaFor(WireAdjudicate);
-const COMPOSE_JSON_SCHEMA = jsonSchemaFor(WireCompose);
-const SUMMARIZE_JSON_SCHEMA = jsonSchemaFor(WireSummarize);
 
 /** batchEmbedContents accepts at most 100 requests per call. */
 const EMBED_BATCH = 100;
@@ -93,7 +67,7 @@ export function embedText(text: string, purpose: EmbedPurpose): string {
     : `title: none | text: ${text}`;
 }
 
-export class GeminiProvider implements Provider {
+export class GeminiProvider extends PromptedProvider {
   readonly name = 'gemini';
   private readonly embedModel: string;
   private readonly baseUrl: string;
@@ -103,6 +77,7 @@ export class GeminiProvider implements Provider {
   private keyIndex = 0;
 
   constructor(private readonly options: GeminiOptions) {
+    super();
     if (!options.apiKey) throw new ProviderError('GEMINI_API_KEY is not set.');
     this.embedModel = options.embedModel ?? DEFAULT_EMBED_MODEL;
     this.baseUrl = options.baseUrl ?? GEMINI_BASE_URL;
@@ -164,109 +139,9 @@ export class GeminiProvider implements Provider {
     return vectors;
   }
 
-  /** JSON generation with zod validation and one repair attempt. Used by structured methods. */
-  generate<T>(request: StructuredRequest<T>): Promise<T> {
+  protected chat(): ChatSend | Error {
     const model = this.options.chatModel;
-    if (!model) return Promise.reject(new ProviderError('No Gemini chat model configured.'));
-    return generateStructured(
-      (body) => this.post(`models/${model}:generateContent`, body),
-      request,
-    );
+    if (!model) return new ProviderError('No Gemini chat model configured.');
+    return geminiChat((body) => this.post(`models/${model}:generateContent`, body));
   }
-
-  private notYet<M extends StructuredMethod>(method: M, where: string): Promise<MethodOutput<M>> {
-    return Promise.reject(new ProviderError(`GeminiProvider.${method}: see ${where}.`));
-  }
-
-  processEpisode = (input: MethodInput<'processEpisode'>) =>
-    this.generate({
-      system: PROCESS_EPISODE_SYSTEM,
-      user: processEpisodeUser(ProcessEpisodeInput.parse(input)),
-      schema: WireProcessEpisode,
-      jsonSchema: PROCESS_EPISODE_JSON_SCHEMA,
-    });
-
-  adjudicate = async (input: MethodInput<'adjudicate'>) => {
-    const parsed = AdjudicateInput.parse(input);
-    const ids = aliasIds(
-      parsed.existing.map((e) => e.id),
-      'f',
-    );
-    const out = await this.generate({
-      system: ADJUDICATE_SYSTEM,
-      user: adjudicateUser({
-        ...parsed,
-        existing: parsed.existing.map((e) => ({ ...e, id: ids.label(e.id) })),
-      }),
-      schema: WireAdjudicate,
-      jsonSchema: ADJUDICATE_JSON_SCHEMA,
-    });
-    return {
-      ...out,
-      targetFactId: out.targetFactId === null ? null : ids.resolve(out.targetFactId),
-    };
-  };
-
-  disambiguate = async (input: MethodInput<'disambiguate'>) => {
-    const parsed = DisambiguateInput.parse(input);
-    const ids = aliasIds(
-      parsed.candidates.map((c) => c.id),
-      'c',
-    );
-    const out = await this.generate({
-      system: DISAMBIGUATE_SYSTEM,
-      user: disambiguateUser({
-        ...parsed,
-        candidates: parsed.candidates.map((c) => ({ ...c, id: ids.label(c.id) })),
-      }),
-      schema: WireDisambiguate,
-      jsonSchema: DISAMBIGUATE_JSON_SCHEMA,
-    });
-    return { ...out, entityId: out.entityId === null ? null : ids.resolve(out.entityId) };
-  };
-
-  compose = async (input: MethodInput<'compose'>) => {
-    const parsed = ComposeInput.parse(input);
-    const ids = aliasIds(
-      parsed.memories.map((m) => m.id),
-      'm',
-    );
-    const out = await this.generate({
-      system: COMPOSE_SYSTEM,
-      user: composeUser({
-        ...parsed,
-        memories: parsed.memories.map((m) => ({ ...m, id: ids.label(m.id) })),
-      }),
-      schema: WireCompose,
-      jsonSchema: COMPOSE_JSON_SCHEMA,
-    });
-    return normalizeCompose({ ...out, usedMemoryIds: out.usedMemoryIds.map(ids.resolve) }, parsed);
-  };
-  summarize = async (input: MethodInput<'summarize'>) => {
-    const parsed = SummarizeInput.parse(input);
-    const turns = aliasIds(
-      parsed.episodes.map((e) => e.id),
-      't',
-    );
-    const out = await this.generate({
-      system: SUMMARIZE_SYSTEM,
-      user: summarizeUser({
-        ...parsed,
-        episodes: parsed.episodes.map((e) => ({ ...e, id: turns.label(e.id) })),
-      }),
-      schema: WireSummarize,
-      jsonSchema: SUMMARIZE_JSON_SCHEMA,
-    });
-    // Cited labels map back to episode ids; a candidate citing no real turn has no provenance.
-    const known = new Set(parsed.episodes.map((e) => e.id));
-    const candidates = out.candidates
-      .map((c) => ({
-        ...c,
-        sourceEpisodeIds: c.sourceEpisodeIds.map(turns.resolve).filter((id) => known.has(id)),
-      }))
-      .filter((c) => c.sourceEpisodeIds.length > 0);
-    return { summary: out.summary, candidates };
-  };
-  /** The bench judge runs on a different model family (GroqProvider). */
-  judge = () => this.notYet('judge', 'GroqProvider');
 }

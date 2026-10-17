@@ -113,3 +113,5 @@ export { processPending } from './ingest/pending.js';
 export type { PendingOptions, PendingResult } from './ingest/pending.js';
 export { BenchSummary } from './types/benchSummary.js';
 export { textArray, uuidArray } from './db/client.js';
+export { DEFAULT_OLLAMA_MODEL, OLLAMA_BASE_URL, OllamaProvider } from './providers/ollama.js';
+export type { OllamaOptions } from './providers/ollama.js';
