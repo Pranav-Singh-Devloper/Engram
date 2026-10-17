@@ -107,6 +107,21 @@ describe('migrate', () => {
     expect(row?.two).toBe(2);
   });
 
+  it('sets the search path itself, for hosts that drop the startup parameter', async () => {
+    // Neon's proxy ignores search_path at connect time; simulate that session.
+    await sql`set search_path to public`;
+    const src = await source('migrations', {
+      '0001_check.sql': `do $$ begin
+        if current_setting('search_path') <> 'engram, extensions, public' then
+          raise exception 'search_path is %', current_setting('search_path');
+        end if;
+      end $$;`,
+    });
+    expect(await migrate(sql, { sources: [src], trackingSchema: schema })).toEqual([
+      'migrations/0001_check.sql',
+    ]);
+  });
+
   it('fails when an applied file is missing on disk', async () => {
     const src = await source('migrations', { '0001_a.sql': `create table ${schema}.a (id int);` });
     await migrate(sql, { sources: [src], trackingSchema: schema });

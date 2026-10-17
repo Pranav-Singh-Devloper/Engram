@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { SEARCH_PATH } from './client.js';
 import type { Sql } from './client.js';
 
 export interface MigrationSource {
@@ -119,6 +120,10 @@ export async function migrate(sql: Sql, options: MigrateOptions): Promise<string
       const [existing] = await tx<{ checksum: string }[]>`
         select checksum from ${tx(schema)}.schema_migrations where filename = ${m.name}`;
       if (existing?.checksum === m.checksum) return false;
+      // Some hosts (Neon's proxy) drop the search_path startup parameter, so
+      // each migration sets it itself: opclasses like vector_cosine_ops live
+      // in `extensions`.
+      await tx.unsafe(`set local search_path to ${SEARCH_PATH}`);
       await tx.unsafe(m.sql);
       await tx`
         insert into ${tx(schema)}.schema_migrations (filename, checksum)
