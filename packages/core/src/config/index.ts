@@ -51,6 +51,16 @@ export const config = {
     /** Below this best raw cosine, recall returns nothing. Tuned on dev. */
     floor: 0.5,
   },
+  consolidation: {
+    /** Turns per cluster at most; sessions this long are consolidated first (SPEC §8). */
+    maxClusterSize: 12,
+    /** Consecutive turns less similar than this start a new cluster. */
+    driftThreshold: 0.5,
+    /** A cluster whose turns all score below this is small talk: marked done without a model call. */
+    minImportance: 0.3,
+    /** Clusters summarized per run, to bound free-tier quota use. */
+    maxClustersPerRun: 20,
+  },
   decay: {
     tauWorkingDays: 14,
     tauLongTermDays: 90,
