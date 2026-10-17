@@ -120,3 +120,19 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 - **Smoke runs offline.** A 20-item subset replays committed responses in read-only mode in CI. To make request bodies deterministic, providers alias database ids out of prompts.
 
 **Consequences.** A cold dev run is about 25 minutes at free pacing, and re-runs are nearly free. Dev histories are short (≤20 turns), so buffer and full_context see identical prompts; the full test split needs longer histories to separate them.
+
+---
+
+## ADR-010 — Recall: RRF, a 0.5 safety floor, and the dev targets
+
+**Date:** 2026-10-17 · **Status:** Accepted
+
+**Context.** P05 built `recall()` with two rankers and an abstention floor, to be chosen on dev (SPEC §6.2, §13.1). The 40-item dev split (14 turns per history) saturates, so a `dev-long` variant adds filler sessions (about 37 turns per history) for tuning. Retrieval-only runs and a floor-0 run let rankers and floors be compared without spending generation quota.
+
+**Decision.**
+
+- **Ranker: RRF.** On dev-long, RRF and min-max linear tie at recall@8 35/36. The one miss is dev-019, whose answer lives in a validity window rather than in text: a label limitation. RRF is the spec default and has no weights to tune.
+- **Floor: 0.5.** Abstention items' best similarities (0.67–0.77) overlap answerable ones (lowest 0.72), so no floor separates them. Simulated accuracy is 100% for every floor from 0 to 0.7, because the composer abstains correctly. 0.5 stays as a safety net.
+- **Targets (dev-long, regressions fail):** engram accuracy ≥ 95% (now 100%), recall@8 ≥ 95% (now 97%).
+
+**Consequences.** On histories this short, rag and full_context also score 100%; only buffer degrades, to 71% on 35 of 40 items so far (cross-session 45%, multi-hop 0%). Showing engram's advantages needs far longer histories (P08), and at one extraction call per turn that would exceed free quotas, so P08 must reconsider extraction batching.
