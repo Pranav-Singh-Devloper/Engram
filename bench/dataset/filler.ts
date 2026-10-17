@@ -109,7 +109,8 @@ export function checkShape(turns: readonly string[]): string[] {
   for (const t of turns) {
     const words = t.trim().split(/\s+/).length;
     if (/^\s*>/.test(t) || /\s>\s/.test(t)) problems.push('packs several messages into one turn');
-    if (!/[a-z]{2,}\s+[a-z]{2,}/i.test(t) || /^[\w-]+_[\w-]+$/.test(t.trim()))
+    // Two words in a row, allowing punctuation and apostrophes ("Hi, I'm Kwame.").
+    if (!/[a-z']{2,}[,.!?;:]*\s+[a-z']{2,}/i.test(t) || /^[\w-]+_[\w-]+$/.test(t.trim()))
       problems.push(`"${t}" is not a message`);
     if (words > 60) problems.push('a turn is too long');
   }

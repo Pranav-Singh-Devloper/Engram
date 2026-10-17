@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FILLER_SESSIONS, checkFiller, fillerPlans, personaStrings } from './filler.js';
+import { FILLER_SESSIONS, checkFiller, checkShape, fillerPlans, personaStrings } from './filler.js';
 import { buildPersona } from './personas.js';
 
 describe('fillerPlans', () => {
@@ -33,6 +33,10 @@ describe('checkFiller', () => {
     expect(checkFiller(['How do I fix a squeaky hinge?', 'Thanks, that worked!'], forbid)).toEqual(
       [],
     );
+  });
+
+  it('accepts short greetings with punctuation and apostrophes', () => {
+    expect(checkShape(["Hi, I'm Kwame.", 'I moved to Accra last year.'])).toEqual([]);
   });
 
   it('rejects packed transcripts and junk turns', () => {
