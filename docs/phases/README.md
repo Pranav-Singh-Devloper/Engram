@@ -29,7 +29,8 @@ Statuses are `outline` → `planned` → `in progress` → `done`. P08 and P09a/
 3. **Build.** Work in small steps. Engine logic gets its tests first or alongside.
 4. **Gate.** Before every commit: `pnpm -r typecheck && pnpm -r test && pnpm -r lint`.
 5. **Commit.** 3–8 Conventional Commits per phase, one logical change each (spec §16).
-6. **Close.** Tick the DoD, set the status to `done`, write a 3–5 line summary at the bottom of the file, and note any follow-ups in the next phase's file.
+6. **Close.** Tick the DoD, set the status to `done`, and write a 3–5 line summary at the bottom of the file. Every follow-up becomes a row in the [carried-items ledger](#carried-items-ledger) *and* a task or DoD item in its target phase's file.
+7. **Carried items must land.** When expanding a phase, pull every open ledger row targeting it into its tasks and DoD. A phase can't close while a row targeting it is open, unless the row is re-shifted with a reason.
 
 ## Full template
 
@@ -69,3 +70,42 @@ Verify every figure at the start of the phase that first needs it. Free quotas c
 | Groq (`gpt-oss-120b` judge, `qwen3.8-27b` verbalizer) | bench judge, dataset wording | P04 | 30 RPM, 1K RPD, 8K TPM; fallbacks are Mistral, then Cohere |
 | Supabase free tier | hosted DB, pg_cron | P10 (optional earlier) | 500 MB DB; pauses after inactivity |
 | Vercel Hobby | web, API, HTTP MCP | P09a | function duration and invocation limits |
+
+## Carried-items ledger
+
+Every item a phase deferred or put on hold, with where it landed. Rows are never deleted. A re-shifted row keeps its history in the status column.
+
+| # | Item | From | To | Status |
+|---|---|---|---|---|
+| 1 | Shared DB client and migrator in core | P00 | P01 | done (P01) |
+| 2 | Pick `GEMINI_CHAT_MODEL` | P01 | P02 | done (ADR-005) |
+| 3 | Judge as a separate (Groq) provider | P01 | P04 | done (P04) |
+| 4 | Restore archived facts when recall hits them | P01 | P05 | done (P05) |
+| 5 | Use the `rate_limits` table | P01 | P09a | open (P09a DoD) |
+| 6 | `prepare: false` for the transaction pooler, with a test | P01 | P09a | open (P09a risks/DoD) |
+| 7 | Unknown `valid_from` for end-only facts | P02 | P03 | done (ADR-007) |
+| 8 | Assistant echoes merge, raising confidence only for new episodes | P02 | P03 | done (P03) |
+| 9 | Fixture 04 correction retracts Initech | P02 | P03 | done (P03) |
+| 10 | `engram_remember` returns the processing summary | P02 | P07 | open (P07 design 4) |
+| 11 | Tune the merge threshold (0.9) | P03 | P05 → P08 | re-shifted: P05 tuned ranker and floor only; dev/dev-long show no paraphrase misses. Check on dev-long before freezing test |
+| 12 | Report the adjudication rate | P03 | P04 → P08 | re-shifted: not in reports yet; add to the report before the test run |
+| 13 | Document that multi-instance deploys need synced clocks | P03 | P10 | open (README limitations) |
+| 14 | Registry gaps (`occupation`, `sibling_of`) | P04 | P05 | done (ad-hoc 34% → 0%) |
+| 15 | Nickname duplicates ("Rob" next to "Robert") | P02 | P04 → P10 | tracked: duplicate-entity rate is 0% on dev and dev-long; no fix. Listed as a limitation in P10 |
+| 16 | Retrieval recall@8 with relevance labels | P04 | P05 | done (P05) |
+| 17 | Hand-labelled judge agreement | P04 | P08 | open (P08 DoD) |
+| 18 | Longer histories vs one extraction call per turn (batching decision) | P04, P05 | P08 | open (P08 carry-in) |
+| 19 | Budget 10% above the cache-based call count | P05 | P08 | open (P08 carry-in) |
+| 20 | MCP recall tracks access to everything returned | P05 | P07 | open (P07 design 4) |
+| 21 | Chat tracks access via `usedMemoryIds` | P05 | P09a | open (P09a DoD) |
+| 22 | Prompt pass: fixture 08 maps the brother to `partner_of` | P05 | P08 | open (P08 prompt pass, before re-recording) |
+| 23 | Regenerate purged summaries; re-embed redacted turns | P06a | P06b | done (P06b) |
+| 24 | pg_cron schedules for decay and demo cleanup | P06a | P06b | done (P06b, generated) |
+| 25 | Verify pg_cron on Supabase (`select * from cron.job`) | P06b | P10 | open (P10 DoD) |
+| 26 | `engram_forget` modes and stats' "last sweep" | P06a | P07 | open (P07 design 4–5) |
+| 27 | Prompt pass: summaries say "the user", never he/she | P06b | P08 | open (P08 prompt pass) |
+| 28 | Watch weak inferred facts (`visited`) on test | P06b | P08 | open (P08 carry-in) |
+| 29 | README: re-enable paused scheduled workflows and Supabase | P06b | P10 | open (P10 DoD) |
+| 30 | Smoke cache size (4.2 MB) | P04 | P08 | watch (P08 carry-in) |
+| 31 | `/graph` page | P09b | P09b | stretch, only if P10 is on track |
+

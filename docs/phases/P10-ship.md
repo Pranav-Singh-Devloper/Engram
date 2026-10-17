@@ -15,6 +15,7 @@ P08 (bench tables) and P09b (demo pages).
 
 ## Definition of done
 - [ ] Supabase free project created, with `pnpm db:migrate:hosted` applied: portable migrations, revokes and pg_cron schedules. A REST call with the anon key to an `engram` table returns an error.
+- [ ] `select jobname, schedule, command from cron.job` on Supabase lists the decay sweep and the demo cleanup with the generated parameters (ledger row 25).
 - [ ] Vercel Hobby deploy with env vars set and the transaction-pooler URL with prepared statements off. `/api/mcp` reachable with a bearer token.
 - [ ] A seed script loads the showcase namespace (the read-only story from `docs/demo.md`).
 - [ ] README per §17:
@@ -25,7 +26,7 @@ P08 (bench tables) and P09b (demo pages).
   - bench tables;
   - MCP client snippets;
   - design notes;
-  - limitations (free-tier data terms, disambiguation, extraction error rates, dependence on clients calling remember);
+  - limitations (free-tier data terms, disambiguation, extraction error rates, dependence on clients calling remember, nickname duplicates such as "Rob"/"Robert" (row 15), and that multi-instance deploys rely on synced clocks for record time (row 13));
   - prior art;
   - how to restore a paused Supabase project and re-enable disabled scheduled workflows.
 - [ ] `docs/architecture.md` is written. DECISIONS.md is tidied (superseded ADRs marked, not deleted).

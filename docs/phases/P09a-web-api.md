@@ -19,6 +19,9 @@ P07 (the MCP server factory). P08 isn't required, but `/api/evals` reads its rep
 - [ ] `POST /api/chat` streams, works only on the cookie namespace, is limited to 30 turns/hour per namespace via `rate_limits`, and respects the global daily cap. Returning the cap message doesn't break the showcase.
 - [ ] Chat runs `process()` after the response is sent.
 - [ ] Read endpoints are scoped to the cookie namespace or the read-only showcase namespace.
+- [ ] Chat tracks access only for the memories the composer used (`usedMemoryIds`, ledger row 21).
+- [ ] A test proves the production client config has `prepare: false` (ledger row 6).
+- [ ] `/api/mcp` mounts P07's `createEngramHttpHandler` unchanged.
 - [ ] Route handler tests cover auth, namespace scoping, both rate limits and the cap (FakeProvider, local DB).
 
 ## Risks and verify-at-build-time

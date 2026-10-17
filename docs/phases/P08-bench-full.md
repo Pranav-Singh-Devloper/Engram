@@ -33,6 +33,13 @@ P07, so the engine is feature-complete before anything is measured. It can overl
 - **The smoke cache is 4.2 MB** after P06b added the consolidated replay, mostly embedding vectors. If it grows, store embeddings more compactly.
 - **From P06b:** run `engram_consolidated` alongside the four modes on test (it's opt-in, so name it), and report consolidation's inserted and duplicate counts. Do the summarizer's "the user, not he/she" prompt fix before that run, so the summaries are cached once.
 
+## Carried in from P03, P05 and P06b (ledger rows 11, 12, 22, 27, 28)
+
+- **One prompt pass, before any re-recording** (rows 22 and 27). Fix fixture 08 (the brother mapped to `partner_of`), and make the summarizer say "the user", never he or she. Then bump `PROMPT_VERSION` and `CONSOLIDATION_PROMPT_VERSION` and re-record the fixtures and the smoke cache once. Estimate the calls first: an extraction prompt change invalidates every cached extraction.
+- **Merge threshold** (row 11): check 0.9 on dev-long for paraphrase splits (duplicate facts with the same meaning) before freezing test. Tune only on dev.
+- **Adjudication rate** (row 12): add it to the report (share of resolutions decided by `llm`), so that test runs show it.
+- **Weak inferred facts** (row 28): report consolidation's inserted count on test, and read through the inserted facts.
+
 ## Risks and verify-at-build-time
 - **Verify:** the LongMemEval repo, license, format and question types. Record the license in the README.
 - **Free quotas are the bottleneck.** `full_context` on LongMemEval-S is ~115k tokens per item, so budget from the pre-run estimate and expect a multi-day run. The cache plus resumability make that safe.
