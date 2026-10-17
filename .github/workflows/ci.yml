@@ -58,3 +58,5 @@ jobs:
       # 20 dev items through all four memory modes, replayed from committed
       # recordings: the real providers, no keys, no network.
       - run: pnpm bench --subset=smoke --offline
+      # The same items with nightly consolidation, replaying recorded summaries.
+      - run: pnpm bench --subset=smoke --offline --memory=engram_consolidated
