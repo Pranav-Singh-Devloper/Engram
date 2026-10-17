@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "runId": "2026-10-18-devlong-session",
+  "split": "dev-long",
+  "date": "2026-10-18",
+  "finishedAt": "2026-10-17T19:16:55.098Z",
+  "model": "gemini-3.5-flash-lite",
+  "judge": "openai/gpt-oss-120b",
+  "items": 40,
+  "retrievalOnly": false,
+  "modes": {
+    "engram": {
+      "accuracy": 1,
+      "n": 40,
+      "recallAt8": 0.972
+    }
+  }
+}
