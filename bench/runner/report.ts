@@ -1,7 +1,7 @@
 // Turns a run's per-item results into a markdown report (SPEC §13.5).
 import { CATEGORIES } from '../dataset/schema.js';
 import { isAbstention, normalize } from './judge.js';
-import { MODES } from './modes.js';
+import { ALL_MODES } from './modes.js';
 import type { Mode } from './modes.js';
 import type { ItemResult } from './run.js';
 
@@ -22,7 +22,7 @@ export interface ReportMeta {
 }
 
 export function renderReport(results: readonly ItemResult[], meta: ReportMeta): string {
-  const modes = MODES.filter((m) => results.some((r) => r.mode === m));
+  const modes = ALL_MODES.filter((m) => results.some((r) => r.mode === m));
   const of = (mode: Mode, category?: string) =>
     results.filter((r) => r.mode === mode && (category === undefined || r.category === category));
   const acc = (rs: ItemResult[]) => pct(rs.filter((r) => r.verdict.correct).length, rs.length);
@@ -155,6 +155,32 @@ export function renderReport(results: readonly ItemResult[], meta: ReportMeta): 
       )} of entities share a name with another.`,
     );
     lines.push('');
+  }
+
+  const consolidated = of('engram_consolidated').filter((r) => r.answer.consolidation);
+  if (consolidated.length > 0) {
+    const total = (f: (c: NonNullable<ItemResult['answer']['consolidation']>) => number) =>
+      consolidated.reduce(
+        (n, r) => n + (r.answer.consolidation ? f(r.answer.consolidation) : 0),
+        0,
+      );
+    const outcomes = new Map<string, number>();
+    for (const r of consolidated) {
+      for (const [k, n] of Object.entries(r.answer.consolidation?.outcomes ?? {})) {
+        outcomes.set(k, (outcomes.get(k) ?? 0) + n);
+      }
+    }
+    lines.push('## Consolidation', '');
+    lines.push(
+      `- Per item, on average: ${(total((c) => c.summarized) / consolidated.length).toFixed(1)} clusters summarized, ${(total((c) => c.skipped) / consolidated.length).toFixed(1)} skipped without a call, ${(total((c) => c.longTermFacts) / consolidated.length).toFixed(1)} current long_term facts.`,
+      `- Candidate outcomes: ${
+        [...outcomes]
+          .filter(([, n]) => n > 0)
+          .map(([k, n]) => `${k} ${n}`)
+          .join(', ') || 'none'
+      }.`,
+      '',
+    );
   }
 
   lines.push('## Misses', '');

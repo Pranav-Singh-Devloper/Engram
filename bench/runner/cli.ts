@@ -11,7 +11,7 @@ import { PORTABLE, migrate } from '@engram/core/migrate';
 import { SplitFile } from '../dataset/schema.js';
 import type { BenchItem } from '../dataset/schema.js';
 import { describeEstimate, estimate } from './estimate.js';
-import { MODES } from './modes.js';
+import { ALL_MODES, MODES } from './modes.js';
 import type { Mode } from './modes.js';
 import { BENCH_DIR, DEFAULT_CACHE_DIR, loadEnv, makeProviders } from './providers.js';
 import { renderReport } from './report.js';
@@ -54,7 +54,7 @@ async function main(): Promise<void> {
 
   const memory = arg('memory') ?? 'all';
   const modes = (memory === 'all' ? [...MODES] : memory.split(',')) as Mode[];
-  for (const m of modes) if (!MODES.includes(m)) throw new Error(`Unknown mode ${m}`);
+  for (const m of modes) if (!ALL_MODES.includes(m)) throw new Error(`Unknown mode ${m}`);
 
   const runId =
     arg('run') ?? `${new Date().toISOString().slice(0, 10)}-${split}${smoke ? '-smoke' : ''}`;

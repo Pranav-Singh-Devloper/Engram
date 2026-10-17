@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
 import { FakeProvider, ProviderHttpError, SELF_REF } from '@engram/core';
-import type { MethodInput } from '@engram/core';
+import type { ConsolidatedCandidate, MethodInput } from '@engram/core';
 import { testDb } from '@engram/core/testing';
 import type { BenchItem } from '../dataset/schema.js';
 import { runMode } from './modes.js';
@@ -98,6 +98,69 @@ describe('memory modes', () => {
     expect(await db`select 1 from namespaces where slug like ${'bench-dev-test-1-%'}`).toHaveLength(
       0,
     );
+  });
+
+  it('engram_consolidated summarizes each session after it ends and promotes its facts', async () => {
+    const provider = fake().when(
+      'summarize',
+      () => true,
+      (input) => ({
+        summary: `Summary: ${input.episodes.map((e) => e.content).join(' ')}`,
+        candidates: [],
+      }),
+    );
+    const answer = await runMode('engram_consolidated', item, {
+      db,
+      provider,
+      recall: { floor: 0 },
+    });
+    expect(answer.answer).toContain('Krakow');
+    expect(answer.consolidation).toMatchObject({ summarized: 2, skipped: 0 });
+    // Session 1 is consolidated before session 2 is told, so each summary sees one session.
+    const inputs = provider.callsTo('summarize') as MethodInput<'summarize'>[];
+    expect(inputs.map((i) => i.episodes.map((e) => e.content))).toEqual([
+      ['I live in Krakow.'],
+      ['I moved to Osaka in May.'],
+    ]);
+    expect(answer.retrieved?.some((t) => t.startsWith('Summary:'))).toBe(true);
+  });
+
+  it('engram_consolidated promotes the facts its summaries confirm, history included', async () => {
+    const self = { name: SELF_REF, type: 'person', description: null } as const;
+    const provider = fake().when(
+      'summarize',
+      () => true,
+      (input) => ({
+        summary: 'Where the user lives.',
+        candidates: input.episodes.map((e): ConsolidatedCandidate => {
+          const city = e.content.includes('Krakow') ? 'Krakow' : 'Osaka';
+          return {
+            subject: self,
+            predicate: 'lives_in',
+            object: { kind: 'entity', entity: { name: city, type: 'place', description: null } },
+            statement: `The user lives in ${city}.`,
+            validFrom:
+              city === 'Osaka'
+                ? { kind: 'named_period', year: null, month: 5, season: null }
+                : { kind: 'none' },
+            validTo: { kind: 'none' },
+            isCorrection: false,
+            confidence: 0.9,
+            sourceEpisodeIds: [e.id],
+          } as const;
+        }),
+      }),
+    );
+    const answer = await runMode('engram_consolidated', item, {
+      db,
+      provider,
+      recall: { floor: 0 },
+    });
+    // Each confirmation cites the fact's own turn: merged, never double-counted.
+    expect(answer.consolidation).toMatchObject({ promoted: 2, outcomes: { merged: 2 } });
+    // Osaka, and the closed Krakow history row the update copied from a long_term fact.
+    expect(answer.consolidation?.longTermFacts).toBe(2);
+    expect(answer.answer).toContain('Krakow');
   });
 
   it('the baselines see dated turns and no facts', async () => {

@@ -4,11 +4,14 @@
 //   rag           vector search over turns only: no facts, conflicts or time
 //   full_context  the whole history
 //   engram        the full write path into a fresh namespace, then recall()
+//   engram_consolidated  engram, plus a consolidation run after each session
+//                 (opt-in: named explicitly, never part of "all")
 // Turns are prefixed with their dates in every mode.
 import { randomUUID } from 'node:crypto';
 import {
   SimClock,
   config,
+  consolidate,
   cosine,
   ensureNamespace,
   ingest,
@@ -19,8 +22,15 @@ import type { Provider, RecallOptions, Sql } from '@engram/core';
 import { turnTime } from '../dataset/schema.js';
 import type { BenchItem } from '../dataset/schema.js';
 
+/** What `--memory=all` runs. */
 export const MODES = ['buffer', 'rag', 'full_context', 'engram'] as const;
-export type Mode = (typeof MODES)[number];
+/** Opt-in modes, run only when named. */
+export const EXTRA_MODES = ['engram_consolidated'] as const;
+export type Mode = (typeof MODES)[number] | (typeof EXTRA_MODES)[number];
+export const ALL_MODES: readonly Mode[] = [...MODES, ...EXTRA_MODES];
+
+/** Consolidation runs this long after a session's last turn ("that night"). */
+export const CONSOLIDATE_AFTER_MS = 60 * 60 * 1000;
 
 export const BUFFER_TURNS = 20;
 export const RAG_K = 8;
@@ -40,6 +50,14 @@ export interface ModeAnswer {
   retrievedBy?: Record<'rrf' | 'linear', string[]>;
   /** Engram only: what the write path produced. */
   store?: { facts: number; adHoc: number; entities: number; duplicateEntities: number };
+  /** engram_consolidated only: what consolidation did. */
+  consolidation?: {
+    summarized: number;
+    skipped: number;
+    promoted: number;
+    longTermFacts: number;
+    outcomes: Record<string, number>;
+  };
 }
 
 interface Turn {
@@ -113,10 +131,17 @@ export async function runMode(mode: Mode, item: BenchItem, deps: ModeDeps): Prom
     }
     case 'engram':
       return engram(item, turns, deps);
+    case 'engram_consolidated':
+      return engram(item, turns, deps, { consolidate: true });
   }
 }
 
-async function engram(item: BenchItem, turns: Turn[], deps: ModeDeps): Promise<ModeAnswer> {
+async function engram(
+  item: BenchItem,
+  turns: Turn[],
+  deps: ModeDeps,
+  options: { consolidate?: boolean } = {},
+): Promise<ModeAnswer> {
   const { db, provider } = deps;
   const { namespace } = await ensureNamespace(db, {
     slug: `bench-${item.id}-${randomUUID()}`,
@@ -124,14 +149,41 @@ async function engram(item: BenchItem, turns: Turn[], deps: ModeDeps): Promise<M
   });
   try {
     const clock = new SimClock(turns[0]?.at ?? new Date(item.asked_at));
-    for (const t of turns) {
+    const consolidation: NonNullable<ModeAnswer['consolidation']> = {
+      summarized: 0,
+      skipped: 0,
+      promoted: 0,
+      longTermFacts: 0,
+      outcomes: {},
+    };
+    const sessionOf = (t: Turn) => t.id.split('#')[0] ?? 's';
+    // Each session is consolidated "that night", before the next one starts.
+    const consolidateSession = async (last: Turn) => {
+      clock.set(new Date(last.at.getTime() + CONSOLIDATE_AFTER_MS));
+      const r = await consolidate(db, provider, {
+        namespaceId: namespace.id,
+        clock,
+        maxClusters: Number.POSITIVE_INFINITY,
+      });
+      consolidation.summarized += r.summarized;
+      consolidation.skipped += r.skipped;
+      consolidation.promoted += r.promoted;
+      for (const [k, n] of Object.entries(r.outcomes)) {
+        consolidation.outcomes[k] = (consolidation.outcomes[k] ?? 0) + n;
+      }
+    };
+    for (const [i, t] of turns.entries()) {
+      const prev = turns[i - 1];
+      if (options.consolidate && prev && sessionOf(prev) !== sessionOf(t)) {
+        await consolidateSession(prev);
+      }
       clock.set(t.at);
       const episode = await ingest(
         db,
         provider,
         {
           namespaceId: namespace.id,
-          sessionId: t.id.split('#')[0] ?? 's',
+          sessionId: sessionOf(t),
           role: 'user',
           content: t.text,
           occurredAt: t.at,
@@ -139,6 +191,14 @@ async function engram(item: BenchItem, turns: Turn[], deps: ModeDeps): Promise<M
         { clock },
       );
       await processEpisode(db, provider, episode.id, { clock });
+    }
+    const last = turns.at(-1);
+    if (options.consolidate && last) {
+      await consolidateSession(last);
+      const [row] = await db<{ n: number }[]>`
+        select count(*)::int as n from facts
+        where namespace_id = ${namespace.id} and tier = 'long_term' and invalidated_at is null`;
+      consolidation.longTermFacts = row?.n ?? 0;
     }
 
     clock.set(item.asked_at);
@@ -193,6 +253,7 @@ async function engram(item: BenchItem, turns: Turn[], deps: ModeDeps): Promise<M
       bestSimilarity: result.bestSimilarity,
       floor: deps.recall?.floor ?? config.recall.floor,
       store: await storeStats(db, namespace.id),
+      ...(options.consolidate ? { consolidation } : {}),
     };
   } finally {
     await db`delete from namespaces where id = ${namespace.id}`;
