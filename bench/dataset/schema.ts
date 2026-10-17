@@ -14,19 +14,29 @@ export const CATEGORIES = [
 export type Category = (typeof CATEGORIES)[number];
 
 export const JUDGES = ['exact', 'contains', 'llm'] as const;
+
+/** Our splits, plus the LongMemEval-S subset adapted to this format (P08). */
+export const SPLITS = ['dev', 'dev-long', 'test', 'longmemeval'] as const;
+export type Split = (typeof SPLITS)[number];
 export type JudgeKind = (typeof JUDGES)[number];
 
-export const SetupSession = z.object({
-  session_id: z.string().min(1),
-  occurred_at: z.iso.datetime(),
-  /** User turns, a minute apart from `occurred_at` (decision 8 in the P04 plan). */
-  turns: z.array(z.string().min(1)).min(1),
-});
+export const SetupSession = z
+  .object({
+    session_id: z.string().min(1),
+    occurred_at: z.iso.datetime(),
+    /** Turns, a minute apart from `occurred_at` (decision 8 in the P04 plan). */
+    turns: z.array(z.string().min(1)).min(1),
+    /** Who said each turn; omitted means every turn is the user's (our own splits). */
+    roles: z.array(z.enum(['user', 'assistant'])).optional(),
+  })
+  .refine((s) => !s.roles || s.roles.length === s.turns.length, {
+    message: 'roles must match turns one to one',
+  });
 export type SetupSession = z.infer<typeof SetupSession>;
 
 export const BenchItem = z.object({
   id: z.string().min(1),
-  split: z.enum(['dev', 'dev-long', 'test']),
+  split: z.enum(SPLITS),
   category: z.enum(CATEGORIES),
   persona: z.string().min(1),
   setup_sessions: z.array(SetupSession).min(1),
@@ -41,7 +51,7 @@ export const BenchItem = z.object({
 export type BenchItem = z.infer<typeof BenchItem>;
 
 export const SplitFile = z.object({
-  split: z.enum(['dev', 'dev-long', 'test']),
+  split: z.enum(SPLITS),
   seed: z.number().int(),
   generated_at: z.iso.datetime(),
   /** Models that verbalized the turns; the ground truth itself is code. */

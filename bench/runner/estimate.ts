@@ -23,7 +23,7 @@ export function estimate(
   extraction: Extraction = 'turn',
 ): Estimate {
   const uniqueTurns = new Set<string>();
-  const uniqueExtractSessions = new Set<string>();
+  const uniqueExtractSessions = new Map<string, number>();
   const packedHistories = new Map<string, number>();
   const uniqueSessions = new Set<string>();
   let composeChars = 0;
@@ -36,13 +36,13 @@ export function estimate(
       if (mode === 'engram' || mode === 'engram_consolidated') {
         turns.forEach((t) => uniqueTurns.add(t));
         for (const s of item.setup_sessions) {
-          uniqueExtractSessions.add(`${s.session_id}:${s.turns.join('|')}`);
+          uniqueExtractSessions.set(
+            `${s.session_id}:${s.turns.join('|')}`,
+            s.turns.reduce((n, t) => n + t.length, 0),
+          );
         }
         // Packs depend on the whole history, so identical histories share them.
-        packedHistories.set(
-          turns.join('\n'),
-          Math.max(1, Math.ceil(historyChars / 4 / PACK_TOKENS)),
-        );
+        packedHistories.set(turns.join('\n'), historyChars);
       }
       if (mode === 'engram_consolidated') {
         for (const s of item.setup_sessions)
@@ -52,18 +52,25 @@ export function estimate(
       composeChars += 1200 + (mode === 'full_context' || mode === 'buffer' ? historyChars : 1500);
     }
   }
+  const packs = (chars: number) => Math.max(1, Math.ceil(chars / 4 / PACK_TOKENS));
   const extractionCalls =
     extraction === 'turn'
       ? uniqueTurns.size
       : extraction === 'session'
         ? uniqueExtractSessions.size
-        : [...packedHistories.values()].reduce((n, k) => n + k, 0);
+        : [...packedHistories.values()].reduce((n, chars) => n + packs(chars), 0);
+  // Batched calls carry their turns' text plus ~1,500 tokens of instructions each.
+  const batchedChars = [
+    ...(extraction === 'session' ? uniqueExtractSessions.values() : packedHistories.values()),
+  ].reduce((n, c) => n + c, 0);
+  const extractionTokens =
+    extraction === 'turn' ? extractionCalls * 900 : tokens(batchedChars) + extractionCalls * 1500;
   return {
     extractionCalls,
     summarizeCalls: uniqueSessions.size,
     composeCalls: items.length * modes.length,
     judgeCalls: llmJudge ? items.filter((i) => i.judge === 'llm').length * modes.length : 0,
-    promptTokens: tokens(composeChars) + extractionCalls * 900 + uniqueSessions.size * 1500,
+    promptTokens: tokens(composeChars) + extractionTokens + uniqueSessions.size * 1500,
   };
 }
 

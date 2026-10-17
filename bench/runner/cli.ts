@@ -1,5 +1,6 @@
 // pnpm bench [--split=dev] [--memory=all|engram,rag,...] [--run=<id>] [--limit=N] [--ids=a,b]
 //            [--subset=smoke] [--offline] [--record-smoke] [--no-llm-judge] [--report-only]
+//            [--extraction=turn|session|packed] [--system=gemini|ollama] [--estimate]
 //            [--retrieval-only]   engram: compare rankers on recall@8, no composer calls
 //
 // --offline       replay recorded responses only (no network, no keys); fails on a miss
@@ -38,10 +39,13 @@ export function smokeItems(items: readonly BenchItem[]): BenchItem[] {
 
 async function main(): Promise<void> {
   loadEnv();
-  const split = (arg('split') ?? 'dev') as 'dev' | 'test';
-  const file = SplitFile.parse(
-    JSON.parse(readFileSync(path.join(BENCH_DIR, 'dataset', `${split}.json`), 'utf8')),
-  );
+  const split = arg('split') ?? 'dev';
+  // LongMemEval is built locally from downloaded data (pnpm bench:lme); ours are committed.
+  const splitPath =
+    split === 'longmemeval'
+      ? path.join(BENCH_DIR, 'longmemeval', 'data', 'longmemeval.json')
+      : path.join(BENCH_DIR, 'dataset', `${split}.json`);
+  const file = SplitFile.parse(JSON.parse(readFileSync(splitPath, 'utf8')));
   const offline = flag('offline');
   const recordSmoke = flag('record-smoke');
   const smoke = recordSmoke || arg('subset') === 'smoke';
@@ -71,6 +75,7 @@ async function main(): Promise<void> {
       `${items.length} items × ${modes.length} modes, run ${runId}${offline ? ' (offline replay)' : ''}`,
     );
     console.log(describeEstimate(estimate(items, modes, llmJudge, extraction), geminiRpm));
+    if (flag('estimate')) return;
     const system = arg('system') ?? 'gemini';
     if (system !== 'gemini' && system !== 'ollama') throw new Error(`Unknown system ${system}`);
     const providers = makeProviders({

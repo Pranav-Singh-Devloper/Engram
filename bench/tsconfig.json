@@ -1,4 +1,4 @@
 {
   "extends": "../tsconfig.base.json",
-  "include": ["dataset", "runner", "*.ts"]
+  "include": ["dataset", "runner", "longmemeval", "*.ts"]
 }

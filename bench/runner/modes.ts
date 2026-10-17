@@ -85,20 +85,34 @@ interface Turn {
   id: string;
   text: string;
   at: Date;
+  role: 'user' | 'assistant';
 }
 
 function turnsOf(item: BenchItem): Turn[] {
   return item.setup_sessions.flatMap((s) =>
-    s.turns.map((text, i) => ({ id: `${s.session_id}#${i}`, text, at: turnTime(s, i) })),
+    s.turns.map((text, i) => ({
+      id: `${s.session_id}#${i}`,
+      text,
+      at: turnTime(s, i),
+      role: s.roles?.[i] ?? 'user',
+    })),
   );
 }
 
 type Memory = Parameters<Provider['compose']>[0]['memories'][number];
 
+/**
+ * What the composer sees for a turn. Our splits are all user turns, so their
+ * text is unchanged (recordings stay valid); an assistant turn (LongMemEval)
+ * is labelled, so "what did you recommend?" can be answered.
+ */
+const spoken = (role: string | null, text: string) =>
+  role === 'assistant' ? `assistant: ${text}` : text;
+
 const episodeMemory = (t: Turn): Memory => ({
   id: t.id,
   kind: 'episode',
-  text: t.text,
+  text: spoken(t.role, t.text),
   validFrom: t.at,
   validTo: null,
 });
@@ -211,7 +225,7 @@ async function engram(
           {
             namespaceId: namespace.id,
             sessionId: sessionOf(t),
-            role: 'user',
+            role: t.role,
             content: t.text,
             occurredAt: t.at,
           },
@@ -235,7 +249,7 @@ async function engram(
           session.map((t) => ({
             namespaceId: namespace.id,
             sessionId: sessionOf(t),
-            role: 'user' as const,
+            role: t.role,
             content: t.text,
             occurredAt: t.at,
             createdAt: t.at,
@@ -322,7 +336,7 @@ async function engram(
     const memories = result.memories.map((m): Memory => ({
       id: m.id,
       kind: m.kind,
-      text: m.text,
+      text: m.kind === 'episode' ? spoken(m.role, m.text) : m.text,
       validFrom: m.validFrom,
       validTo: m.validTo,
     }));

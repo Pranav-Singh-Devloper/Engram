@@ -24,7 +24,8 @@
     "bench:generate": "pnpm --filter @engram/bench bench:generate",
     "bench:inspect": "pnpm --filter @engram/bench bench:inspect",
     "jobs:consolidate": "pnpm --filter @engram/scripts consolidate",
-    "jobs:maintain": "pnpm --filter @engram/scripts maintain"
+    "jobs:maintain": "pnpm --filter @engram/scripts maintain",
+    "bench:lme": "pnpm --filter @engram/bench bench:lme"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
