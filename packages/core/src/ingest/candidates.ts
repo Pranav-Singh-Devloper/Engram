@@ -2,6 +2,7 @@
 // (SPEC §6.1 steps 2-4, §8): predicate normalization, validity windows,
 // entity resolution, then conflict resolution with provenance.
 import type { Clock } from '../config/clock.js';
+import { lookupPredicate } from '../conflict/predicates.js';
 import { UNKNOWN_START } from '../db/client.js';
 import type { Sql } from '../db/client.js';
 import { getSelfEntity } from '../db/namespaces.js';
@@ -146,8 +147,14 @@ export async function resolveCandidates(
       if (r.created) result.createdEntities++;
       return r.entity;
     };
-    const subject = await resolveRef(raw.subject);
-    const object = raw.object.kind === 'entity' ? await resolveRef(raw.object.entity) : null;
+    let subject = await resolveRef(raw.subject);
+    let object = raw.object.kind === 'entity' ? await resolveRef(raw.object.entity) : null;
+    // One canonical direction for symmetric facts: the user first, else the lower id.
+    if (object && lookupPredicate(predicate.predicate)?.symmetric) {
+      const swap =
+        object.id === selfEntity.id || (subject.id !== selfEntity.id && object.id < subject.id);
+      if (swap) [subject, object] = [object, subject];
+    }
     const candidate: ResolvedCandidate = {
       namespaceId,
       subjectId: subject.id,

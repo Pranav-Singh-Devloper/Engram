@@ -49,7 +49,7 @@
       "sources": 1
     },
     {
-      "fact": "Ana sibling_of User",
+      "fact": "User sibling_of Ana",
       "status": "active",
       "adHoc": false,
       "statement": "Ana is the sibling of The user.",

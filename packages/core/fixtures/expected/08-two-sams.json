@@ -107,16 +107,6 @@
       "sources": 1
     },
     {
-      "fact": "Sam [the user's brother, a chef in Lyon] partner_of User",
-      "status": "active",
-      "adHoc": false,
-      "statement": "Sam cooked a birthday dinner for the user.",
-      "validFrom": "2024-07-02 (explicit)",
-      "validTo": null,
-      "confidence": 0.7,
-      "sources": 1
-    },
-    {
       "fact": "Sam [the user's manager from work] manager_of User",
       "status": "active",
       "adHoc": true,
@@ -124,6 +114,16 @@
       "validFrom": "2024-07-02 (episode)",
       "validTo": null,
       "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "User partner_of Sam [the user's brother, a chef in Lyon]",
+      "status": "active",
+      "adHoc": false,
+      "statement": "Sam cooked a birthday dinner for the user.",
+      "validFrom": "2024-07-02 (explicit)",
+      "validTo": null,
+      "confidence": 0.7,
       "sources": 1
     },
     {

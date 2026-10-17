@@ -6,6 +6,7 @@ import { config } from '../config/index.js';
 import { getFact } from '../db/facts.js';
 import { forget } from '../forget/forget.js';
 import { processEpisode } from '../ingest/process.js';
+import { SELF_REF } from '../providers/contracts.js';
 import type { FactCandidate } from '../providers/contracts.js';
 import { testDb, withTestNamespace } from '../testing/db.js';
 import { Scenario, aboutSelf } from '../testing/scenario.js';
@@ -128,6 +129,34 @@ describe('consolidate: provenance and promotion', () => {
       );
       expect(after?.tier).toBe('long_term');
       expect(await s.checkInvariants()).toEqual([]);
+    });
+  });
+
+  it('merges restatements in another tense or the other way round (bench dev-long)', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const s = new Scenario(db, ns);
+      const riley = { name: 'Riley', type: 'person', description: null } as const;
+      const melbourne = (predicate: string) =>
+        aboutSelf(predicate, 'Melbourne', {
+          from: { kind: 'named_period', year: 2016, month: null, season: null },
+          to: { kind: 'named_period', year: 2019, month: null, season: null },
+        });
+      const told = 'I lived in Melbourne from 2016 to 2019, and my partner is Riley.';
+      await s.tell({
+        at: '2024-07-10T09:00:00Z',
+        content: told,
+        candidates: [melbourne('lives_in'), aboutSelf('partner_of', 'Riley', { type: 'person' })],
+      });
+      scriptSummary(s, 'The user lived in Melbourne and has a partner, Riley.', [
+        [[told], melbourne('lived_in')],
+        [[told], aboutSelf('partner_of', SELF_REF, { type: 'person', subject: riley })],
+      ]);
+      const r = await run(s);
+      expect(r.outcomes).toMatchObject({ merged: 2, inserted: 0 });
+      const facts = await db<{ predicate: string; subjectId: string }[]>`
+        select predicate, subject_id from facts where namespace_id = ${ns.namespace.id}`;
+      expect(facts.map((f) => f.predicate).sort()).toEqual(['lives_in', 'partner_of']);
+      expect(facts.every((f) => f.subjectId === ns.selfEntity.id)).toBe(true);
     });
   });
 

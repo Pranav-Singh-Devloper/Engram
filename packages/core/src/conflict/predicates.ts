@@ -7,6 +7,8 @@ export interface PredicateSpec {
   cardinality: 'one' | 'many';
   mutability: 'static' | 'dynamic';
   synonyms: readonly string[];
+  /** `a p b` means `b p a`: stored one way round so restatements merge. */
+  symmetric?: boolean;
   /** Shown to the extraction model. */
   description: string;
 }
@@ -16,14 +18,14 @@ export const PREDICATES: readonly PredicateSpec[] = [
     name: 'lives_in',
     cardinality: 'one',
     mutability: 'dynamic',
-    synonyms: ['resides_in', 'based_in', 'moved_to', 'home_city'],
+    synonyms: ['resides_in', 'based_in', 'moved_to', 'home_city', 'lived_in', 'resided_in'],
     description: 'the place someone lives',
   },
   {
     name: 'works_at',
     cardinality: 'one',
     mutability: 'dynamic',
-    synonyms: ['employed_by', 'job_at'],
+    synonyms: ['employed_by', 'job_at', 'worked_at'],
     description: 'the organization someone works for',
   },
   {
@@ -68,6 +70,7 @@ export const PREDICATES: readonly PredicateSpec[] = [
     cardinality: 'many',
     mutability: 'static',
     synonyms: ['sister_of', 'brother_of', 'has_sister', 'has_brother', 'sibling', 'has_sibling'],
+    symmetric: true,
     description: 'a sibling relationship between two people',
   },
   {
@@ -82,6 +85,7 @@ export const PREDICATES: readonly PredicateSpec[] = [
       'married_to',
       'spouse_of',
     ],
+    symmetric: true,
     description: "someone's romantic partner or spouse",
   },
   {
