@@ -106,3 +106,9 @@ export type { ConsolidateOptions, ConsolidateSummary } from './consolidate/conso
 export { resolveCandidates } from './ingest/candidates.js';
 export type { CandidateBatch, CandidateSource } from './ingest/candidates.js';
 export { CRON_SCHEDULES_FILE, cronSchedulesSql } from './jobs/schedules.js';
+export { searchEntities } from './resolve/search.js';
+export type { EntityHit, EntityMatch, SearchEntitiesOptions } from './resolve/search.js';
+export { namespaceStats } from './stats/stats.js';
+export type { NamespaceStats } from './stats/stats.js';
+export { processPending } from './ingest/pending.js';
+export type { PendingOptions, PendingResult } from './ingest/pending.js';

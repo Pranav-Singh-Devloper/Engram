@@ -161,7 +161,7 @@ async function main(): Promise<void> {
     console.log(
       `  ${'city'.padEnd(10)} ${'valid'.padEnd(26)} ${'believed (record time)'.padEnd(26)} status`,
     );
-    for (const e of await history(db, ns.selfEntity.id, {
+    for (const e of await history(db, ns.namespace.id, ns.selfEntity.id, {
       predicate: 'lives_in',
       includeRevised: true,
     })) {

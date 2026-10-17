@@ -73,7 +73,7 @@ async function main(): Promise<void> {
           }
         }
         console.log('  timeline (user, including replaced versions):');
-        for (const e of await history(db, selfEntity.id, { includeRevised: true })) {
+        for (const e of await history(db, namespace.id, selfEntity.id, { includeRevised: true })) {
           const f = e.fact;
           console.log(
             `    ${f.predicate} ${e.objectName} [${day(f.validFrom)} → ${day(f.validTo)}] ${f.status}${e.replaced ? ' (replaced)' : ''}`,

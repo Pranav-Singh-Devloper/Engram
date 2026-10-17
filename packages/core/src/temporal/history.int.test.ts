@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { afterAll, describe, expect, it } from 'vitest';
 import { testDb, withTestNamespace } from '../testing/db.js';
 import { Scenario, aboutSelf, hint } from '../testing/scenario.js';
@@ -36,7 +37,9 @@ describe('history', () => {
     await withTestNamespace(db, async (ns) => {
       const s = new Scenario(db, ns);
       await movedThrice(s);
-      const timeline = await history(db, ns.selfEntity.id, { predicate: 'lives_in' });
+      const timeline = await history(db, ns.namespace.id, ns.selfEntity.id, {
+        predicate: 'lives_in',
+      });
       expect(timeline.map((e) => [e.objectName, e.fact.status])).toEqual([
         ['Lyon', 'superseded'],
         ['Paris', 'superseded'],
@@ -50,7 +53,7 @@ describe('history', () => {
     await withTestNamespace(db, async (ns) => {
       const s = new Scenario(db, ns);
       await movedThrice(s);
-      const audit = await history(db, ns.selfEntity.id, {
+      const audit = await history(db, ns.namespace.id, ns.selfEntity.id, {
         predicate: 'lives_in',
         includeRevised: true,
       });
@@ -72,7 +75,9 @@ describe('history', () => {
         content: 'Actually, I work at Initech, not Acme.',
         candidates: [aboutSelf('works_at', 'Initech', { type: 'org', correction: true })],
       });
-      const all = await history(db, ns.selfEntity.id);
+      const all = await history(db, ns.namespace.id, ns.selfEntity.id);
+      // Another namespace's id finds nothing, even for a real entity id.
+      expect(await history(db, randomUUID(), ns.selfEntity.id)).toEqual([]);
       expect(new Set(all.map((e) => e.fact.predicate))).toEqual(new Set(['lives_in', 'works_at']));
       expect(
         all

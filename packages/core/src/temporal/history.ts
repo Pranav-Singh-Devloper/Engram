@@ -22,8 +22,10 @@ export interface HistoryOptions {
   includeRevised?: boolean;
 }
 
+/** Scoped to the namespace: an id from another namespace returns nothing. */
 export async function history(
   db: Queryable,
+  namespaceId: string,
   entityId: string,
   options: HistoryOptions = {},
 ): Promise<HistoryEntry[]> {
@@ -31,7 +33,7 @@ export async function history(
     select f.*, coalesce(o.name, f.object_literal) as object_name,
            exists (select 1 from facts n where n.revises = f.id) as replaced
     from facts f left join entities o on o.id = f.object_id
-    where f.subject_id = ${entityId}
+    where f.namespace_id = ${namespaceId} and f.subject_id = ${entityId}
       ${options.predicate ? db`and f.predicate = ${options.predicate}` : db``}
       ${options.includeRevised ? db`` : db`and not exists (select 1 from facts n where n.revises = f.id)`}
     order by f.predicate, f.valid_from, f.recorded_at, f.id`;
