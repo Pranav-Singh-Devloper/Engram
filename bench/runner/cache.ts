@@ -61,6 +61,17 @@ export function compact(json: unknown): unknown {
   };
 }
 
+/** Token counts from the final line of an Ollama /api/chat stream. */
+export function streamTokens(ndjson: string): { promptTokens: number; outputTokens: number } {
+  const last = ndjson.trim().split('\n').at(-1) ?? '';
+  try {
+    const done = JSON.parse(last) as { prompt_eval_count?: number; eval_count?: number };
+    return { promptTokens: done.prompt_eval_count ?? 0, outputTokens: done.eval_count ?? 0 };
+  } catch {
+    return { promptTokens: 0, outputTokens: 0 };
+  }
+}
+
 export function cacheKey(url: string, body: string): string {
   return createHash('sha256').update(`${url}\n${body}`).digest('hex');
 }
@@ -85,8 +96,9 @@ export function cachingFetch(options: CachingFetchOptions): typeof fetch {
 
     if (options.mode !== 'off' && existsSync(file)) {
       options.meter?.record({ cached: 1 });
-      const entry = JSON.parse(readFileSync(file, 'utf8')) as { body: unknown };
-      return new Response(JSON.stringify(entry.body), { status: 200 });
+      const entry = JSON.parse(readFileSync(file, 'utf8')) as { body?: unknown; text?: string };
+      // Streamed (NDJSON) replies are stored as text and replayed verbatim.
+      return new Response(entry.text ?? JSON.stringify(entry.body), { status: 200 });
     }
     if (options.mode === 'readonly') {
       // Kept for debugging: which request had no recording, and why.
@@ -104,7 +116,19 @@ export function cachingFetch(options: CachingFetchOptions): typeof fetch {
     await options.pacer?.wait(url);
     const res = await real(input, init);
     if (!res.ok) return res;
-    const json: unknown = await res.json();
+    const text = await res.text();
+    let json: unknown;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      // A local model's NDJSON stream: kept as text; its last line has the token counts.
+      options.meter?.record({ calls: 1, ...streamTokens(text) });
+      if (options.mode === 'readwrite') {
+        mkdirSync(path.dirname(file), { recursive: true });
+        writeFileSync(file, `${JSON.stringify({ url, text })}\n`);
+      }
+      return new Response(text, { status: res.status });
+    }
     options.meter?.record({ calls: 1, ...tokensOf(json) });
     if (options.mode === 'readwrite') {
       mkdirSync(path.dirname(file), { recursive: true });

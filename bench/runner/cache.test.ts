@@ -121,3 +121,17 @@ describe('Pacer', () => {
     expect(laneOf('https://example.test')).toBeNull();
   });
 });
+
+describe('cachingFetch with streamed replies', () => {
+  it('stores an NDJSON stream as text, replays it verbatim, and meters its tokens', async () => {
+    const ndjson =
+      '{"message":{"content":"{\\"a\\""}}\n{"message":{"content":":1}"},"done":true,"prompt_eval_count":40,"eval_count":7}\n';
+    const { fetch, meter, calls } = setup('readwrite', () => new Response(ndjson));
+    const first = await fetch('http://localhost:11434/api/chat', post('{"model":"qwen"}'));
+    expect(await first.text()).toBe(ndjson);
+    expect(meter.take()).toMatchObject({ calls: 1, promptTokens: 40, outputTokens: 7 });
+    const again = await fetch('http://localhost:11434/api/chat', post('{"model":"qwen"}'));
+    expect(await again.text()).toBe(ndjson);
+    expect(calls()).toBe(1);
+  });
+});

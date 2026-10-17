@@ -71,7 +71,10 @@ async function main(): Promise<void> {
       `${items.length} items × ${modes.length} modes, run ${runId}${offline ? ' (offline replay)' : ''}`,
     );
     console.log(describeEstimate(estimate(items, modes, llmJudge, extraction), geminiRpm));
+    const system = arg('system') ?? 'gemini';
+    if (system !== 'gemini' && system !== 'ollama') throw new Error(`Unknown system ${system}`);
     const providers = makeProviders({
+      system,
       cacheDir,
       mode: offline ? 'readonly' : 'readwrite',
       fallbackCacheDir: recordSmoke ? DEFAULT_CACHE_DIR : undefined,
@@ -81,7 +84,7 @@ async function main(): Promise<void> {
       await migrate(db, { sources: [PORTABLE] });
       await runItems(items, modes, {
         db,
-        provider: providers.gemini,
+        provider: providers.system,
         judge: llmJudge ? providers.judge : undefined,
         meter: providers.meter,
         recall: {
@@ -111,7 +114,10 @@ async function main(): Promise<void> {
   const meta = {
     runId,
     split,
-    model: process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash-lite',
+    model:
+      arg('system') === 'ollama'
+        ? `ollama ${process.env.OLLAMA_MODEL || 'qwen3.5:9b'}`
+        : process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash-lite',
     judge: llmJudge ? process.env.JUDGE_MODEL || 'openai/gpt-oss-120b' : 'exact/contains only',
     // The run's own date when its id carries one, so --report-only keeps it.
     date: /^\d{4}-\d{2}-\d{2}/.exec(runId)?.[0] ?? new Date().toISOString().slice(0, 10),
