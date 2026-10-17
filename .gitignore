@@ -21,3 +21,6 @@ bench/cache/
 
 # Bench per-item run results (reports are committed)
 bench/runs/
+
+# LongMemEval data (MIT, downloaded by bench/longmemeval; 277 MB)
+bench/longmemeval/data/

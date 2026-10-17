@@ -15,7 +15,7 @@ The plan for building Engram, one file per phase. [`docs/SPEC.md`](../SPEC.md) i
 | P06a Decay + purge | [P06a-decay-purge.md](P06a-decay-purge.md) | done | P05 | the time-travel and purge tests pass |
 | P06b Consolidation + jobs | [P06b-consolidation-jobs.md](P06b-consolidation-jobs.md) | done | P06a | consolidation runs end-to-end on the local DB; the merge test passes |
 | P07 MCP | [P07-mcp.md](P07-mcp.md) | done | P06b | the SDK-client integration test passes; Claude Code can remember and recall |
-| P08 Bench full | [P08-bench-full.md](P08-bench-full.md) | outline | P07 | test and LongMemEval reports exist; the README table shows judge agreement |
+| P08 Bench full | [P08-bench-full.md](P08-bench-full.md) | planned | P07 | test and LongMemEval reports exist; the README table shows judge agreement |
 | P09a Web API | [P09a-web-api.md](P09a-web-api.md) | outline | P07 | route handlers, auth, demo sessions and rate limits are tested |
 | P09b Web UI | [P09b-web-ui.md](P09b-web-ui.md) | outline | P09a | `docs/demo.md` can be followed without improvising |
 | P10 Ship | [P10-ship.md](P10-ship.md) | outline | P08, P09b | three reviewer paths are verified from a fresh clone; the hosted demo is live |
@@ -112,5 +112,5 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 33 | Decide whether the REST endpoints' bearer reuses `ENGRAM_MCP_TOKENS` (one namespace per token) or keeps a single `ENGRAM_API_TOKEN` | P07 | P09a | open (P09a DoD) |
 | 34 | Node: MCP Inspector 2.11 requires ≥ 22.19; the repo pins 22 via `.node-version`. Bump to the current 22 LTS and re-check the fresh clone | P07 | P10 | open (P10 DoD) |
 | 35 | Neon's pooled endpoint resets the search path (verified after a compute restart). Vercel uses the direct endpoint, unless traffic needs the pooler and every transaction then sets the path | Neon setup | P09a | open (P09a DoD) |
-| 36 | GitHub secrets for `nightly.yml` (`HOSTED_DATABASE_URL`, Gemini keys); until then the workflow skips | Neon setup | P08 | open (asked at P08 approval) |
+| 36 | GitHub secrets for `nightly.yml` (`HOSTED_DATABASE_URL`, Gemini keys) | Neon setup | P08 | done (set 2026-10-17; a dispatched nightly run succeeded on Neon) |
 
