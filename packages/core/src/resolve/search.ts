@@ -8,6 +8,7 @@ import type { EntityRow } from '../db/entities.js';
 import { normalizeName } from '../extract/normalize.js';
 import type { Provider } from '../providers/provider.js';
 import type { Entity } from '../types/index.js';
+import { uuidArray } from '../db/client.js';
 
 export type EntityMatch = 'name' | 'alias' | 'similar';
 
@@ -82,7 +83,7 @@ export async function searchEntities(
   const ids = ranked.map((h) => h.entity.id);
   const counts = await db<{ id: string; n: number }[]>`
     select e.id, count(f.id)::int as n
-    from unnest(${db.array(ids)}::uuid[]) as e(id)
+    from unnest(${uuidArray(db, ids)}::uuid[]) as e(id)
     left join facts f on f.invalidated_at is null and (f.subject_id = e.id or f.object_id = e.id)
     group by e.id`;
   const facts = new Map(counts.map((c) => [c.id, c.n]));

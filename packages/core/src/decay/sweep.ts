@@ -4,6 +4,7 @@ import { config } from '../config/index.js';
 import { PREDICATES } from '../conflict/predicates.js';
 import type { Queryable } from '../db/client.js';
 import { maybeOne, one } from '../db/rows.js';
+import { textArray } from '../db/client.js';
 
 /** Predicates decay never archives: facts that don't go stale (SPEC §9.2). */
 export const STATIC_PREDICATES = PREDICATES.filter((p) => p.mutability === 'static').map(
@@ -32,7 +33,7 @@ export async function decaySweep(
         ${cfg.accessWeight}::double precision,
         ${cfg.importanceWeight}::double precision,
         ${cfg.accessSaturation}::double precision,
-        ${db.array(STATIC_PREDICATES)}::text[],
+        ${textArray(db, STATIC_PREDICATES)}::text[],
         ${options.namespaceId ?? null}::uuid
       ) as archived`,
   );

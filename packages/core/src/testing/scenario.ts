@@ -13,6 +13,7 @@ import type { EntityRef, FactCandidate, TemporalHint } from '../providers/contra
 import { FakeProvider } from '../providers/fake.js';
 import { factsAsOf } from '../temporal/asOf.js';
 import type { EntityType } from '../types/index.js';
+import { uuidArray } from '../db/client.js';
 
 export const hint = {
   none: { kind: 'none' } as TemporalHint,
@@ -141,7 +142,10 @@ export class Scenario {
     );
     if (facts.length === 0) return [];
     const names = await this.db<{ id: string; name: string }[]>`
-      select id, name from entities where id = any(${this.db.array(facts.flatMap((f) => (f.objectId ? [f.objectId] : [])))}::uuid[])`;
+      select id, name from entities where id = any(${uuidArray(
+        this.db,
+        facts.flatMap((f) => (f.objectId ? [f.objectId] : [])),
+      )}::uuid[])`;
     const byId = new Map(names.map((n) => [n.id, n.name]));
     return facts
       .map((f) => (f.objectId ? (byId.get(f.objectId) ?? '?') : (f.objectLiteral ?? '?')))

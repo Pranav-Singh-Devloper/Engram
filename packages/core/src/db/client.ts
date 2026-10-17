@@ -29,6 +29,19 @@ const dateType = {
 
 export const DEFAULT_DATABASE_URL = 'postgres://engram:engram@localhost:54329/engram';
 
+// postgres.js learns array type ids from the server lazily, so an untyped
+// `db.array(...)` in a connection's first query is sent as "a,b" and rejected
+// as a malformed array literal. Every array parameter goes through these.
+const TEXT_ARRAY_OID = 1009;
+const UUID_ARRAY_OID = 2951;
+
+/** A `text[]` parameter, typed explicitly. */
+export const textArray = (db: Queryable, values: readonly string[]) =>
+  db.array([...values], TEXT_ARRAY_OID);
+/** A `uuid[]` parameter, typed explicitly. */
+export const uuidArray = (db: Queryable, values: readonly string[]) =>
+  db.array([...values], UUID_ARRAY_OID);
+
 /** Every Engram connection resolves unqualified names in this order (SPEC §5). */
 export const SEARCH_PATH = 'engram, extensions, public';
 

@@ -17,6 +17,7 @@ import type { CandidateResolver, ResolutionKind } from '../ingest/resolver.js';
 import type { Provider } from '../providers/provider.js';
 import { pendingClusters } from './cluster.js';
 import type { Cluster, ConsolidationConfig } from './cluster.js';
+import { uuidArray } from '../db/client.js';
 
 export interface ConsolidateOptions {
   namespaceId?: string;
@@ -68,7 +69,10 @@ async function reembedTurns(
 async function markConsolidated(db: Queryable, cluster: Cluster): Promise<void> {
   await db`
     update episodes set consolidated = true
-    where id = any(${db.array(cluster.turns.map((t) => t.id))}::uuid[])`;
+    where id = any(${uuidArray(
+      db,
+      cluster.turns.map((t) => t.id),
+    )}::uuid[])`;
 }
 
 export async function consolidate(

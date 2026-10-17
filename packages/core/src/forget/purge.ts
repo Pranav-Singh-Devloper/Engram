@@ -2,6 +2,7 @@
 // removes the information from every place it lives. One transaction, in an
 // order that respects the self-referencing fact links and revision FKs.
 import type { TransactionSql } from '../db/client.js';
+import { textArray, uuidArray } from '../db/client.js';
 
 export const REDACTED = '[redacted]';
 
@@ -28,7 +29,7 @@ export async function purgeFacts(
   const set = (
     await tx<{ id: string }[]>`
       with recursive chain(id) as (
-        select id from facts where namespace_id = ${namespaceId} and id = any(${tx.array([...targets])}::uuid[])
+        select id from facts where namespace_id = ${namespaceId} and id = any(${uuidArray(tx, [...targets])}::uuid[])
         union
         select f.id from facts f, chain c
         where f.namespace_id = ${namespaceId}
@@ -36,7 +37,7 @@ export async function purgeFacts(
       )
       select id from chain`
   ).map((r) => r.id);
-  const ids = tx.array(set);
+  const ids = uuidArray(tx, set);
 
   const sources = (
     await tx<{ id: string }[]>`
@@ -65,7 +66,7 @@ export async function purgeFacts(
     delete from fact_revisions
     where namespace_id = ${namespaceId}
       and (old_fact_id = any(${ids}::uuid[]) or new_fact_id = any(${ids}::uuid[])
-           or (candidate -> 'sourceEpisodeIds') ?| ${tx.array(sources)}::text[])`;
+           or (candidate -> 'sourceEpisodeIds') ?| ${textArray(tx, sources)}::text[])`;
 
   // 4. The facts themselves (their embeddings go with them).
   const facts = await tx`delete from facts where id = any(${ids}::uuid[])`;
@@ -73,7 +74,7 @@ export async function purgeFacts(
     (
       await tx<{ value: string }[]>`
         select distinct object_literal as value from facts
-        where namespace_id = ${namespaceId} and object_literal = any(${tx.array(literals)}::text[])`
+        where namespace_id = ${namespaceId} and object_literal = any(${textArray(tx, literals)}::text[])`
     ).map((r) => r.value),
   );
 
@@ -81,7 +82,7 @@ export async function purgeFacts(
   // and aliases of entities the purge leaves without any fact.
   const orphanRows = await tx<{ id: string; name: string; aliases: string[] }[]>`
     select e.id, e.name, e.aliases from entities e
-    where e.id = any(${tx.array(entities)}::uuid[]) and not e.is_self
+    where e.id = any(${uuidArray(tx, entities)}::uuid[]) and not e.is_self
       and not exists (select 1 from facts f where f.subject_id = e.id or f.object_id = e.id)`;
   const terms = [
     ...new Set(
@@ -100,14 +101,14 @@ export async function purgeFacts(
   // changed episodes are dropped: they encoded the old text.
   const deleted = await tx`
     delete from episodes
-    where id = any(${tx.array(sources)}::uuid[])
+    where id = any(${uuidArray(tx, sources)}::uuid[])
       and not exists (select 1 from facts f where f.source_episode_ids @> array[episodes.id])`;
   const pattern =
     terms.length > 0 ? new RegExp(`\\b(${terms.map(escapeRegExp).join('|')})\\b`, 'gi') : null;
   const touched = await tx<{ id: string; content: string }[]>`
     select id, content from episodes
     where namespace_id = ${namespaceId}
-      and (id = any(${tx.array(sources)}::uuid[])
+      and (id = any(${uuidArray(tx, sources)}::uuid[])
         ${terms.length > 0 ? tx`or content ~* ${terms.map((t) => `\\m${escapeRegExp(t)}\\M`).join('|')}` : tx``})`;
   let redacted = 0;
   for (const e of touched) {
@@ -124,16 +125,18 @@ export async function purgeFacts(
   const summaries = await tx<{ summarizes: string[] }[]>`
     delete from episodes
     where namespace_id = ${namespaceId} and kind = 'summary'
-      and summarizes && ${tx.array(changed)}::uuid[]
+      and summarizes && ${uuidArray(tx, changed)}::uuid[]
     returning summarizes`;
   const resummarize = summaries.flatMap((s) => s.summarizes);
   if (resummarize.length > 0) {
-    await tx`update episodes set consolidated = false where id = any(${tx.array(resummarize)}::uuid[])`;
+    await tx`update episodes set consolidated = false where id = any(${uuidArray(tx, resummarize)}::uuid[])`;
   }
 
   // 7. Entities the purge left without any fact: their names would otherwise survive.
-  const orphans =
-    await tx`delete from entities where id = any(${tx.array(orphanRows.map((e) => e.id))}::uuid[])`;
+  const orphans = await tx`delete from entities where id = any(${uuidArray(
+    tx,
+    orphanRows.map((e) => e.id),
+  )}::uuid[])`;
 
   return {
     facts: facts.count,

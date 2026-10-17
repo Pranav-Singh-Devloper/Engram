@@ -7,6 +7,7 @@ import { fromSql, toSql } from '../db/vector.js';
 import { asOfPredicate, episodesAsOfPredicate } from '../temporal/asOf.js';
 import type { AsOf } from '../temporal/asOf.js';
 import type { FactStatus, FactTier } from '../types/index.js';
+import { uuidArray } from '../db/client.js';
 
 export interface Candidate {
   /** `f:<id>` or `e:<id>`, unique across kinds. */
@@ -155,11 +156,11 @@ export async function graphNeighbours(
   if (direct.length === 0 && episodeIds.length === 0) return [];
   const rows = await tx<Row[]>`
     with seed as (
-      select unnest(${tx.array(direct)}::uuid[]) as id
+      select unnest(${uuidArray(tx, direct)}::uuid[]) as id
       union
       select unnest(array[f.subject_id, f.object_id]) from facts f
       where f.namespace_id = ${ctx.namespaceId}
-        and f.source_episode_ids && ${tx.array(episodeIds)}::uuid[]
+        and f.source_episode_ids && ${uuidArray(tx, episodeIds)}::uuid[]
         and ${asOfPredicate(tx, ctx.asOf)}
     ),
     hub as (

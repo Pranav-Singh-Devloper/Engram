@@ -8,6 +8,7 @@ import { parseFact } from './factRows.js';
 import type { FactRow } from './factRows.js';
 import { toSql } from './vector.js';
 import type { Fact, FactStatus, FactTier, ValidFromSource } from '../types/index.js';
+import { uuidArray } from './client.js';
 
 export interface NewFact {
   id?: string;
@@ -85,5 +86,5 @@ export async function recordFactAccess(
   if (ids.length === 0) return;
   await db`
     update facts set access_score = access_score + 1, last_accessed_at = ${at}
-    where id = any(${db.array([...ids])}::uuid[])`;
+    where id = any(${uuidArray(db, [...ids])}::uuid[])`;
 }
