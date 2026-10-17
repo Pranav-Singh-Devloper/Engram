@@ -1,6 +1,6 @@
 # P07 — MCP server
 
-**Status:** planned (expanded 2026-10-17)
+**Status:** done (2026-10-17)
 
 ## Goal
 Expose Engram to any MCP client: six tools and a stats resource built on the official TypeScript SDK. One server factory backs two transports: a stdio binary for local clients (Claude Code, Claude Desktop, Cursor), and a stateless, bearer-authenticated HTTP handler that P09a mounts at `/api/mcp` without changes.
@@ -132,15 +132,15 @@ DECISIONS.md                                  # ADR-013: MCP SDK v2, one factory
 - **stdio:** spawning the binary, the client lists the tools and reads stats. Every stdout line is valid JSON-RPC.
 
 ## Definition of done
-- [ ] `packages/mcp` with `engram_remember`, `engram_recall`, `engram_history`, `engram_entities`, `engram_forget`, `engram_consolidate` and `engram://stats`. Inputs use zod schemas. Outputs are concise deterministic text plus structured content. Descriptions say *when* to call each tool.
-- [ ] stdio entry using `ENGRAM_NAMESPACE`. The transport-agnostic server factory is ready for HTTP mounting with bearer → namespace mapping, and the HTTP handler is tested in-process.
-- [ ] An integration test drives the server through the SDK client (in-memory and stdio transports) over the local DB with FakeProvider.
-- [ ] Namespace isolation is tested across bearer tokens, including cross-namespace ids.
-- [ ] Claude Code calls `engram_remember` and `engram_recall` locally (a manual check, written down in `docs/mcp.md`).
-- [ ] An MCP Inspector session is recorded. Copy-paste configs for Claude Code, Claude Desktop and Cursor are drafted for the README.
-- [ ] `engram_forget` with `mode: 'hard'` refuses without `confirm_hard: true`.
-- [ ] Bench reports write a JSON summary, and `engram://stats` shows the latest score.
-- [ ] Every ledger row targeting P07 is closed (see [README](README.md#carried-items-ledger)).
+- [x] `packages/mcp` with `engram_remember`, `engram_recall`, `engram_history`, `engram_entities`, `engram_forget`, `engram_consolidate` and `engram://stats`. Inputs use zod schemas. Outputs are concise deterministic text plus structured content. Descriptions say *when* to call each tool.
+- [x] stdio entry using `ENGRAM_NAMESPACE`. The transport-agnostic server factory is ready for HTTP mounting with bearer → namespace mapping, and the HTTP handler is tested in-process.
+- [x] An integration test drives the server through the SDK client (in-memory and stdio transports) over the local DB with FakeProvider.
+- [x] Namespace isolation is tested across bearer tokens, including cross-namespace ids.
+- [x] Claude Code calls `engram_remember` and `engram_recall` locally (a manual check, written down in `docs/mcp.md`).
+- [x] An MCP Inspector session is recorded. Copy-paste configs for Claude Code, Claude Desktop and Cursor are drafted for the README.
+- [x] `engram_forget` with `mode: 'hard'` refuses without `confirm_hard: true`.
+- [x] Bench reports write a JSON summary, and `engram://stats` shows the latest score.
+- [x] Every ledger row targeting P07 is closed (see [README](README.md#carried-items-ledger)).
 
 ## Planned commits
 1. `docs(phases): expand P07 and add the carried-items ledger`
@@ -167,3 +167,31 @@ DECISIONS.md                                  # ADR-013: MCP SDK v2, one factory
 - **Verify:** that the Inspector CLI mode (`--cli`) still exists in Inspector 2.11. If not, record the session with the SDK client script instead and say so.
 - **The stats "latest bench score"** depends on the report JSON shape. It's versioned with a `schema: 1` field.
 - **Known limitation** (§10): recall depends on agents actually calling remember. Document it, and don't engineer around it.
+
+## Summary
+
+Done 2026-10-17, using 3 Gemini generate calls (budget: ≤ 10), plus embeddings.
+- **`packages/mcp`** serves six tools and `engram://stats` from one factory on MCP SDK v2 (ADR-013).
+- **Transports:** a stdio binary and a stateless bearer-token HTTP handler that P09a mounts unchanged.
+- **Tests:** 21 run with FakeProvider, driving the real client over three transports: in-memory, in-process HTTP (including 2025-protocol clients and cross-namespace ids), and the spawned stdio binary (with a stdout-is-only-JSON-RPC check).
+- **Live:**
+  - an MCP Inspector CLI session against real Gemini;
+  - a two-session Claude Code check, in which the second process recalled what the first remembered.
+
+  Both are in `docs/mcp.md`, with configs for Claude Code, Claude Desktop and Cursor.
+- **Core additions:** `searchEntities`, `namespaceStats`, `processPending`, and a namespace-scoped `history()`. Bench reports now write a JSON summary, backfilled for every past run at 0 calls.
+
+Found and fixed along the way:
+- **The decay sweep failed on underflow.** Postgres raises on an underflowing double, and `access_score` is a `real` column. A far-future sweep in the stats test exposed it, and migration 0006 clamps it. Without the fix, one long-idle fact would eventually break every hosted sweep.
+- **The entity-search floor was too low** for real embeddings (the Inspector session listed Porto for "Ana"). It's now 0.7, from measured similarities.
+- **A stale global sweep row** from P06a-era testing was in the shared dev DB. It was removed; no test sweeps globally.
+
+Deviations from the plan above:
+- **`processPending` was added.** The plan first left `wait: false` stragglers as a limitation; under the carried-items rule it was built instead. It runs on stdio start and in `engram_consolidate`.
+- **Bench summaries carry `finishedAt` and `retrievalOnly`,** so stats orders runs reliably and skips ranker comparisons that composed no answers.
+- **Inspector 2.11 asks for Node ≥ 22.19** (this machine has 22.14). The CLI worked regardless. Upgrading Node is noted for P10's fresh-clone check.
+
+Carried forward (ledger rows 32 and 33):
+- **Recall ranking** for questions about the user goes to P08, with tuning on dev.
+- **The REST bearer scheme** (`ENGRAM_MCP_TOKENS` vs `ENGRAM_API_TOKEN`) goes to P09a.
+

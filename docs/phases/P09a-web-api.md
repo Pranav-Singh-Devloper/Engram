@@ -22,6 +22,7 @@ P07 (the MCP server factory). P08 isn't required, but `/api/evals` reads its rep
 - [ ] Chat tracks access only for the memories the composer used (`usedMemoryIds`, ledger row 21).
 - [ ] A test proves the production client config has `prepare: false` (ledger row 6).
 - [ ] `/api/mcp` mounts P07's `createEngramHttpHandler` unchanged.
+- [ ] The REST endpoints' bearer either reuses `ENGRAM_MCP_TOKENS` (token → namespace) or keeps `ENGRAM_API_TOKEN`; decided, documented in `.env.example` (ledger row 33).
 - [ ] Route handler tests cover auth, namespace scoping, both rate limits and the cap (FakeProvider, local DB).
 
 ## Risks and verify-at-build-time

@@ -34,6 +34,7 @@ P08 (bench tables) and P09b (demo pages).
   1. the hosted demo URL works without signing in;
   2. `pnpm demo:offline` works with only Docker and no keys;
   3. the quickstart takes under 10 minutes with a free Gemini key.
+- [ ] `.node-version` is the current Node 22 LTS (≥ 22.19 for MCP Inspector 2.11), and the fresh-clone check passes on it (ledger row 34).
 - [ ] Final §16 checks are clean (one author identity, no attribution trailers).
 
 ## Risks and verify-at-build-time

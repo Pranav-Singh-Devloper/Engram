@@ -14,7 +14,7 @@ The plan for building Engram, one file per phase. [`docs/SPEC.md`](../SPEC.md) i
 | P05 Retrieval | [P05-retrieval.md](P05-retrieval.md) | done | P04 | retrieval fixtures pass; dev targets are recorded in DECISIONS.md |
 | P06a Decay + purge | [P06a-decay-purge.md](P06a-decay-purge.md) | done | P05 | the time-travel and purge tests pass |
 | P06b Consolidation + jobs | [P06b-consolidation-jobs.md](P06b-consolidation-jobs.md) | done | P06a | consolidation runs end-to-end on the local DB; the merge test passes |
-| P07 MCP | [P07-mcp.md](P07-mcp.md) | outline | P06b | the SDK-client integration test passes; Claude Code can remember and recall |
+| P07 MCP | [P07-mcp.md](P07-mcp.md) | done | P06b | the SDK-client integration test passes; Claude Code can remember and recall |
 | P08 Bench full | [P08-bench-full.md](P08-bench-full.md) | outline | P07 | test and LongMemEval reports exist; the README table shows judge agreement |
 | P09a Web API | [P09a-web-api.md](P09a-web-api.md) | outline | P07 | route handlers, auth, demo sessions and rate limits are tested |
 | P09b Web UI | [P09b-web-ui.md](P09b-web-ui.md) | outline | P09a | `docs/demo.md` can be followed without improvising |
@@ -86,7 +86,7 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 7 | Unknown `valid_from` for end-only facts | P02 | P03 | done (ADR-007) |
 | 8 | Assistant echoes merge, raising confidence only for new episodes | P02 | P03 | done (P03) |
 | 9 | Fixture 04 correction retracts Initech | P02 | P03 | done (P03) |
-| 10 | `engram_remember` returns the processing summary | P02 | P07 | open (P07 design 4) |
+| 10 | `engram_remember` returns the processing summary | P02 | P07 | done (P07) |
 | 11 | Tune the merge threshold (0.9) | P03 | P05 → P08 | re-shifted: P05 tuned ranker and floor only; dev/dev-long show no paraphrase misses. Check on dev-long before freezing test |
 | 12 | Report the adjudication rate | P03 | P04 → P08 | re-shifted: not in reports yet; add to the report before the test run |
 | 13 | Document that multi-instance deploys need synced clocks | P03 | P10 | open (README limitations) |
@@ -96,16 +96,19 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 17 | Hand-labelled judge agreement | P04 | P08 | open (P08 DoD) |
 | 18 | Longer histories vs one extraction call per turn (batching decision) | P04, P05 | P08 | open (P08 carry-in) |
 | 19 | Budget 10% above the cache-based call count | P05 | P08 | open (P08 carry-in) |
-| 20 | MCP recall tracks access to everything returned | P05 | P07 | open (P07 design 4) |
+| 20 | MCP recall tracks access to everything returned | P05 | P07 | done (P07, tested) |
 | 21 | Chat tracks access via `usedMemoryIds` | P05 | P09a | open (P09a DoD) |
 | 22 | Prompt pass: fixture 08 maps the brother to `partner_of` | P05 | P08 | open (P08 prompt pass, before re-recording) |
 | 23 | Regenerate purged summaries; re-embed redacted turns | P06a | P06b | done (P06b) |
 | 24 | pg_cron schedules for decay and demo cleanup | P06a | P06b | done (P06b, generated) |
 | 25 | Verify pg_cron on Supabase (`select * from cron.job`) | P06b | P10 | open (P10 DoD) |
-| 26 | `engram_forget` modes and stats' "last sweep" | P06a | P07 | open (P07 design 4–5) |
+| 26 | `engram_forget` modes and stats' "last sweep" | P06a | P07 | done (P07) |
 | 27 | Prompt pass: summaries say "the user", never he/she | P06b | P08 | open (P08 prompt pass) |
 | 28 | Watch weak inferred facts (`visited`) on test | P06b | P08 | open (P08 carry-in) |
 | 29 | README: re-enable paused scheduled workflows and Supabase | P06b | P10 | open (P10 DoD) |
 | 30 | Smoke cache size (4.2 MB) | P04 | P08 | watch (P08 carry-in) |
 | 31 | `/graph` page | P09b | P09b | stretch, only if P10 is on track |
+| 32 | Recall ranks "Ana lives in Porto" above "The user lives in Lisbon" for "where does the user live" (Inspector session) | P07 | P08 | open (P08 carry-in: check subject-aware ranking on dev before freezing test) |
+| 33 | Decide whether the REST endpoints' bearer reuses `ENGRAM_MCP_TOKENS` (one namespace per token) or keeps a single `ENGRAM_API_TOKEN` | P07 | P09a | open (P09a DoD) |
+| 34 | Node: MCP Inspector 2.11 requires ≥ 22.19; the repo pins 22 via `.node-version`. Bump to the current 22 LTS and re-check the fresh clone | P07 | P10 | open (P10 DoD) |
 

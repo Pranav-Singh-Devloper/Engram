@@ -163,3 +163,19 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 **Decision.** A file named `R__*.sql` is _repeatable_, in the Flyway sense: it's re-applied whenever its checksum changes, after the numbered files of its source, and its SQL must be idempotent. Numbered files keep the strict rule. The schedule file is `supabase/hosted/R__cron_schedules.sql`, and `cron.schedule` replaces a job of the same name, so re-applying it is safe.
 
 **Consequences.** Changing `config.decay` or `config.schedules` means running `pnpm db:hosted-cron` and committing the result (a drift test enforces it). The next `db:migrate:hosted` then updates the hosted jobs in place.
+
+---
+
+## ADR-013 — MCP SDK v2, with one server factory behind both transports
+
+**Date:** 2026-10-17 · **Status:** Accepted
+
+**Context.** SPEC §10 asks for the official TypeScript MCP SDK, with stdio for local clients and streamable HTTP at `/api/mcp` on Vercel (P09a). The SDK now has two lines: the v1 monolith `@modelcontextprotocol/sdk` (1.32.1), and v2's split packages `@modelcontextprotocol/server` and `/client` (2.3.1; 2.0.0 shipped on 2026-07-27), which v2 calls the stable line.
+
+**Decision.**
+
+- **Use v2.** Its `createMcpHandler(factory)` is a stateless, web-standard `fetch` handler, which a Vercel route handler can mount directly. `serveStdio(factory)` serves the same factory over stdio. It still negotiates the 2025 protocol revisions, so older clients work.
+- **One factory:** `createEngramServer({ db, provider, namespaceId })` scopes every tool to one namespace. Bearer tokens map to namespaces before the factory is called (401 otherwise), so an HTTP request can never reach another namespace's server.
+- **Tests:** the client package is a dev dependency. Tests use the real client over the in-memory transport, in-process HTTP and the spawned stdio binary.
+
+**Consequences.** P09a only mounts the handler. The only additions are one dependency and one dev dependency, both official MCP packages.

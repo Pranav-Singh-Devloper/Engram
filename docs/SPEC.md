@@ -92,7 +92,7 @@ engram/
 ├── packages/
 │   ├── core/                 # engine (no HTTP, no CLI)
 │   │   └── src/{db,extract,resolve,conflict,retrieve,consolidate,decay,purge,providers,types,config}/
-│   └── mcp/                  # MCP server (stdio entry + transport-agnostic server)
+│   └── mcp/                  # MCP server: server factory, tools, stdio entry, HTTP handler
 ├── apps/
 │   └── web/                  # Next.js (App Router)
 ├── bench/
@@ -445,6 +445,8 @@ score = 0.50 · exp(−days_since_last_access / τ_tier)
 
 For a default-importance fact (0.5) that is never accessed, the score crosses θ after roughly `3τ`: about 42 days in `working`, about 270 days in `long_term`. Facts with importance ≥ 0.6 are effectively permanent unless forgotten explicitly. This is intentional, and the test suite asserts both the invariant and the crossing times.
 
+**Numerics.** Postgres raises on a `double` that underflows instead of returning 0, and `access_score` is a `real` column. The sweep therefore clamps its exponents at −700 and stores a decayed access score below 1e-30 as 0 (migration 0006). Without that, one fact untouched for ~745·τ days, or a far-future simulated sweep, made every sweep fail.
+
 ### 9.2 Sweep rules
 
 - Only current beliefs are scored (`invalidated_at is null`); replaced versions never are. Closed history rows are current beliefs and decay like any other.
@@ -486,29 +488,32 @@ For a default-importance fact (0.5) that is never accessed, the score crosses θ
 
 ## 10. MCP server (`packages/mcp`)
 
-Use the **official TypeScript MCP SDK**. Verify the current package name, transport APIs, and streamable-HTTP usage against the SDK docs at build time.
+Use the **official TypeScript MCP SDK**: v2, `@modelcontextprotocol/server` (verified 2.3.1, 2026-10-17; ADR-013). One factory, `createEngramServer({ db, provider, namespaceId })`, builds a server scoped to one namespace, and both transports use it. The server still negotiates the 2025 protocol revisions for older clients.
 
 **Namespace selection**
-- stdio: the `ENGRAM_NAMESPACE` environment variable.
-- HTTP: a bearer token maps to a namespace.
+- stdio: the `ENGRAM_NAMESPACE` environment variable (a slug, default `default`, created as a `user` namespace if missing).
+- HTTP: `ENGRAM_MCP_TOKENS` maps each bearer token (≥ 24 characters, compared in constant time) to a namespace slug. A missing or unknown token gets 401 before any server is built.
+- **Isolation is enforced in core:** `history()` takes the namespace, entity references resolve only inside it, and `forget` targets only its facts. Another namespace's ids find nothing.
 
 **Tools** (zod input schemas; concise deterministic text plus structured content). Descriptions explicitly tell the agent *when* to call each tool: recall at the start of a task, remember durable user facts, preferences, and decisions.
 
-- `engram_remember { content, session_id?, occurred_at?, wait? = true }` → episode id plus a summary of extracted, merged, updated, and rejected facts.
-- `engram_recall { query, k?, valid_at?, known_at?, include_archived? }` → ranked memories with provenance, validity windows, and record windows.
+- `engram_remember { content, session_id?, occurred_at?, wait? = true }` → episode id plus a summary of extracted, merged, updated, and rejected facts. Content is stored with role `user`, and `session_id` defaults to `mcp-YYYY-MM-DD` (UTC) so one day's remembers cluster for consolidation. With `wait: false` it returns `pending`, and an episode left unprocessed is finished by `processPending` on the next server start or `engram_consolidate`.
+- `engram_recall { query, k?, valid_at?, known_at?, include_archived? }` → ranked memories with provenance, validity windows, and record windows. It tracks access for everything returned (§6.2).
 - `engram_history { entity, predicate?, include_revised? }` → revision timeline.
-- `engram_entities { query }` → entity search.
-- `engram_forget { fact_id? | entity + predicate?, mode: 'archive'|'retract'|'hard', confirm_hard? }`.
-- `engram_consolidate {}` → manual consolidation for the namespace.
-- Resource `engram://stats` → counts by tier and status, ad-hoc predicate rate, last sweep, latest bench score.
+- `engram_entities { query, limit? }` → entity search: names and aliases containing the query, then labels with embedding similarity ≥ 0.7, with fact counts.
+- `engram_forget { fact_id? | entity + predicate?, mode: 'archive'|'retract'|'hard', confirm_hard?, reason? }`. A hard purge without `confirm_hard: true` returns an error and changes nothing.
+- `engram_consolidate {}` → processes pending episodes, then runs consolidation for the namespace.
+- Resource `engram://stats` → counts by tier and status, ad-hoc predicate rate, last sweep, latest bench score. The score is the newest `bench/reports/<run>.json` summary from a run that composed answers, or `null` where there are no reports (a deploy).
+- **Entity references** (`entity`) accept an id, a name or alias (case-insensitive), or `user`/`me`/`self`. An ambiguous name returns an error listing the candidates' ids; it never guesses.
+- **Errors** an agent can act on (bad input, unknown or ambiguous entity, nothing to forget, an unconfirmed hard purge) come back as `isError` results with a one-line message.
 
 **Transports**
-- stdio binary for local clients (Claude Code, Claude Desktop, Cursor). The README gets copy-paste config for each.
-- Streamable HTTP at `/api/mcp` in the Next.js app, bearer-protected.
+- stdio binary for local clients (Claude Code, Claude Desktop, Cursor), `packages/mcp/src/stdio.ts`, launched through the package's own `tsx`. stdout carries only the protocol; diagnostics go to stderr. `docs/mcp.md` has copy-paste config for each client (the README copies it in P10).
+- Streamable HTTP at `/api/mcp` in the Next.js app, bearer-protected: P09a mounts `createEngramHttpHandler(…).fetch`, a stateless web-standard handler, unchanged.
 
 **Known limitation (documented):** recall quality depends on the client actually calling `engram_remember`. Agents sometimes skip it or store paraphrases rather than raw turns.
 
-**Definition of done:** a recorded MCP Inspector session, plus an integration test that drives the server through the SDK client.
+**Definition of done:** a recorded MCP Inspector session, plus an integration test that drives the server through the SDK client (in-memory, in-process HTTP, and the spawned stdio binary). Both are in `docs/mcp.md` and `packages/mcp`.
 
 ---
 
@@ -805,6 +810,7 @@ Exposed over MCP; measured by bench/. Source of truth: docs/SPEC.md.
 - pnpm bench --split=dev|test --memory=engram|rag|full_context|buffer
 - pnpm bench:longmemeval
 - pnpm jobs:consolidate [--hosted] [--estimate]     (decay runs in pg_cron)
+- packages/mcp/node_modules/.bin/tsx packages/mcp/src/stdio.ts   (MCP stdio server; ENGRAM_NAMESPACE, see docs/mcp.md)
 - pnpm db:hosted-cron                               (regenerate supabase/hosted/R__cron_schedules.sql)
 
 ## Working rules
