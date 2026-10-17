@@ -108,7 +108,7 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 29 | README: re-enable paused scheduled workflows, and Neon's monthly compute/egress limits | P06b | P10 | open (P10 DoD; Supabase pausing no longer applies) |
 | 30 | Smoke cache size (4.2 MB) | P04 | P08 | watch (P08 carry-in) |
 | 31 | `/graph` page | P09b | P09b | stretch, only if P10 is on track |
-| 32 | Recall ranks "Ana lives in Porto" above "The user lives in Lisbon" for "where does the user live" (Inspector session) | P07 | P08 | open (P08 carry-in: check subject-aware ranking on dev before freezing test) |
+| 32 | Recall ranks "Ana lives in Porto" above "The user lives in Lisbon" for "where does the user live" (Inspector session) | P07 | P08 | done (P08, 2026-10-18): a self-subject prior was tested on dev-long retrieval-only runs at weights 0 / 0.15 / 0.3: MRR 0.760 / 0.749 / 0.760, top-1 21 / 22 / 23 of 36, i.e. noise. Kept off (`recall.selfWeight: 0`), available as an option |
 | 33 | Decide whether the REST endpoints' bearer reuses `ENGRAM_MCP_TOKENS` (one namespace per token) or keeps a single `ENGRAM_API_TOKEN` | P07 | P09a | open (P09a DoD) |
 | 34 | Node: MCP Inspector 2.11 requires ≥ 22.19; the repo pins 22 via `.node-version`. Bump to the current 22 LTS and re-check the fresh clone | P07 | P10 | open (P10 DoD) |
 | 35 | Neon's pooled endpoint resets the search path (verified after a compute restart). Vercel uses the direct endpoint, unless traffic needs the pooler and every transaction then sets the path | Neon setup | P09a | open (P09a DoD) |

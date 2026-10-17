@@ -97,6 +97,7 @@ async function main(): Promise<void> {
             ? { ranker: process.env.BENCH_RANKER as 'rrf' | 'linear' }
             : {}),
           ...(process.env.BENCH_FLOOR ? { floor: Number(process.env.BENCH_FLOOR) } : {}),
+          ...(arg('self-prior') ? { selfWeight: Number(arg('self-prior')) } : {}),
         },
         retrievalOnly: flag('retrieval-only'),
         extraction,

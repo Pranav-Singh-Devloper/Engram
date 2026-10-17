@@ -10,7 +10,8 @@ import { cosine } from '../db/vector.js';
 import type { Provider } from '../providers/provider.js';
 import type { FactStatus, EpisodeRole } from '../types/index.js';
 import { trackUse } from './access.js';
-import { minMax, recency, rrf, withPriors } from './fuse.js';
+import { aboutUser, minMax, recency, rrf, withPriors } from './fuse.js';
+import { getSelfEntity } from '../db/namespaces.js';
 import {
   graphNeighbours,
   prepareVectorSearch,
@@ -33,6 +34,8 @@ export interface RecallOptions {
   trackAccess?: boolean;
   ranker?: 'rrf' | 'linear';
   floor?: number;
+  /** Overrides config.recall.selfWeight (tuning on dev). */
+  selfWeight?: number;
 }
 
 export interface RecalledMemory {
@@ -134,9 +137,15 @@ export async function recall(
     return { memories: [], abstained: true, bestSimilarity };
   }
 
+  const selfWeight = options.selfWeight ?? cfg.selfWeight;
+  const selfId =
+    selfWeight > 0 && aboutUser(options.query)
+      ? (await getSelfEntity(db, options.namespaceId)).id
+      : null;
   const prior = (c: Candidate) => ({
     recency: recency(c.validFrom, asOf.validAt, cfg.recencyScaleDays),
     importance: c.importance,
+    self: selfId !== null && c.subjectId === selfId ? 1 : 0,
   });
   const scores = new Map<string, number>();
   if ((options.ranker ?? cfg.ranker) === 'rrf') {
@@ -150,6 +159,7 @@ export async function recall(
         withPriors(fused.get(c.key) ?? 0, prior(c), {
           recency: cfg.recencyWeight,
           importance: cfg.importanceWeight,
+          self: selfWeight,
         }),
       );
     }

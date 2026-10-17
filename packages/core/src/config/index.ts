@@ -47,6 +47,11 @@ export const config = {
     rrfK: 60,
     recencyWeight: 0.1,
     importanceWeight: 0.1,
+    /**
+     * Prior for facts about the user when the query is about the user (ledger
+     * row 32). Off unless dev shows it helps; see P08.
+     */
+    selfWeight: 0,
     /** Recency prior is exp(−age / recencyScaleDays). */
     recencyScaleDays: 30,
     graphLimit: 20,

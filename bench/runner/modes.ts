@@ -134,7 +134,7 @@ export interface ModeDeps {
   db: Sql;
   provider: Provider;
   /** Overrides for engram's recall (tuning sweeps). */
-  recall?: Partial<Pick<RecallOptions, 'ranker' | 'floor' | 'k'>>;
+  recall?: Partial<Pick<RecallOptions, 'ranker' | 'floor' | 'k' | 'selfWeight'>>;
   /**
    * Engram: recall with both rankers and skip the composer, so rankers can be
    * compared on recall@8 at no generation cost (embeddings have their own quota).

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { UNKNOWN_START } from '../db/client.js';
-import { minMax, recency, rrf, withPriors } from './fuse.js';
+import { aboutUser, minMax, recency, rrf, withPriors } from './fuse.js';
 
 describe('rrf', () => {
   it('ranks a key found by several lists above one found by a single list', () => {
@@ -41,5 +41,29 @@ describe('minMax', () => {
   it('scales to [0, 1] and maps a constant to 1', () => {
     expect(minMax([2, 4, 6])).toEqual([0, 0.5, 1]);
     expect(minMax([3, 3])).toEqual([1, 1]);
+  });
+});
+
+describe('the self prior', () => {
+  it('recognizes questions about the user', () => {
+    for (const q of [
+      'Where do I live?',
+      'what is my sister called',
+      "I'm moving soon",
+      'where does the user live',
+    ])
+      expect(aboutUser(q), q).toBe(true);
+    for (const q of ['Where does Ana live?', 'capital of Italy', 'mime artists'])
+      expect(aboutUser(q), q).toBe(false);
+  });
+
+  it('boosts a fact about the user only when its weight is set', () => {
+    const w = { recency: 0, importance: 0 };
+    expect(withPriors(1, { recency: 0, importance: 0, self: 1 }, w)).toBe(1);
+    expect(withPriors(1, { recency: 0, importance: 0, self: 1 }, { ...w, self: 0.3 })).toBeCloseTo(
+      1.3,
+      10,
+    );
+    expect(withPriors(1, { recency: 0, importance: 0, self: 0 }, { ...w, self: 0.3 })).toBe(1);
   });
 });

@@ -19,13 +19,27 @@ export function recency(at: Date | null, validAt: Date, scaleDays: number): numb
   return Math.exp(-ageDays / scaleDays);
 }
 
-/** The spec's mild prior: score = base · (1 + w_r · recency + w_i · importance). */
+/**
+ * The spec's mild prior: score = base · (1 + w_r · recency + w_i · importance
+ * + w_s · self), where self is 1 for a fact about the user when the query is.
+ */
 export function withPriors(
   base: number,
-  prior: { recency: number; importance: number },
-  weights: { recency: number; importance: number },
+  prior: { recency: number; importance: number; self?: number },
+  weights: { recency: number; importance: number; self?: number },
 ): number {
-  return base * (1 + weights.recency * prior.recency + weights.importance * prior.importance);
+  return (
+    base *
+    (1 +
+      weights.recency * prior.recency +
+      weights.importance * prior.importance +
+      (weights.self ?? 0) * (prior.self ?? 0))
+  );
+}
+
+/** Does the query ask about the user themself ("where do I live", "my sister")? */
+export function aboutUser(query: string): boolean {
+  return /\b(i|i'm|i've|i'd|me|my|mine|myself|the user)\b/i.test(query);
 }
 
 /** Min-max normalization to [0, 1]; a constant input maps to 1 (it's as good as it gets). */
