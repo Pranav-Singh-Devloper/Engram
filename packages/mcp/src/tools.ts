@@ -32,6 +32,11 @@ export interface ToolDeps {
   provider: Provider;
   namespaceId: string;
   clock: Clock;
+  /**
+   * engram_remember's default for `wait`. Local models take 5-15 s a turn, so
+   * local mode returns at once and extracts in the background (P08b).
+   */
+  rememberWaitDefault: boolean;
   /** Receives work that outlives a tool call (`wait: false`); tests await it. */
   background: (task: Promise<void>) => void;
   /** Diagnostics. Never stdout: stdio carries the protocol there. */
@@ -73,7 +78,10 @@ export function registerTools(server: McpServer, deps: ToolDeps): void {
         'Store something durable about the user in long-term memory. Call this whenever the user ' +
         'shares a lasting fact, preference, relationship, plan or decision (where they live or work, ' +
         "who people are, what they like or chose), or corrects one. Pass the user's own words where " +
-        "possible. Don't store small talk or details that only matter to the current task.",
+        "possible. Don't store small talk or details that only matter to the current task." +
+        (deps.rememberWaitDefault
+          ? ''
+          : ' Extraction runs in the background here, so a fact you just stored may take a few seconds to appear in engram_recall.'),
       inputSchema: z.object({
         content: z
           .string()
@@ -95,9 +103,11 @@ export function registerTools(server: McpServer, deps: ToolDeps): void {
           ),
         wait: z
           .boolean()
-          .default(true)
+          .default(deps.rememberWaitDefault)
           .describe(
-            'Wait for extraction and return what was stored (default). false returns at once.',
+            deps.rememberWaitDefault
+              ? 'Wait for extraction and return what was stored (default). false returns at once.'
+              : 'false (default here): return at once and extract in the background. true waits for what was stored.',
           ),
       }),
       outputSchema: z.object({
@@ -227,7 +237,12 @@ export function registerTools(server: McpServer, deps: ToolDeps): void {
           .default(false)
           .describe('Include facts archived by decay or by request.'),
       }),
-      outputSchema: z.object({ abstained: z.boolean(), memories: z.array(Memory) }),
+      outputSchema: z.object({
+        abstained: z.boolean(),
+        memories: z.array(Memory),
+        /** Episodes stored but not yet extracted (wait: false, or a restart); not yet recallable as facts. */
+        pending: z.number().int(),
+      }),
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
     async ({ query, k, valid_at, known_at, include_archived }) => {
@@ -246,6 +261,9 @@ export function registerTools(server: McpServer, deps: ToolDeps): void {
         },
         clock,
       );
+      const [queue] = await db<{ n: number }[]>`
+        select count(*)::int as n from episodes where namespace_id = ${namespaceId} and processed_at is null`;
+      const pending = queue?.n ?? 0;
       const memories = r.memories.map((m) => ({
         id: m.id,
         kind: m.kind,
@@ -264,8 +282,17 @@ export function registerTools(server: McpServer, deps: ToolDeps): void {
           : `${i + 1}. [episode ${m.id}] ${m.text} (said ${iso(m.validFrom)})`,
       );
       return {
-        content: text(lines.length > 0 ? lines.join('\n') : 'Nothing relevant in memory.'),
-        structuredContent: { abstained: r.abstained, memories },
+        content: text(
+          [
+            lines.length > 0 ? lines.join('\n') : 'Nothing relevant in memory.',
+            ...(pending > 0
+              ? [
+                  `(${plural(pending, 'recent memory is', 'recent memories are')} still being processed; ask again shortly.)`,
+                ]
+              : []),
+          ].join('\n'),
+        ),
+        structuredContent: { abstained: r.abstained, memories, pending },
       };
     },
   );

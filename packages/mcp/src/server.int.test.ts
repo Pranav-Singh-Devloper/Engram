@@ -157,6 +157,38 @@ describe('engram_remember', () => {
   });
 });
 
+describe('local mode (P08b)', () => {
+  it('remembers without waiting by default, and recall says what is still processing', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const s = new Scenario(db, ns);
+      s.fake.when('processEpisode', 'Lisbon', { importance: 0.6, candidates: [] });
+      // Hold extraction until after the first recall, as a slow local model would.
+      let release: () => void = () => undefined;
+      const gate = new Promise<void>((r) => (release = r));
+      const extract = s.fake.processEpisode;
+      s.fake.processEpisode = async (input) => {
+        await gate;
+        return extract(input);
+      };
+      const { client, call, tasks } = await connect(s, { rememberWaitDefault: false });
+      const { tools } = await client.listTools();
+      expect(tools.find((t) => t.name === 'engram_remember')?.description).toMatch(/background/);
+
+      const stored = await call('engram_remember', { content: 'I live in Lisbon.' });
+      expect(stored.structuredContent).toMatchObject({ status: 'pending' });
+      const before = await call('engram_recall', { query: 'Lisbon' });
+      expect(before.structuredContent?.pending).toBe(1);
+      expect(textOf(before)).toMatch(/1 recent memory is still being processed/);
+
+      release();
+      await Promise.all(tasks);
+      const after = await call('engram_recall', { query: 'Lisbon' });
+      expect(after.structuredContent?.pending).toBe(0);
+      expect(textOf(after)).not.toMatch(/still being processed/);
+    });
+  });
+});
+
 describe('engram_recall', () => {
   it('returns facts with provenance and both windows, as of any time, tracking access', async () => {
     await withTestNamespace(db, async (ns) => {

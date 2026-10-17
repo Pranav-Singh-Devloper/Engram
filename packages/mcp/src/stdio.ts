@@ -10,6 +10,7 @@ import {
   ensureNamespace,
   processPending,
   providerFromEnv,
+  providerKind,
 } from '@engram/core';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { namespaceSlug } from './env.js';
@@ -36,7 +37,11 @@ async function main(): Promise<void> {
   const { namespace } = await ensureNamespace(db, { slug, kind: 'user' });
   log(`serving namespace "${slug}"`);
 
-  serveStdio(() => createEngramServer({ db, provider, namespaceId: namespace.id, log }));
+  // Local extraction takes seconds a turn: remember returns at once there (P08b).
+  const rememberWaitDefault = providerKind(env) !== 'ollama';
+  serveStdio(() =>
+    createEngramServer({ db, provider, namespaceId: namespace.id, log, rememberWaitDefault }),
+  );
 
   // Finish anything a previous session left unprocessed (wait: false, a crash).
   void processPending(db, provider, { namespaceId: namespace.id }).then(

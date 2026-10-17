@@ -13,6 +13,8 @@ export interface EngramServerOptions {
   clock?: Clock;
   background?: (task: Promise<void>) => void;
   log?: (message: string) => void;
+  /** engram_remember's `wait` default; false in local mode (P08b). Default true. */
+  rememberWaitDefault?: boolean;
   /** Where to find bench report summaries; null when there are none (a deploy). */
   reportsDir?: string | null;
 }
@@ -37,6 +39,7 @@ export function createEngramServer(options: EngramServerOptions): McpServer {
     provider: options.provider,
     namespaceId: options.namespaceId,
     clock: options.clock ?? systemClock,
+    rememberWaitDefault: options.rememberWaitDefault ?? true,
     background:
       options.background ??
       ((task) => {
