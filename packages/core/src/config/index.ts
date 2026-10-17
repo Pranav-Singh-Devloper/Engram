@@ -22,8 +22,12 @@ export const config = {
     descriptionConflictThreshold: 0.95,
     /** Attempts before giving up when concurrent writers keep changing the candidates. */
     maxResolveAttempts: 3,
-    /** Entity search (MCP `engram_entities`): weakest similarity listed as a match. */
-    searchMinSimilarity: 0.5,
+    /**
+     * Entity search (MCP `engram_entities`): weakest similarity listed as a match.
+     * Measured with gemini-embedding-2 (2026-10-17): unrelated labels score
+     * 0.57–0.64 against a query, related ones 0.71–0.80.
+     */
+    searchMinSimilarity: 0.7,
   },
   conflict: {
     /** Statement similarity for a merge. Tuned on dev. */
