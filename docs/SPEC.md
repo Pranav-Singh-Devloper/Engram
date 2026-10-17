@@ -299,12 +299,13 @@ The write path is split into a fast step and a slow step so interactive clients 
 2. **Candidate lists**, each pre-filtered by the §5.1 temporal predicates:
    - vector top-40 over facts
    - vector top-20 over episodes
-   - FTS top-20 over facts and episodes
-3. **Graph expansion:** for entities appearing in the top-10 candidates, pull their 1-hop facts under the same temporal filter, as a fourth ranked list.
+   - FTS top-20 over facts and episodes, with the query's lexemes OR-ed (an AND query of a natural question matches almost nothing)
+3. **Graph expansion:** for entities appearing in the top-10 candidates (directly, or through the facts an episode produced), pull their 1-hop facts under the same temporal filter, as a fourth ranked list. The user's own entity is not expanded: nearly every fact touches it.
 4. **Fusion:** reciprocal rank fusion across the lists (`k_rrf = 60`), then a mild prior: `score = rrf · (1 + 0.1·recency + 0.1·importance)`.
    - Recency is `exp(−age/30d)`, where age is measured from `valid_from` (facts) or `occurred_at` (episodes) to `validAt`.
-   - A min-max-normalized weighted-linear ranker is kept as an alternative; the dev split decides (ADR).
-5. **Abstention floor:** if the best raw cosine similarity is below `θ_floor`, return an explicit empty result. Final abstention happens in the composer (§6.3).
+   - A min-max-normalized weighted-linear ranker is kept as an alternative; the dev split decides (ADR-010: RRF).
+   - **Determinism:** lists are re-ranked by exact similarity, and every tie breaks on content (text, valid time), never on row ids. Identical histories in different namespaces give identical recall, which also makes responses cacheable and replayable.
+5. **Abstention floor:** if the best raw cosine similarity is below `θ_floor` (0.5, ADR-010), return an explicit empty result. Final abstention happens in the composer (§6.3); on dev and dev-long the composer does all of it, and the floor is a safety net.
 6. Return top-k with provenance (source episodes, validity window, record window, status).
 7. **Access tracking:** only when `trackAccess` is true and only for memories the caller actually used. For chat this is the composer's `used_memory_ids`; for MCP recall it's every returned memory. Dashboard browsing passes `trackAccess = false`. Accesses are applied in one batched write: `access_score += 1`, `last_accessed_at = now()`, and archived hits are restored to `working`.
 
