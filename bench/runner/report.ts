@@ -178,7 +178,7 @@ export function renderReport(results: readonly ItemResult[], meta: ReportMeta): 
     '',
   );
 
-  const engram = of('engram').filter((r) => r.answer.store);
+  const engram = [...of('engram'), ...of('engram_consolidated')].filter((r) => r.answer.store);
   if (engram.length > 0) {
     const sum = (f: (r: ItemResult) => number) => engram.reduce((n, r) => n + f(r), 0);
     lines.push('## Engram store health', '');
@@ -194,6 +194,14 @@ export function renderReport(results: readonly ItemResult[], meta: ReportMeta): 
         sum((r) => r.answer.store?.entities ?? 0),
       )} of entities share a name with another.`,
     );
+    if (engram.some((r) => r.answer.store?.revisions !== undefined)) {
+      lines.push(
+        `- Adjudication rate: ${pct(
+          sum((r) => r.answer.store?.llmRevisions ?? 0),
+          sum((r) => r.answer.store?.revisions ?? 0),
+        )} of fact revisions were decided by the LLM adjudicator rather than the rules.`,
+      );
+    }
     lines.push('');
   }
 
@@ -221,6 +229,18 @@ export function renderReport(results: readonly ItemResult[], meta: ReportMeta): 
       }.`,
       '',
     );
+    const inserted = [
+      ...new Set(consolidated.flatMap((r) => r.answer.consolidation?.inserted ?? [])),
+    ].sort();
+    if (inserted.length > 0) {
+      lines.push(
+        `Facts consolidation inserted (unique across items; read for weak inferences):`,
+        '',
+        ...inserted.slice(0, 40).map((s) => `- ${s}`),
+        ...(inserted.length > 40 ? [`- … and ${inserted.length - 40} more`] : []),
+        '',
+      );
+    }
   }
 
   lines.push('## Misses', '');

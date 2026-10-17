@@ -101,3 +101,38 @@ describe('summarizeRun', () => {
     expect(summary.retrievalOnly).toBe(true);
   });
 });
+
+describe('renderReport store and consolidation sections', () => {
+  it('reports the adjudication rate and lists facts consolidation inserted', () => {
+    const store = {
+      facts: 4,
+      adHoc: 0,
+      entities: 2,
+      duplicateEntities: 0,
+      revisions: 4,
+      llmRevisions: 1,
+    };
+    const report = renderReport(
+      [
+        result({ answer: { store } }),
+        result({
+          mode: 'engram_consolidated',
+          answer: {
+            store,
+            consolidation: {
+              summarized: 1,
+              skipped: 0,
+              promoted: 2,
+              longTermFacts: 2,
+              outcomes: { inserted: 1 },
+              inserted: ['The user visited Porto.'],
+            },
+          },
+        }),
+      ],
+      meta,
+    );
+    expect(report).toContain('- Adjudication rate: 25% of fact revisions');
+    expect(report).toContain('- The user visited Porto.');
+  });
+});

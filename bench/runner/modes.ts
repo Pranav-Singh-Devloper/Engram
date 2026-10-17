@@ -60,7 +60,15 @@ export interface ModeAnswer {
   /** Engram retrieval-only runs: what each ranker retrieved; nothing was composed. */
   retrievedBy?: Record<'rrf' | 'linear', string[]>;
   /** Engram only: what the write path produced. */
-  store?: { facts: number; adHoc: number; entities: number; duplicateEntities: number };
+  store?: {
+    facts: number;
+    adHoc: number;
+    entities: number;
+    duplicateEntities: number;
+    /** fact_revisions rows, and how many the LLM adjudicator decided (ledger row 12). */
+    revisions?: number;
+    llmRevisions?: number;
+  };
   /** engram_consolidated only: what consolidation did. */
   consolidation?: {
     summarized: number;
@@ -68,6 +76,8 @@ export interface ModeAnswer {
     promoted: number;
     longTermFacts: number;
     outcomes: Record<string, number>;
+    /** Statements of facts consolidation newly inserted, for a read-through (ledger row 28). */
+    inserted?: string[];
   };
 }
 
@@ -171,8 +181,10 @@ async function engram(
     };
     const sessionOf = (t: Turn) => t.id.split('#')[0] ?? 's';
     // Each session is consolidated "that night", before the next one starts.
+    const consolidatedAt: Date[] = [];
     const consolidateSession = async (last: Turn) => {
       clock.set(new Date(last.at.getTime() + CONSOLIDATE_AFTER_MS));
+      consolidatedAt.push(clock.now());
       const r = await consolidate(db, provider, {
         namespaceId: namespace.id,
         clock,
@@ -260,6 +272,13 @@ async function engram(
         select count(*)::int as n from facts
         where namespace_id = ${namespace.id} and tier = 'long_term' and invalidated_at is null`;
       consolidation.longTermFacts = row?.n ?? 0;
+      // New originals recorded at a consolidation time were inserted by it.
+      const inserted = await db<{ statement: string }[]>`
+        select statement from facts
+        where namespace_id = ${namespace.id} and revises is null
+          and recorded_at = any(${db.array(consolidatedAt, 1185)}::timestamptz[])
+        order by statement`;
+      consolidation.inserted = inserted.map((r) => r.statement);
     }
 
     clock.set(item.asked_at);
@@ -323,7 +342,14 @@ async function engram(
 
 async function storeStats(db: Sql, namespaceId: string): Promise<NonNullable<ModeAnswer['store']>> {
   const [row] = await db<
-    { facts: number; adHoc: number; entities: number; duplicateEntities: number }[]
+    {
+      facts: number;
+      adHoc: number;
+      entities: number;
+      duplicateEntities: number;
+      revisions: number;
+      llmRevisions: number;
+    }[]
   >`
     select
       (select count(*)::int from facts where namespace_id = ${namespaceId} and invalidated_at is null) as facts,
@@ -331,6 +357,10 @@ async function storeStats(db: Sql, namespaceId: string): Promise<NonNullable<Mod
       (select count(*)::int from entities where namespace_id = ${namespaceId} and not is_self) as entities,
       (select coalesce(sum(n - 1), 0)::int from (
          select count(*) as n from entities where namespace_id = ${namespaceId} and not is_self
-         group by lower(name) having count(*) > 1) d) as duplicate_entities`;
-  return row ?? { facts: 0, adHoc: 0, entities: 0, duplicateEntities: 0 };
+         group by lower(name) having count(*) > 1) d) as duplicate_entities,
+      (select count(*)::int from fact_revisions where namespace_id = ${namespaceId}) as revisions,
+      (select count(*)::int from fact_revisions where namespace_id = ${namespaceId} and resolver = 'llm') as llm_revisions`;
+  return (
+    row ?? { facts: 0, adHoc: 0, entities: 0, duplicateEntities: 0, revisions: 0, llmRevisions: 0 }
+  );
 }
