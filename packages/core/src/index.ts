@@ -112,5 +112,4 @@ export type { NamespaceStats } from './stats/stats.js';
 export { processPending } from './ingest/pending.js';
 export type { PendingOptions, PendingResult } from './ingest/pending.js';
 export { BenchSummary } from './types/benchSummary.js';
-export { CRON_SCHEDULES_FILE, cronSchedulesSql } from './jobs/schedules.js';
 export { textArray, uuidArray } from './db/client.js';

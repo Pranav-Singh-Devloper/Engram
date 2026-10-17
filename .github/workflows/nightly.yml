@@ -1,12 +1,12 @@
-name: consolidate
+name: nightly
 
-# Nightly consolidation on the hosted database (SPEC §6.4, §8). It also keeps
-# the free Supabase project from pausing for inactivity (SPEC §14). Decay and
-# demo cleanup run inside the database through pg_cron instead.
+# Nightly maintenance and consolidation on the hosted database (SPEC §6.4,
+# §8). Neon (ADR-014) scales to zero after 5 idle minutes, so this one run is
+# the only daily wake-up: decay and demo cleanup run here, not in pg_cron.
 on:
   schedule:
     # 09:17 UTC is just after Gemini's daily quota resets at midnight Pacific
-    # (in both PST and PDT), so a run starts on a fresh quota.
+    # (in both PST and PDT), so consolidation starts on a fresh quota.
     - cron: '17 9 * * *'
   workflow_dispatch:
 
@@ -14,16 +14,16 @@ permissions:
   contents: read
 
 concurrency:
-  group: consolidate
+  group: nightly
   cancel-in-progress: false
 
 jobs:
-  consolidate:
+  nightly:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     env:
-      # The session pooler or a direct connection, not the transaction pooler.
+      # A direct connection, not the pooler: these are long jobs.
       HOSTED_DATABASE_URL: ${{ secrets.HOSTED_DATABASE_URL }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       GEMINI_API_KEY_FALLBACK: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
@@ -34,7 +34,7 @@ jobs:
     steps:
       - name: Skip without a hosted database
         if: env.HOSTED_DATABASE_URL == ''
-        run: echo "HOSTED_DATABASE_URL is not set; nothing to consolidate."
+        run: echo "HOSTED_DATABASE_URL is not set; nothing to do."
 
       - uses: actions/checkout@v7
         if: env.HOSTED_DATABASE_URL != ''
@@ -50,6 +50,9 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+        if: env.HOSTED_DATABASE_URL != ''
+
+      - run: pnpm jobs:maintain --hosted
         if: env.HOSTED_DATABASE_URL != ''
 
       - run: pnpm jobs:consolidate --hosted

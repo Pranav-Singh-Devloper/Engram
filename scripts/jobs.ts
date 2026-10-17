@@ -23,9 +23,24 @@ export function parseConsolidateArgs(args: readonly string[], env: Env): Consoli
       out.maxClusters = Number(value);
     } else throw new Error(`Unknown argument: ${arg}`);
   }
-  if (!out.hosted) return { ...out, url: env.DATABASE_URL || DEFAULT_DATABASE_URL };
+  return { ...out, url: jobDatabaseUrl(out.hosted, env) };
+}
+
+/** Local by default; --hosted needs a non-local HOSTED_DATABASE_URL (a direct connection). */
+export function jobDatabaseUrl(hosted: boolean, env: Env): string {
+  if (!hosted) return env.DATABASE_URL || DEFAULT_DATABASE_URL;
   const url = env.HOSTED_DATABASE_URL;
   if (!url) throw new Error('HOSTED_DATABASE_URL is not set.');
   if (isLocalUrl(url)) throw new Error('--hosted points at a local database.');
-  return { ...out, url };
+  return url;
+}
+
+/** Parses `jobs:maintain` arguments: only --hosted. */
+export function parseMaintainArgs(
+  args: readonly string[],
+  env: Env,
+): { url: string; hosted: boolean } {
+  for (const arg of args) if (arg !== '--hosted') throw new Error(`Unknown argument: ${arg}`);
+  const hosted = args.includes('--hosted');
+  return { url: jobDatabaseUrl(hosted, env), hosted };
 }

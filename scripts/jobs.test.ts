@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { DEFAULT_DATABASE_URL } from '@engram/core';
 import { describe, expect, it } from 'vitest';
-import { parseConsolidateArgs } from './jobs.js';
+import { parseConsolidateArgs, parseMaintainArgs } from './jobs.js';
 
 const HOSTED = 'postgres://u:p@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres';
 
@@ -35,11 +35,32 @@ describe('jobs:consolidate arguments', () => {
   });
 });
 
-describe('consolidate workflow', () => {
+describe('jobs:maintain arguments', () => {
+  it('accepts only --hosted, with the same target rules', () => {
+    expect(parseMaintainArgs([], {})).toEqual({ url: DEFAULT_DATABASE_URL, hosted: false });
+    expect(parseMaintainArgs(['--hosted'], { HOSTED_DATABASE_URL: HOSTED })).toEqual({
+      url: HOSTED,
+      hosted: true,
+    });
+    expect(() => parseMaintainArgs(['--estimate'], {})).toThrow(/Unknown/);
+    expect(() =>
+      parseMaintainArgs(['--hosted'], { HOSTED_DATABASE_URL: DEFAULT_DATABASE_URL }),
+    ).toThrow(/local/);
+  });
+});
+
+describe('nightly workflow', () => {
   const workflow = readFileSync(
-    path.resolve(import.meta.dirname, '../.github/workflows/consolidate.yml'),
+    path.resolve(import.meta.dirname, '../.github/workflows/nightly.yml'),
     'utf8',
   );
+
+  it('runs maintenance, then consolidation', () => {
+    expect(workflow.indexOf('pnpm jobs:maintain --hosted')).toBeGreaterThan(0);
+    expect(workflow.indexOf('pnpm jobs:consolidate --hosted')).toBeGreaterThan(
+      workflow.indexOf('pnpm jobs:maintain --hosted'),
+    );
+  });
 
   it('runs nightly and on dispatch', () => {
     expect(workflow).toMatch(/schedule:[^]*?- cron: '[^']+'/);
