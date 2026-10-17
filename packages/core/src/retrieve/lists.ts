@@ -6,7 +6,7 @@ import type { TransactionSql } from '../db/client.js';
 import { fromSql, toSql } from '../db/vector.js';
 import { asOfPredicate, episodesAsOfPredicate } from '../temporal/asOf.js';
 import type { AsOf } from '../temporal/asOf.js';
-import type { FactStatus, FactTier } from '../types/index.js';
+import type { FactStatus, FactTier, EpisodeRole } from '../types/index.js';
 import { uuidArray } from '../db/client.js';
 
 export interface Candidate {
@@ -27,6 +27,8 @@ export interface Candidate {
   sourceEpisodeIds: string[];
   subjectId: string | null;
   objectId: string | null;
+  /** Episodes: who said it. Facts: null. */
+  role: EpisodeRole | null;
 }
 
 interface Row {
@@ -44,6 +46,7 @@ interface Row {
   sourceEpisodeIds: string[];
   subjectId: string | null;
   objectId: string | null;
+  role: EpisodeRole | null;
 }
 
 const toCandidate = (r: Row): Candidate => ({
@@ -56,7 +59,7 @@ function factColumns(tx: TransactionSql) {
   return tx`
     'fact'::text as kind, f.id, f.statement as text, f.embedding::text as embedding,
     f.valid_from, f.valid_to, f.recorded_at, f.invalidated_at, f.importance,
-    f.status, f.tier, f.source_episode_ids, f.subject_id, f.object_id`;
+    f.status, f.tier, f.source_episode_ids, f.subject_id, f.object_id, null::text as role`;
 }
 
 function episodeColumns(tx: TransactionSql) {
@@ -64,7 +67,7 @@ function episodeColumns(tx: TransactionSql) {
     'episode'::text as kind, e.id, e.content as text, e.embedding::text as embedding,
     e.occurred_at as valid_from, null::timestamptz as valid_to, e.created_at as recorded_at,
     null::timestamptz as invalidated_at, e.importance, null::text as status, null::text as tier,
-    array[e.id] as source_episode_ids, null::uuid as subject_id, null::uuid as object_id`;
+    array[e.id] as source_episode_ids, null::uuid as subject_id, null::uuid as object_id, e.role`;
 }
 
 export interface ListContext {

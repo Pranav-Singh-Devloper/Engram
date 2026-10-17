@@ -8,7 +8,7 @@ import { transaction } from '../db/client.js';
 import type { Sql } from '../db/client.js';
 import { cosine } from '../db/vector.js';
 import type { Provider } from '../providers/provider.js';
-import type { FactStatus } from '../types/index.js';
+import type { FactStatus, EpisodeRole } from '../types/index.js';
 import { trackUse } from './access.js';
 import { minMax, recency, rrf, withPriors } from './fuse.js';
 import {
@@ -50,6 +50,8 @@ export interface RecalledMemory {
   invalidatedAt: Date | null;
   status: FactStatus | null;
   sourceEpisodeIds: string[];
+  /** Episodes: who said it. Facts: null. */
+  role: EpisodeRole | null;
   /** Which candidate lists found it. */
   lists: ListName[];
 }
@@ -182,6 +184,7 @@ export async function recall(
       invalidatedAt: c.invalidatedAt,
       status: c.status,
       sourceEpisodeIds: c.sourceEpisodeIds,
+      role: c.role,
       lists: foundIn.get(c.key) ?? [],
     }))
     .sort((a, b) => b.score - a.score || b.similarity - a.similarity || byContent(a, b))
