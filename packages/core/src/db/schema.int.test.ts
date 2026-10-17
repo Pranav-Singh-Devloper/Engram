@@ -85,4 +85,43 @@ describe('hosted revoke SQL', () => {
 
     await expect(result).rejects.toBe(rollback);
   });
+
+  it('applies cleanly where the API roles do not exist (Neon)', async () => {
+    const [roles] = await sql<{ n: number }[]>`
+      select count(*)::int as n from pg_roles where rolname in ('anon', 'authenticated')`;
+    if ((roles?.n ?? 0) > 0) return;
+    const hostedSql = await readFile(path.join(HOSTED.dir, '0001_revoke_api_roles.sql'), 'utf8');
+    const rollback = new Error('rollback');
+    const result = sql.begin(async (tx) => {
+      await tx`create function engram.revoke_probe_fn() returns int language sql as 'select 1'`;
+      await tx.unsafe(hostedSql);
+      const [p] = await tx<{ publicExecute: boolean }[]>`
+        select exists (
+          select 1 from pg_proc p, aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+          where p.oid = 'engram.revoke_probe_fn()'::regprocedure and a.grantee = 0
+        ) as public_execute`;
+      expect(p?.publicExecute).toBe(false);
+      throw rollback;
+    });
+    await expect(result).rejects.toBe(rollback);
+  });
+});
+
+describe('hosted search path SQL', () => {
+  it('sets a database-level search path, so hosts that drop the startup parameter still resolve names', async () => {
+    const hostedSql = await readFile(
+      path.join(HOSTED.dir, '0002_database_search_path.sql'),
+      'utf8',
+    );
+    const rollback = new Error('rollback');
+    const result = sql.begin(async (tx) => {
+      await tx.unsafe(hostedSql);
+      const [row] = await tx<{ setconfig: string[] }[]>`
+        select s.setconfig from pg_db_role_setting s join pg_database d on d.oid = s.setdatabase
+        where d.datname = current_database() and s.setrole = 0`;
+      expect(row?.setconfig).toContain('search_path=engram, extensions, public');
+      throw rollback;
+    });
+    await expect(result).rejects.toBe(rollback);
+  });
 });
