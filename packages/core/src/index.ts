@@ -13,7 +13,7 @@ export {
   transaction,
 } from './db/client.js';
 export type { DbOptions, Queryable, Sql, TransactionSql } from './db/client.js';
-export { getEntity, insertEntity } from './db/entities.js';
+export { findEntitiesByAlias, findEntitiesByName, getEntity, insertEntity } from './db/entities.js';
 export type { NewEntity } from './db/entities.js';
 export { getEpisode, insertEpisode } from './db/episodes.js';
 export type { NewEpisode } from './db/episodes.js';
@@ -112,3 +112,4 @@ export { namespaceStats } from './stats/stats.js';
 export type { NamespaceStats } from './stats/stats.js';
 export { processPending } from './ingest/pending.js';
 export type { PendingOptions, PendingResult } from './ingest/pending.js';
+export { BenchSummary } from './types/benchSummary.js';
