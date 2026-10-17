@@ -22,11 +22,12 @@ P07 (the MCP server factory). P08 isn't required, but `/api/evals` reads its rep
 - [ ] Chat tracks access only for the memories the composer used (`usedMemoryIds`, ledger row 21).
 - [ ] A test proves the production client config has `prepare: false` (ledger row 6).
 - [ ] `/api/mcp` mounts P07's `createEngramHttpHandler` unchanged.
+- [ ] Vercel connects to Neon's direct endpoint with `max: 1` and a short idle timeout, and a deployed function resolves unqualified names. If the pooler is adopted instead, every transaction sets the search path, with a test (ledger row 35).
 - [ ] The REST endpoints' bearer either reuses `ENGRAM_MCP_TOKENS` (token → namespace) or keeps `ENGRAM_API_TOKEN`; decided, documented in `.env.example` (ledger row 33).
 - [ ] Route handler tests cover auth, namespace scoping, both rate limits and the cap (FakeProvider, local DB).
 
 ## Risks and verify-at-build-time
-- **Transaction pooler:** Vercel connects through Supabase's transaction-mode pooler. Prepared statements must be off in the Postgres client (`prepare: false` in postgres.js). Add a test that a client built from the production config has `prepare` disabled.
+- **Pooler or direct (ADR-014):** Neon's pooled endpoint (PgBouncer, transaction mode) resets the search path, so the default is the direct endpoint. If the pooler is used: Prepared statements must be off in the Postgres client (`prepare: false` in postgres.js). Add a test that a client built from the production config has `prepare` disabled.
 - **Advisory locks:** only `pg_advisory_xact_lock` inside a transaction is safe behind the pooler (§6.1). Grep for any session-level lock before deploy.
 - **Verify:** the current Next.js post-response API (`after()` at last check), and Vercel Hobby function duration limits against the slowest `process()` call. If that is too slow, chat skips awaiting extraction and relies on post-response work only.
 - **Verify:** the current AI SDK version for streaming, if it's used. Ask before adding it.

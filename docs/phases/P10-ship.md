@@ -14,8 +14,8 @@ Make the project easy for a reviewer to try. Deploy the hosted demo on free tier
 P08 (bench tables) and P09b (demo pages).
 
 ## Definition of done
-- [ ] Supabase free project created, with `pnpm db:migrate:hosted` applied: portable migrations, revokes and pg_cron schedules. A REST call with the anon key to an `engram` table returns an error.
-- [ ] `select jobname, schedule, command from cron.job` on Supabase lists the decay sweep and the demo cleanup with the generated parameters (ledger row 25).
+- [ ] The Neon project (connected 2026-10-17, ADR-014) has `pnpm db:migrate:hosted` applied, and its Data API is off, so there is no REST surface.
+- [ ] A `nightly.yml` run against Neon logs the decay sweep, the demo cleanup and consolidation (ledger row 25).
 - [ ] Vercel Hobby deploy with env vars set and the transaction-pooler URL with prepared statements off. `/api/mcp` reachable with a bearer token.
 - [ ] A seed script loads the showcase namespace (the read-only story from `docs/demo.md`).
 - [ ] README per §17:
@@ -28,7 +28,7 @@ P08 (bench tables) and P09b (demo pages).
   - design notes;
   - limitations (free-tier data terms, disambiguation, extraction error rates, dependence on clients calling remember, nickname duplicates such as "Rob"/"Robert" (row 15), and that multi-instance deploys rely on synced clocks for record time (row 13));
   - prior art;
-  - how to restore a paused Supabase project and re-enable disabled scheduled workflows.
+  - how to re-enable disabled scheduled workflows, and what happens when Neon's monthly compute or egress runs out (the compute suspends until the next month).
 - [ ] `docs/architecture.md` is written. DECISIONS.md is tidied (superseded ADRs marked, not deleted).
 - [ ] All three reviewer paths are verified from a fresh clone, step by step against the README:
   1. the hosted demo URL works without signing in;
@@ -38,5 +38,5 @@ P08 (bench tables) and P09b (demo pages).
 - [ ] Final §16 checks are clean (one author identity, no attribution trailers).
 
 ## Risks and verify-at-build-time
-- **The hosted demo will need occasional attention**: Supabase pauses and the daily quota cap. The landing page should degrade to the read-only showcase, not an error page.
-- **Verify:** current Supabase free-tier limits (DB size, pause policy) and Vercel Hobby limits at deploy time, and write them into the README.
+- **The hosted demo will need occasional attention**: Neon's monthly compute budget and the daily Gemini quota cap. The landing page should degrade to the read-only showcase, not an error page.
+- **Verify:** current Neon free-tier limits (storage, CU-hours, egress) and Vercel Hobby limits at deploy time, and write them into the README.

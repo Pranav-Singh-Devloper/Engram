@@ -179,3 +179,30 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 - **Tests:** the client package is a dev dependency. Tests use the real client over the in-memory transport, in-process HTTP and the spawned stdio binary.
 
 **Consequences.** P09a only mounts the handler. The only additions are one dependency and one dev dependency, both official MCP packages.
+
+---
+
+## ADR-014 — Neon instead of Supabase for the hosted database
+
+**Date:** 2026-10-17 · **Status:** Accepted. Supersedes ADR-002's hosted half, and the pg_cron schedules from P06b.
+
+**Context.** ADR-002 planned Supabase's free tier as the hosted database. The project's hosted database is now a Neon free project: Postgres 18.6, pgvector 0.8.6, 1 GB storage, 100 CU-hours and 5 GB egress a month, and scale to zero after 5 idle minutes, which can't be disabled. Probing it before migrating found three differences:
+
+- Neon's proxy drops the `search_path` startup parameter.
+- There are no `anon`/`authenticated` roles.
+- pg_cron exists but only runs while the compute is awake.
+
+**Decision.**
+
+- **Neon hosts the demo database.** `HOSTED_DATABASE_URL` is the direct endpoint, for migrations, jobs and, by default, Vercel (`max: 1` per function). Neon's PgBouncer endpoint resets every session to its own search path, ignoring both the startup parameter and the database default, so it's used only if P09a sets the path per transaction.
+- **Search path:** each migration sets it in its transaction, and `sql/hosted/0002` sets it as the database default, which direct sessions honor.
+- **Revokes:** the Supabase role revokes run only where the roles exist. Neon's Data API stays off, so no REST surface exists.
+- **No pg_cron.** `pnpm jobs:maintain` (decay sweep and demo cleanup) and consolidation run from `nightly.yml`, the database's single daily wake-up, which costs a few CU-minutes.
+- **`supabase/` is renamed `sql/`.** Tracking names (`migrations/…`, `hosted/…`) are unchanged.
+
+**Consequences.**
+
+- Demo cleanup runs nightly, not hourly. That's fine for 24h namespaces on 1 GB.
+- The first query after an idle spell pays Neon's wake-up latency (verify the effect on Vercel in P09a).
+- Exceeding the monthly compute suspends the database until the next month, so bench runs stay on the local database, never Neon.
+- Probing also exposed a latent bug unrelated to the host: untyped `db.array()` fails in a fresh connection's first query. Fixed with typed helpers and a guard test.

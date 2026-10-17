@@ -68,7 +68,7 @@ Verify every figure at the start of the phase that first needs it. Free quotas c
 | GitHub Actions | CI, bench, nightly consolidation | P00 | minutes are unlimited for public repos; schedules pause after 60 days of inactivity |
 | Gemini API (AI Studio) | embeddings, extraction, compose, adjudicate, summarize | P01 | flash-lite: 500 requests/day (measured), reset at midnight Pacific; plan runs within one day |
 | Groq (`gpt-oss-120b` judge, `qwen3.8-27b` verbalizer) | bench judge, dataset wording | P04 | 30 RPM, 1K RPD, 8K TPM; fallbacks are Mistral, then Cohere |
-| Supabase free tier | hosted DB, pg_cron | P10 (optional earlier) | 500 MB DB; pauses after inactivity |
+| Neon free tier (ADR-014) | hosted DB | P07 (connected 2026-10-17) | 1 GB storage, 100 CU-hours and 5 GB egress a month, scale to zero after 5 min. Never run the bench against it |
 | Vercel Hobby | web, API, HTTP MCP | P09a | function duration and invocation limits |
 
 ## Carried-items ledger
@@ -100,15 +100,17 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 21 | Chat tracks access via `usedMemoryIds` | P05 | P09a | open (P09a DoD) |
 | 22 | Prompt pass: fixture 08 maps the brother to `partner_of` | P05 | P08 | open (P08 prompt pass, before re-recording) |
 | 23 | Regenerate purged summaries; re-embed redacted turns | P06a | P06b | done (P06b) |
-| 24 | pg_cron schedules for decay and demo cleanup | P06a | P06b | done (P06b, generated) |
-| 25 | Verify pg_cron on Supabase (`select * from cron.job`) | P06b | P10 | open (P10 DoD) |
+| 24 | pg_cron schedules for decay and demo cleanup | P06a | P06b | done (P06b), then replaced by `jobs:maintain` in `nightly.yml` (ADR-014) |
+| 25 | Verify pg_cron on Supabase (`select * from cron.job`) | P06b | P10 | re-shifted: no pg_cron on Neon (ADR-014). P10 instead checks that a `nightly.yml` run sweeps and consolidates on Neon |
 | 26 | `engram_forget` modes and stats' "last sweep" | P06a | P07 | done (P07) |
 | 27 | Prompt pass: summaries say "the user", never he/she | P06b | P08 | open (P08 prompt pass) |
 | 28 | Watch weak inferred facts (`visited`) on test | P06b | P08 | open (P08 carry-in) |
-| 29 | README: re-enable paused scheduled workflows and Supabase | P06b | P10 | open (P10 DoD) |
+| 29 | README: re-enable paused scheduled workflows, and Neon's monthly compute/egress limits | P06b | P10 | open (P10 DoD; Supabase pausing no longer applies) |
 | 30 | Smoke cache size (4.2 MB) | P04 | P08 | watch (P08 carry-in) |
 | 31 | `/graph` page | P09b | P09b | stretch, only if P10 is on track |
 | 32 | Recall ranks "Ana lives in Porto" above "The user lives in Lisbon" for "where does the user live" (Inspector session) | P07 | P08 | open (P08 carry-in: check subject-aware ranking on dev before freezing test) |
 | 33 | Decide whether the REST endpoints' bearer reuses `ENGRAM_MCP_TOKENS` (one namespace per token) or keeps a single `ENGRAM_API_TOKEN` | P07 | P09a | open (P09a DoD) |
 | 34 | Node: MCP Inspector 2.11 requires ≥ 22.19; the repo pins 22 via `.node-version`. Bump to the current 22 LTS and re-check the fresh clone | P07 | P10 | open (P10 DoD) |
+| 35 | Neon's pooled endpoint resets the search path (verified after a compute restart). Vercel uses the direct endpoint, unless traffic needs the pooler and every transaction then sets the path | Neon setup | P09a | open (P09a DoD) |
+| 36 | GitHub secrets for `nightly.yml` (`HOSTED_DATABASE_URL`, Gemini keys); until then the workflow skips | Neon setup | P08 | open (asked at P08 approval) |
 

@@ -97,6 +97,8 @@ bench/runner/modes.ts                        # + engram_consolidated (opt-in, no
 
 ## Summary
 
+> **Later change (ADR-014):** the hosted database moved to Neon, where pg_cron would only fire while the compute is awake. The generated pg_cron schedules were removed; `pnpm jobs:maintain` in `nightly.yml` (formerly `consolidate.yml`) runs the decay sweep and demo cleanup instead.
+
 Done 2026-10-17, using about 96 Gemini generate calls on the fallback key (budget: ~95), plus embeddings, which have their own quota.
 
 - **Consolidation** clusters each session's extracted turns, skips small talk without a call, and summarizes the rest with candidates that cite their turns. The candidates go through `resolveCandidates`, the pipeline now shared with extraction. A fact confirmed from its own turns merges with confidence unchanged, and a newly cited turn raises it. Everything consolidation creates or confirms becomes `long_term`; a source-scan test keeps it the only path there.

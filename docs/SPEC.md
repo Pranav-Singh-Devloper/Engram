@@ -25,11 +25,11 @@
 
 ## 2. Architecture decision
 
-**Chosen path: a single-language TypeScript monorepo with a hand-built memory engine on Supabase Postgres (pgvector + relational graph tables with bitemporal columns).**
+**Chosen path: a single-language TypeScript monorepo with a hand-built memory engine on Postgres (pgvector + relational graph tables with bitemporal columns).**
 
 Rationale:
 - The project exists to demonstrate the internals — conflict resolution, decay, consolidation, temporal queries. Delegating the temporal graph to Graphiti would outsource exactly those parts and add a Python runtime plus a graph database.
-- One database engine (Postgres + pgvector: a plain Docker container locally and in CI, Supabase free tier when hosted) and one web deploy target (Vercel) keep the free-stack story clean and the quickstart under 10 minutes.
+- One database engine (Postgres + pgvector: a plain Docker container locally and in CI, Neon free tier when hosted; ADR-014) and one web deploy target (Vercel) keep the free-stack story clean and the quickstart under 10 minutes.
 - **Everything runs on free tiers or free trials.** No paid service is required at any point; every quota decision is made against free limits.
 - TypeScript end-to-end: engine, MCP server (official TS SDK), Next.js app, and bench share types.
 
@@ -53,11 +53,10 @@ Graphiti, Mem0, Letta, and Cognee are **prior art** (Appendix C); Graphiti remai
 └───────────────────┘        └──────────┬──────────┘
                                         │ SQL
 ┌───────────────────┐        ┌──────────▼──────────┐
-│ GitHub Actions    │───────▶│ Supabase Postgres   │
-│ consolidation job │  SQL   │ pgvector · FTS ·    │
-└───────────────────┘        │ pg_cron (decay,     │
-                             │ demo cleanup)       │
-                             └─────────────────────┘
+│ GitHub Actions    │───────▶│ Neon Postgres       │
+│ nightly: decay,   │  SQL   │ pgvector · FTS ·    │
+│ cleanup, consol.  │        │ scale to zero       │
+└───────────────────┘        └─────────────────────┘
         LLM + embeddings via provider adapter (Gemini free tier default)
 ```
 
@@ -66,14 +65,15 @@ Components:
 - **packages/mcp** — MCP server wrapping core. stdio transport for local clients; streamable HTTP transport mounted in the Next.js app.
 - **apps/web** — Next.js dashboard, chat playground, HTTP API.
 - **bench** — dataset generator, frozen dev/test splits, runner, LongMemEval adapter, reports ("Engram-Bench").
-- **supabase/** — `migrations/`: portable SQL (schema, SQL functions for decay and cleanup) applied to every database, local or hosted. `hosted/`: Supabase-only SQL (pg_cron schedules, role revokes) applied only by the deploy step.
+- **sql/** — `migrations/`: portable SQL (schema, SQL functions for decay and cleanup) applied to every database, local or hosted. `hosted/`: hosted-only SQL (the database-level search path; Supabase role revokes where those roles exist) applied only by the deploy step. (Named `supabase/` until ADR-014.)
 
-Long-running work never runs inside Vercel functions: decay is a SQL function scheduled by `pg_cron` on the hosted database; consolidation (needs an LLM) runs in GitHub Actions against `DATABASE_URL`.
+Long-running work never runs inside Vercel functions. Decay and demo cleanup are SQL functions, and consolidation needs an LLM; all three run from the nightly GitHub Actions workflow against the hosted database. The free Neon compute scales to zero, so pg_cron there would fire only while something else kept it awake (ADR-014).
 
 **Database targets.**
-- *Local dev, tests, CI:* the plain `pgvector/pgvector` Docker image via `docker-compose.yml` (CI uses the same image as a service container). It has no pg_cron, and nothing local needs it: decay tests call the SQL function directly with a simulated clock.
-- *Hosted:* Supabase free tier. `pnpm db:migrate` applies `supabase/migrations/` to either target; `pnpm db:migrate:hosted` additionally applies `supabase/hosted/`. The local runner never reads `supabase/hosted/`.
-- *Repeatable files:* a file named `R__*.sql` is re-applied whenever its content changes, after the numbered files; numbered files are immutable once applied. Generated SQL (the pg_cron schedules) uses this.
+- *Local dev, tests, CI:* the plain `pgvector/pgvector` Docker image via `docker-compose.yml` (CI uses the same image as a service container). Decay tests call the SQL function directly with a simulated clock.
+- *Hosted:* Neon free tier (ADR-014): Postgres 18 with pgvector, 1 GB storage, 100 CU-hours a month, scale to zero after 5 idle minutes. `HOSTED_DATABASE_URL` is the direct endpoint, for migrations, jobs and (by default) Vercel. Neon's pooled endpoint (PgBouncer) resets every session to its own search path, so the app can't use it unless queries set the path per transaction (verified 2026-10-17). `pnpm db:migrate` applies `sql/migrations/` to either target; `pnpm db:migrate:hosted` additionally applies `sql/hosted/`. The local runner never reads `sql/hosted/`.
+- *Search path:* Neon's proxy drops the `search_path` startup parameter, so each migration sets it in its own transaction, and `sql/hosted/` sets it as the database default, which direct sessions honor. Pooled sessions don't.
+- *Repeatable files:* a file named `R__*.sql` is re-applied whenever its content changes, after the numbered files; numbered files are immutable once applied, comments included.
 
 ---
 
@@ -102,10 +102,10 @@ engram/
 │   ├── cache/                # LLM response cache (gitignored)
 │   └── reports/
 ├── scripts/                  # migration runner, seed, demo-offline
-├── supabase/
+├── sql/
 │   ├── migrations/           # portable SQL, applied everywhere
-│   └── hosted/               # Supabase-only SQL (pg_cron, revokes)
-└── .github/workflows/        # ci.yml, bench.yml, consolidate.yml
+│   └── hosted/               # hosted-only SQL (search path, revokes)
+└── .github/workflows/        # ci.yml, bench.yml, nightly.yml
 ```
 
 `CLAUDE.md` and `.claude/` are local agent files and are gitignored (see §16).
@@ -120,7 +120,7 @@ Embedding dimension: 768. Verify the current Gemini embedding model at build tim
 
 **Schemas.** All Engram tables and functions live in a dedicated `engram` schema; extensions live in an `extensions` schema. Both targets use the same layout, and connections set `search_path = engram, extensions`. The DDL below omits the `engram.` prefix for readability.
 
-**Hosted exposure.** Supabase automatically serves the `public` schema over its REST API, and the anon key is public by design. Keeping everything in `engram` (not in the API's exposed schemas) means the REST API can't reach stored memories. As defense in depth, `supabase/hosted/` revokes all privileges on `engram` from `anon` and `authenticated`. The app connects only through `DATABASE_URL`, so neither measure affects application code.
+**Hosted exposure.** Neon serves no REST API unless its Data API is switched on; keep it off. Supabase, the earlier host, serves `public` over REST with a public anon key. For either, keeping everything in `engram` (not an API-exposed schema) means a REST API can't reach stored memories, and `sql/hosted/` revokes `engram` privileges from `anon` and `authenticated` wherever those roles exist, and function execution from `public` everywhere. The app connects only through `DATABASE_URL`, so neither measure affects application code.
 
 ```sql
 create schema if not exists extensions;
@@ -278,7 +278,7 @@ The write path is split into a fast step and a slow step so interactive clients 
    - Relative dates ("last week", "since March") resolve against the episode's `occurred_at`, never against wall-clock now. The model returns *temporal hints* (absolute date, relative offset, or named period), never computed dates; code resolves them.
    - A window's start resolves to the start of its period; so does its end, so "Lyon from 2015 to 2018" meets "Paris since 2018" instead of overlapping it. When both bounds name the same period ("in summer 2023"), the end is that period's end. A fact that ended before the turn with no stated start gets an unknown start (§5.1) rather than one defaulted to the turn, which would invent a current fact; an end that isn't after the start is discarded.
    - Episodes with `role = 'tool'` are **not** extracted by default (`extractFromToolOutput = false`). This prevents web pages and file contents from planting facts.
-2. **Entity resolution**, under a per-namespace advisory lock so concurrent writes can't create duplicates. The lock is transaction-scoped (`pg_advisory_xact_lock`), so it is safe behind Supabase's transaction-mode pooler; session-level advisory locks are not used anywhere.
+2. **Entity resolution**, under a per-namespace advisory lock so concurrent writes can't create duplicates. The lock is transaction-scoped (`pg_advisory_xact_lock`), so it is safe behind a transaction-mode pooler (Neon's PgBouncer); session-level advisory locks are not used anywhere.
    1. Exact normalized name and type match.
    2. Alias match.
    3. Embedding similarity on `"name (type): description"` ≥ 0.85.
@@ -318,10 +318,10 @@ The composer returns zod-validated `{ answer, supported: boolean, used_memory_id
 
 ### 6.4 Background jobs
 
-- **Decay sweep:** the SQL function `engram_decay_sweep(now, …params)`, scheduled daily by `pg_cron`. Because `now` is a parameter, simulated-clock tests call it directly.
-- **Demo cleanup:** the SQL function `engram_cleanup_demo(now)` deletes expired demo namespaces (cascade); `pg_cron` runs it hourly.
-- **Schedules are generated:** `pnpm db:hosted-cron` writes `supabase/hosted/R__cron_schedules.sql` from `config` (decay parameters, static predicates, cron expressions). A test fails if the committed file drifts from the generator. Named jobs replace themselves on re-run.
-- **Consolidation:** `pnpm jobs:consolidate` (`--hosted` for `HOSTED_DATABASE_URL`, `--estimate` to print the call estimate and stop), run nightly by `.github/workflows/consolidate.yml` just after the Gemini quota resets, and on demand via `engram_consolidate`. The workflow skips cleanly without the secret, and doubles as the Supabase keep-alive. Never runs inside a Vercel function.
+- **Decay sweep:** the SQL function `engram_decay_sweep(now, …params)`. Because `now` is a parameter, simulated-clock tests call it directly; `pnpm jobs:maintain` calls it with the real time and parameters from `config` and the registry.
+- **Demo cleanup:** the SQL function `engram_cleanup_demo(now)` deletes expired demo namespaces (cascade), also run by `pnpm jobs:maintain`. Nightly is enough for 24h demo namespaces on 1 GB of storage; P09a may also run it opportunistically when a demo session is created.
+- **Consolidation:** `pnpm jobs:consolidate` (`--hosted` for `HOSTED_DATABASE_URL`, `--estimate` to print the call estimate and stop), and on demand via `engram_consolidate`.
+- **Schedule:** `.github/workflows/nightly.yml` runs `jobs:maintain --hosted` then `jobs:consolidate --hosted` once a day, just after the Gemini quota resets. It's the hosted database's only daily wake-up (a few CU-minutes of Neon's 100 CU-hours a month), and it skips cleanly without the secret. Nothing here runs inside a Vercel function. pg_cron isn't used: on Neon's free plan the compute scales to zero and cron would only fire while it's awake (ADR-014).
 
 ---
 
@@ -534,7 +534,7 @@ Thin Next.js route handlers over `packages/core`.
 - `POST /api/chat` — streams; operates only on the cookie's namespace; 30 turns/hour per namespace via `rate_limits`.
 - A **global daily turn cap** across all demo namespaces protects the free Gemini quota. When it's reached, the chat returns a clear "demo quota exhausted, try again tomorrow" message and the read-only showcase stays available.
 
-**Connection pooling.** Vercel functions connect through Supabase's transaction-mode pooler. That mode doesn't support prepared statements, so the Postgres client is configured with them disabled. Long-running jobs (consolidation, migrations) use the session pooler or a direct connection.
+**Connection pooling.** Vercel functions connect to Neon's direct endpoint with a small pool (`max: 1` per function instance, a short idle timeout). A free 0.25 CU compute accepts about 100 connections, plenty for the demo. Neon's pooled endpoint (PgBouncer, transaction mode) would also need prepared statements off, and it resets each session's search path, so using it means setting the path inside every transaction. P09a decides whether traffic warrants that. Locks are transaction-scoped either way.
 - Read endpoints are scoped to the cookie namespace, or to the seeded read-only showcase namespace.
 
 ---
@@ -671,14 +671,14 @@ A deterministic `FakeProvider` backs the unit tests, which never hit the network
 
 | Concern | Default (free) | Notes |
 |---|---|---|
-| DB, local / tests / CI | `pgvector/pgvector` Docker image | Via `docker-compose.yml` locally and as a GitHub Actions service container. Small, offline, no pg_cron needed |
-| DB, hosted (vectors / FTS / cron) | Supabase free tier | pgvector and pg_cron included. Free projects pause after a period of inactivity; the nightly consolidation workflow touches the database and doubles as a keep-alive. Document how to restore a paused project |
+| DB, local / tests / CI | `pgvector/pgvector` Docker image | Via `docker-compose.yml` locally and as a GitHub Actions service container. Small and offline |
+| DB, hosted (vectors / FTS) | Neon free tier (ADR-014) | Postgres 18 with pgvector 0.8.6. 1 GB storage per project, 100 CU-hours a month, 5 GB egress a month, scale to zero after 5 idle minutes (verified 2026-10-17). Exceeding compute or egress suspends the compute until the next month; exceeding storage makes writes fail. Nothing is deleted. Wake-ups cost a few hundred ms on the first query |
 | Embeddings + LLM | Gemini API free tier (AI Studio key) | Verify current model names, embedding dimensions, and rate/daily quotas at build time. **Free-tier inputs may be used by Google to improve its products** — stated in README limitations and in the demo UI, since Engram stores personal facts |
 | Judge LLM | Groq free tier: `openai/gpt-oss-120b` with strict JSON-schema output; fallbacks: Mistral free tier, Cohere trial | A different family from Gemini, as §13.4 requires. Dataset verbalization uses a third family (`qwen/qwen3.8-27b` on Groq). Verify current models and limits at build time |
-| Hosting | Vercel Hobby | web, API, HTTP MCP endpoint. No long-running jobs here; check function duration limits. Connect via Supabase's transaction pooler with prepared statements disabled (§11) |
-| CI + jobs | GitHub Actions free | ci.yml, bench.yml, consolidate.yml. Scheduled workflows are auto-disabled after 60 days of repository inactivity; document re-enabling |
+| Hosting | Vercel Hobby | web, API, HTTP MCP endpoint. No long-running jobs here; check function duration limits. Connect to Neon's direct endpoint with a small pool (§11) |
+| CI + jobs | GitHub Actions free | ci.yml, bench.yml, nightly.yml. Scheduled workflows are auto-disabled after 60 days of repository inactivity; document re-enabling |
 
-Secrets only via `.env` (never committed); `.env.example` kept current. Required keys: `DATABASE_URL`, `GEMINI_API_KEY`, `JUDGE_*`, `ENGRAM_API_TOKEN`, `ENGRAM_NAMESPACE`. Hosted-only: `HOSTED_DATABASE_URL` (session pooler or direct, for migrations and jobs).
+Secrets only via `.env` (never committed); `.env.example` kept current. Required keys: `DATABASE_URL`, `GEMINI_API_KEY`, `JUDGE_*`, `ENGRAM_API_TOKEN`, `ENGRAM_NAMESPACE`. Hosted-only: `HOSTED_DATABASE_URL` (Neon direct endpoint, for migrations and jobs) and optionally `HOSTED_POOLED_DATABASE_URL` (pooled endpoint; see §11 before using it).
 
 **Offline mode.** With no API keys set, `pnpm demo:offline` runs the engine against the local database with the FakeProvider. It exists so anyone can see the bitemporal mechanics without signing up for anything.
 
@@ -690,7 +690,7 @@ Each phase follows the same loop: plan → approval → implement in small steps
 
 Each phase has a file in `docs/phases/`. Early phases are written in full; later ones start as outlines (goal, dependencies, done-when, risks) and are expanded into a full plan at the start of the phase, which is the "plan" step of the loop. When a phase's plan changes something here, this spec is updated in the same phase.
 
-- **P0 Scaffold.** pnpm workspaces, TS strict, vitest, eslint + prettier, `docker-compose.yml` with the pgvector image, a plain-SQL migration runner (`db:up`, `db:reset`, `db:migrate`, `db:migrate:hosted`) with the `supabase/migrations/` vs `supabase/hosted/` split, migration 0001 (`engram` and `extensions` schemas, pgvector) applied, `.env.example`, `.gitignore` (including agent files and `bench/cache`), CI workflow with a pgvector service container.
+- **P0 Scaffold.** pnpm workspaces, TS strict, vitest, eslint + prettier, `docker-compose.yml` with the pgvector image, a plain-SQL migration runner (`db:up`, `db:reset`, `db:migrate`, `db:migrate:hosted`) with the `migrations/` vs `hosted/` split (now under `sql/`), migration 0001 (`engram` and `extensions` schemas, pgvector) applied, `.env.example`, `.gitignore` (including agent files and `bench/cache`), CI workflow with a pgvector service container.
   - *Done when:* `pnpm -r typecheck && pnpm -r test && pnpm -r lint` is green locally and in CI, and a fresh clone boots.
 - **P1 Store + providers.** Schema with namespaces, constraints, and indexes; repository layer; Gemini and Fake providers; `ingest`; `is_self` entity creation per namespace.
   - *Done when:* repository unit tests pass, including a pgvector round-trip and the CHECK constraints rejecting bad rows.
@@ -702,15 +702,15 @@ Each phase has a file in `docs/phases/`. Early phases are written in full; later
   - *Done when:* all four modes produce a dev report. (Test split not yet frozen.)
 - **P5 Retrieval.** Candidate lists, graph expansion, RRF plus priors, the abstention floor, composer with `supported`/`used_memory_ids`, and access tracking. Tuned on dev only.
   - *Done when:* retrieval fixtures pass, and dev recall@8 and accuracy targets are recorded in DECISIONS.md.
-- **P6 Jobs.** The decay SQL function with simulated-clock tests (including the §9.1 invariant and crossing times), the pg_cron schedule, consolidation via the write path with the provenance-aware merge test, the GitHub Actions workflow, demo cleanup, and the hard-purge cascade with its test.
-  - *Done when:* the time-travel and purge tests pass, and the consolidation job runs end-to-end against the local Docker database. The pg_cron schedules live in `supabase/hosted/` and are verified at deploy (P10).
+- **P6 Jobs.** The decay SQL function with simulated-clock tests (including the §9.1 invariant and crossing times), the nightly schedule (pg_cron at first; GitHub Actions since ADR-014), consolidation via the write path with the provenance-aware merge test, the GitHub Actions workflow, demo cleanup, and the hard-purge cascade with its test.
+  - *Done when:* the time-travel and purge tests pass, and the consolidation job runs end-to-end against the local Docker database. Decay and demo cleanup run from the nightly workflow (`pnpm jobs:maintain`), verified against the hosted database.
 - **P7 MCP.** Tools and resource, namespace selection, stdio and streamable HTTP, Inspector walkthrough, client config docs.
   - *Done when:* the SDK-client integration test passes, and Claude Code can call `engram_remember` and `engram_recall` locally.
 - **P8 Bench full.** Freeze the test split after human review, label the 40 judge-validation answers, build the LongMemEval subset adapter, run everything, and write reports.
   - *Done when:* the test and LongMemEval reports exist, and the README table shows four modes plus judge agreement.
 - **P9 Web.** Required pages against the real API, demo namespaces, rate limiting.
   - *Done when:* `docs/demo.md` can be followed without improvisation.
-- **P10 Ship.** Supabase cloud and Vercel deploy (`db:migrate:hosted` applied); a showcase namespace seed; the README (gif, <10-minute quickstart, architecture diagram, bench tables, design notes, limitations, prior art); `docs/architecture.md`; a DECISIONS.md tidy. Three ways for a reviewer to try it:
+- **P10 Ship.** Neon and Vercel deploy (`db:migrate:hosted` applied); a showcase namespace seed; the README (gif, <10-minute quickstart, architecture diagram, bench tables, design notes, limitations, prior art); `docs/architecture.md`; a DECISIONS.md tidy. Three ways for a reviewer to try it:
   1. the hosted demo: no setup;
   2. `pnpm demo:offline`: Docker only, no API keys;
   3. the full quickstart with a free Gemini key.
@@ -805,13 +805,13 @@ Exposed over MCP; measured by bench/. Source of truth: docs/SPEC.md.
 ## Commands
 - pnpm -r typecheck · pnpm -r test · pnpm -r lint   (all green before any commit)
 - pnpm db:up / db:reset / db:migrate                (local Docker pgvector)
-- pnpm db:migrate:hosted                            (Supabase: migrations + supabase/hosted/)
+- pnpm db:migrate:hosted                            (Neon: migrations + sql/hosted/)
 - pnpm demo:offline                                 (FakeProvider, no API keys)
 - pnpm bench --split=dev|test --memory=engram|rag|full_context|buffer
 - pnpm bench:longmemeval
-- pnpm jobs:consolidate [--hosted] [--estimate]     (decay runs in pg_cron)
+- pnpm jobs:maintain [--hosted]                     (decay sweep + demo cleanup; nightly.yml)
+- pnpm jobs:consolidate [--hosted] [--estimate]
 - packages/mcp/node_modules/.bin/tsx packages/mcp/src/stdio.ts   (MCP stdio server; ENGRAM_NAMESPACE, see docs/mcp.md)
-- pnpm db:hosted-cron                               (regenerate supabase/hosted/R__cron_schedules.sql)
 
 ## Working rules
 - One phase from docs/SPEC.md §15 at a time. Plan first, wait for approval, then build.
