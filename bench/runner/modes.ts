@@ -6,7 +6,15 @@
 //   engram        the full write path into a fresh namespace, then recall()
 // Turns are prefixed with their dates in every mode.
 import { randomUUID } from 'node:crypto';
-import { SimClock, cosine, ensureNamespace, ingest, processEpisode, recall } from '@engram/core';
+import {
+  SimClock,
+  config,
+  cosine,
+  ensureNamespace,
+  ingest,
+  processEpisode,
+  recall,
+} from '@engram/core';
 import type { Provider, RecallOptions, Sql } from '@engram/core';
 import { turnTime } from '../dataset/schema.js';
 import type { BenchItem } from '../dataset/schema.js';
@@ -25,6 +33,11 @@ export interface ModeAnswer {
   memories: number;
   /** Texts of the retrieved memories (rag, engram), for recall@k. */
   retrieved?: string[];
+  /** Engram: best raw query similarity, and the floor the run used (for floor simulation). */
+  bestSimilarity?: number;
+  floor?: number;
+  /** Engram retrieval-only runs: what each ranker retrieved; nothing was composed. */
+  retrievedBy?: Record<'rrf' | 'linear', string[]>;
   /** Engram only: what the write path produced. */
   store?: { facts: number; adHoc: number; entities: number; duplicateEntities: number };
 }
@@ -69,6 +82,11 @@ export interface ModeDeps {
   provider: Provider;
   /** Overrides for engram's recall (tuning sweeps). */
   recall?: Partial<Pick<RecallOptions, 'ranker' | 'floor' | 'k'>>;
+  /**
+   * Engram: recall with both rankers and skip the composer, so rankers can be
+   * compared on recall@8 at no generation cost (embeddings have their own quota).
+   */
+  retrievalOnly?: boolean;
 }
 
 export async function runMode(mode: Mode, item: BenchItem, deps: ModeDeps): Promise<ModeAnswer> {
@@ -124,19 +142,43 @@ async function engram(item: BenchItem, turns: Turn[], deps: ModeDeps): Promise<M
     }
 
     clock.set(item.asked_at);
-    const result = await recall(
-      db,
-      provider,
-      {
-        namespaceId: namespace.id,
-        query: item.question,
-        validAt: item.valid_at ? new Date(item.valid_at) : undefined,
-        knownAt: item.known_at ? new Date(item.known_at) : undefined,
-        trackAccess: false,
-        ...deps.recall,
-      },
-      clock,
-    );
+    const ask = (overrides: ModeDeps['recall']) =>
+      recall(
+        db,
+        provider,
+        {
+          namespaceId: namespace.id,
+          query: item.question,
+          validAt: item.valid_at ? new Date(item.valid_at) : undefined,
+          knownAt: item.known_at ? new Date(item.known_at) : undefined,
+          trackAccess: false,
+          ...overrides,
+        },
+        clock,
+      );
+
+    if (deps.retrievalOnly) {
+      const [rrf, linear] = [
+        await ask({ ...deps.recall, ranker: 'rrf', floor: 0 }),
+        await ask({ ...deps.recall, ranker: 'linear', floor: 0 }),
+      ];
+      return {
+        answer: '(retrieval only)',
+        supported: false,
+        usedMemoryIds: [],
+        memories: rrf.memories.length,
+        retrieved: rrf.memories.map((m) => m.text),
+        retrievedBy: {
+          rrf: rrf.memories.map((m) => m.text),
+          linear: linear.memories.map((m) => m.text),
+        },
+        bestSimilarity: rrf.bestSimilarity,
+        floor: 0,
+        store: await storeStats(db, namespace.id),
+      };
+    }
+
+    const result = await ask(deps.recall);
     const memories = result.memories.map((m): Memory => ({
       id: m.id,
       kind: m.kind,
@@ -148,6 +190,8 @@ async function engram(item: BenchItem, turns: Turn[], deps: ModeDeps): Promise<M
     return {
       ...answer,
       retrieved: memories.map((m) => m.text),
+      bestSimilarity: result.bestSimilarity,
+      floor: deps.recall?.floor ?? config.recall.floor,
       store: await storeStats(db, namespace.id),
     };
   } finally {

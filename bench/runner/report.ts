@@ -67,6 +67,49 @@ export function renderReport(results: readonly ItemResult[], meta: ReportMeta): 
     lines.push('');
   }
 
+  const byRanker = of('engram').filter((r) => r.answer.retrievedBy);
+  if (byRanker.length > 0) {
+    lines.push('## Ranker comparison (retrieval only, no answers composed)', '');
+    lines.push('| ranker | recall@8 |', '|---|---|');
+    for (const ranker of ['rrf', 'linear'] as const) {
+      const answerable = byRanker.filter((r) => r.category !== 'abstention');
+      const hits = answerable.filter((r) =>
+        (r.answer.retrievedBy?.[ranker] ?? []).some((t) =>
+          normalize(t).includes(normalize(r.expected)),
+        ),
+      );
+      lines.push(
+        `| ${ranker} | ${pct(hits.length, answerable.length)} (${hits.length}/${answerable.length}) |`,
+      );
+    }
+    lines.push('');
+  }
+
+  // Floor simulation: an item whose best similarity is under the floor gets
+  // nothing back and the composer abstains, so it's correct exactly when it's
+  // an abstention item. Valid only for floors at or above the one the run used.
+  const composed = of('engram').filter(
+    (r) => r.answer.bestSimilarity !== undefined && !r.answer.retrievedBy,
+  );
+  if (composed.length > 0) {
+    const ran = Math.max(...composed.map((r) => r.answer.floor ?? 0));
+    const floors = [0, 0.3, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7].filter((f) => f >= ran);
+    lines.push(`## Abstention floor simulation (run floor ${ran})`, '');
+    lines.push('| floor | accuracy | abstention recall | wrongly abstained |', '|---|---|---|---|');
+    for (const f of floors) {
+      const outcome = composed.map((r) => {
+        const below = (r.answer.bestSimilarity ?? 0) < f;
+        return { r, below, correct: below ? r.category === 'abstention' : r.verdict.correct };
+      });
+      const abst = outcome.filter((o) => o.r.category === 'abstention');
+      const wrong = outcome.filter((o) => o.below && o.r.category !== 'abstention').length;
+      lines.push(
+        `| ${f} | ${pct(outcome.filter((o) => o.correct).length, outcome.length)} | ${pct(abst.filter((o) => o.correct).length, abst.length)} | ${wrong} |`,
+      );
+    }
+    lines.push('');
+  }
+
   lines.push('## Abstention and cost', '');
   lines.push(
     '| mode | abstention precision | abstention recall | real calls / item | cached / item | prompt tokens / item | latency p50 | latency p95 |',

@@ -1,5 +1,6 @@
 // pnpm bench [--split=dev] [--memory=all|engram,rag,...] [--run=<id>] [--limit=N] [--ids=a,b]
 //            [--subset=smoke] [--offline] [--record-smoke] [--no-llm-judge] [--report-only]
+//            [--retrieval-only]   engram: compare rankers on recall@8, no composer calls
 //
 // --offline       replay recorded responses only (no network, no keys); fails on a miss
 // --record-smoke  record the smoke subset's responses into bench/fixtures/smoke-cache
@@ -87,6 +88,7 @@ async function main(): Promise<void> {
             : {}),
           ...(process.env.BENCH_FLOOR ? { floor: Number(process.env.BENCH_FLOOR) } : {}),
         },
+        retrievalOnly: flag('retrieval-only'),
         dir: runDir,
         log: (line) => {
           console.log(line);

@@ -32,6 +32,7 @@ export interface RunOptions {
   db: Sql;
   provider: Provider;
   recall?: ModeDeps['recall'];
+  retrievalOnly?: boolean;
   judge?: Pick<Provider, 'judge'>;
   meter?: UsageMeter;
   dir: string;
@@ -66,6 +67,7 @@ export async function runItems(
           db: options.db,
           provider: options.provider,
           recall: options.recall,
+          retrievalOnly: options.retrievalOnly,
         });
       } catch (err) {
         if (err instanceof ProviderHttpError && err.status === 429) {
