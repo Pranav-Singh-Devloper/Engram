@@ -4,7 +4,7 @@
 //
 // --offline       replay recorded responses only (no network, no keys); fails on a miss
 // --record-smoke  record the smoke subset's responses into bench/fixtures/smoke-cache
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { DEFAULT_DATABASE_URL, createDb } from '@engram/core';
 import { PORTABLE, migrate } from '@engram/core/migrate';
@@ -14,8 +14,8 @@ import { describeEstimate, estimate } from './estimate.js';
 import { ALL_MODES, MODES } from './modes.js';
 import type { Mode } from './modes.js';
 import { BENCH_DIR, DEFAULT_CACHE_DIR, loadEnv, makeProviders } from './providers.js';
-import { renderReport } from './report.js';
-import { QuotaStop, loadResults, runItems } from './run.js';
+import { renderReport, summarizeRun } from './report.js';
+import { QuotaStop, loadResults, resultFiles, runItems } from './run.js';
 
 export const SMOKE_CACHE_DIR = path.join(BENCH_DIR, 'fixtures', 'smoke-cache');
 export const SMOKE_SIZE = 20;
@@ -105,16 +105,25 @@ async function main(): Promise<void> {
 
   const wanted = new Set(items.map((i) => i.id));
   const results = loadResults(runDir).filter((r) => wanted.has(r.itemId) && modes.includes(r.mode));
-  const report = renderReport(results, {
+  const meta = {
     runId,
     split,
     model: process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash-lite',
     judge: llmJudge ? process.env.JUDGE_MODEL || 'openai/gpt-oss-120b' : 'exact/contains only',
-    date: new Date().toISOString().slice(0, 10),
-  });
+    // The run's own date when its id carries one, so --report-only keeps it.
+    date: /^\d{4}-\d{2}-\d{2}/.exec(runId)?.[0] ?? new Date().toISOString().slice(0, 10),
+  };
+  const report = renderReport(results, meta);
   if (!smoke) {
     mkdirSync(path.dirname(reportFile), { recursive: true });
     writeFileSync(reportFile, report);
+    const finishedAt = new Date(
+      Math.max(0, ...resultFiles(runDir).map((f) => statSync(f).mtimeMs)),
+    ).toISOString();
+    writeFileSync(
+      reportFile.replace(/\.md$/, '.json'),
+      `${JSON.stringify(summarizeRun(results, { ...meta, finishedAt }), null, 2)}\n`,
+    );
   }
   console.log(`\n${report.split('## Abstention')[0] ?? ''}`);
   if (!smoke) console.log(`Report: ${path.relative(process.cwd(), reportFile)}`);

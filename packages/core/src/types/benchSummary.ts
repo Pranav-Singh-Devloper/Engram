@@ -8,6 +8,10 @@ export const BenchSummary = z.object({
   split: z.string(),
   /** The run's date, YYYY-MM-DD. */
   date: z.string(),
+  /** When the run's last result was written (ISO); orders runs. */
+  finishedAt: z.string(),
+  /** A ranker comparison with no composed answers: accuracy is meaningless. */
+  retrievalOnly: z.boolean(),
   model: z.string(),
   judge: z.string(),
   items: z.number().int(),

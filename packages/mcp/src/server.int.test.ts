@@ -383,11 +383,18 @@ describe('engram_consolidate and engram://stats', () => {
       await moved(s);
       const dir = mkdtempSync(path.join(tmpdir(), 'engram-reports-'));
       dirs.push(dir);
-      const summary = (runId: string, date: string, accuracy: number): BenchSummary => ({
+      const summary = (
+        runId: string,
+        finishedAt: string,
+        accuracy: number,
+        retrievalOnly = false,
+      ): BenchSummary => ({
         schema: 1,
         runId,
         split: 'dev',
-        date,
+        date: finishedAt.slice(0, 10),
+        finishedAt,
+        retrievalOnly,
         model: 'm',
         judge: 'j',
         items: 40,
@@ -396,8 +403,13 @@ describe('engram_consolidate and engram://stats', () => {
           buffer: { accuracy: 0.7, n: 40, recallAt8: null },
         },
       });
-      writeFileSync(path.join(dir, 'old.json'), JSON.stringify(summary('old', '2024-01-01', 0.9)));
-      writeFileSync(path.join(dir, 'new.json'), JSON.stringify(summary('new', '2024-02-01', 1)));
+      const write = (s: BenchSummary) => {
+        writeFileSync(path.join(dir, `${s.runId}.json`), JSON.stringify(s));
+      };
+      write(summary('old', '2024-01-01T10:00:00Z', 0.9));
+      write(summary('new', '2024-02-01T10:00:00Z', 1));
+      // Newer, but a retrieval-only ranker comparison: skipped.
+      write(summary('rankers', '2024-03-01T10:00:00Z', 0, true));
       writeFileSync(path.join(dir, 'junk.json'), '{"not":"a summary"}');
 
       const read = async (reportsDir: string | null) => {

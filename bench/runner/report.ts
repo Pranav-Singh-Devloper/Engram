@@ -1,4 +1,5 @@
 // Turns a run's per-item results into a markdown report (SPEC §13.5).
+import type { BenchSummary } from '@engram/core';
 import { CATEGORIES } from '../dataset/schema.js';
 import { isAbstention, normalize } from './judge.js';
 import { ALL_MODES } from './modes.js';
@@ -19,6 +20,45 @@ export interface ReportMeta {
   model: string;
   judge: string;
   date: string;
+}
+
+/** The machine-readable side of a report (bench/reports/<run>.json), read by engram://stats. */
+export function summarizeRun(
+  results: readonly ItemResult[],
+  meta: ReportMeta & { finishedAt: string },
+): BenchSummary {
+  const modes = ALL_MODES.filter((m) => results.some((r) => r.mode === m));
+  const share = (num: number, den: number) =>
+    den === 0 ? 0 : Math.round((num / den) * 1000) / 1000;
+  return {
+    schema: 1,
+    runId: meta.runId,
+    split: meta.split,
+    date: meta.date,
+    finishedAt: meta.finishedAt,
+    model: meta.model,
+    judge: meta.judge,
+    items: new Set(results.map((r) => r.itemId)).size,
+    // Ranker comparisons set retrievedBy and compose nothing.
+    retrievalOnly: results.length > 0 && results.every((r) => r.answer.retrievedBy !== undefined),
+    modes: Object.fromEntries(
+      modes.map((m) => {
+        const rs = results.filter((r) => r.mode === m);
+        const answerable = rs.filter((r) => r.category !== 'abstention' && r.answer.retrieved);
+        const hits = answerable.filter((r) =>
+          (r.answer.retrieved ?? []).some((t) => normalize(t).includes(normalize(r.expected))),
+        );
+        return [
+          m,
+          {
+            accuracy: share(rs.filter((r) => r.verdict.correct).length, rs.length),
+            n: rs.length,
+            recallAt8: answerable.length > 0 ? share(hits.length, answerable.length) : null,
+          },
+        ];
+      }),
+    ),
+  };
 }
 
 export function renderReport(results: readonly ItemResult[], meta: ReportMeta): string {

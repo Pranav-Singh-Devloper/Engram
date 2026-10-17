@@ -9,7 +9,7 @@ import { iso } from './format.js';
 /** Where bench reports live in a checkout; absent in a deployed app. */
 export const DEFAULT_REPORTS_DIR = path.resolve(import.meta.dirname, '../../../bench/reports');
 
-/** The newest parseable summary (by date, then run id), or null if there is none. */
+/** The newest summary of a run that composed answers, or null if there is none. */
 export function latestBenchSummary(dir: string | null): BenchSummary | null {
   if (dir === null) return null;
   let files: string[];
@@ -21,12 +21,14 @@ export function latestBenchSummary(dir: string | null): BenchSummary | null {
   const summaries = files.flatMap((f) => {
     try {
       const parsed = BenchSummary.safeParse(JSON.parse(readFileSync(path.join(dir, f), 'utf8')));
-      return parsed.success ? [parsed.data] : [];
+      return parsed.success && !parsed.data.retrievalOnly ? [parsed.data] : [];
     } catch {
       return [];
     }
   });
-  summaries.sort((a, b) => b.date.localeCompare(a.date) || b.runId.localeCompare(a.runId));
+  summaries.sort(
+    (a, b) => b.finishedAt.localeCompare(a.finishedAt) || b.runId.localeCompare(a.runId),
+  );
   return summaries[0] ?? null;
 }
 

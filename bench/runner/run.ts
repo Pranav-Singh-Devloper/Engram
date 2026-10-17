@@ -103,10 +103,15 @@ export async function runItems(
   return ran;
 }
 
-export function loadResults(dir: string): ItemResult[] {
+/** Paths of a run's per-item result files. */
+export function resultFiles(dir: string): string[] {
   if (!existsSync(dir)) return [];
   return readdirSync(dir, { recursive: true })
     .map(String)
     .filter((f) => f.endsWith('.json'))
-    .map((f) => JSON.parse(readFileSync(path.join(dir, f), 'utf8')) as ItemResult);
+    .map((f) => path.join(dir, f));
+}
+
+export function loadResults(dir: string): ItemResult[] {
+  return resultFiles(dir).map((f) => JSON.parse(readFileSync(f, 'utf8')) as ItemResult);
 }

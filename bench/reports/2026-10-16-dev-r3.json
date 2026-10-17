@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "runId": "2026-10-16-dev-r3",
+  "split": "dev",
+  "date": "2026-10-16",
+  "finishedAt": "2026-10-16T18:18:04.151Z",
+  "model": "gemini-3.5-flash-lite",
+  "judge": "openai/gpt-oss-120b",
+  "items": 40,
+  "retrievalOnly": false,
+  "modes": {
+    "buffer": {
+      "accuracy": 1,
+      "n": 40,
+      "recallAt8": null
+    },
+    "rag": {
+      "accuracy": 1,
+      "n": 40,
+      "recallAt8": null
+    },
+    "full_context": {
+      "accuracy": 1,
+      "n": 40,
+      "recallAt8": null
+    },
+    "engram": {
+      "accuracy": 0.975,
+      "n": 40,
+      "recallAt8": null
+    }
+  }
+}
