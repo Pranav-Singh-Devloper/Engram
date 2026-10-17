@@ -25,6 +25,11 @@ P07, so the engine is feature-complete before anything is measured. It can overl
 
 - **The test split needs longer histories.** With ≤20 turns, buffer and full_context see identical prompts and every baseline scores 100% on dev, so the test split can't separate them. Add filler sessions (small talk, unrelated tasks) so histories exceed the buffer window and rag has to search.
 - **The verbalizer prompt now forbids statements phrased as questions** (from the dev review). Keep the read-through review pass: string checks miss meaning drift.
+- **From P05, scale vs budget.** At ~37 turns (about 600 tokens) per history, full_context and rag still score 100%, and only buffer degrades (71%). Separating engram from full_context needs histories in the thousands of tokens, but engram makes one extraction call per turn, and free Gemini allows 500 calls a day. Before freezing test, decide whether to:
+  - batch extraction per session (one call per session, roughly 5–10× fewer calls; changes SPEC §6.1);
+  - shrink LongMemEval to a subset that fits the budget (SPEC §13.6 rule); or
+  - both.
+- **Budget 10% above the cache-based count:** failed requests count against the quota too.
 - **The smoke cache is 2.7 MB**, mostly embedding vectors. If it grows, store embeddings more compactly.
 
 ## Risks and verify-at-build-time
