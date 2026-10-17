@@ -135,3 +135,5 @@ export type { OllamaEmbedderOptions } from './providers/ollamaEmbed.js';
 export { EmbeddingSpaceError, bindEmbeddingSpace } from './db/namespaces.js';
 export { reembedNamespace } from './db/reembed.js';
 export type { ReembedReport } from './db/reembed.js';
+export { OpenAICompatibleProvider } from './providers/openaiCompat.js';
+export type { OpenAICompatibleOptions } from './providers/openaiCompat.js';

@@ -44,8 +44,21 @@ const LOCAL_RETRY: RetryOptions = { maxRetries: 2, baseDelayMs: 500, maxDelayMs:
 const StreamLine = z.object({
   message: z.object({ content: z.string().optional() }).optional(),
   done: z.boolean().optional(),
+  done_reason: z.string().optional(),
+  eval_count: z.number().optional(),
   error: z.string().optional(),
 });
+
+/** Output tokens and whether the reply hit its length cap, from a stream's final line. */
+export function streamUsage(ndjson: string): { outputTokens: number; capped: boolean } {
+  const last = ndjson.trim().split('\n').at(-1) ?? '';
+  try {
+    const d = StreamLine.parse(JSON.parse(last));
+    return { outputTokens: d.eval_count ?? 0, capped: d.done_reason === 'length' };
+  } catch {
+    return { outputTokens: 0, capped: false };
+  }
+}
 
 /** The JSON object in a reply that may be fenced or padded. Exported for tests. */
 export function jsonPart(text: string): string {
@@ -81,6 +94,9 @@ export class OllamaProvider extends PromptedProvider {
   private readonly retry: RetryOptions;
   private readonly deps: HttpDeps;
   private structured: 'format' | 'prompt' | 'auto';
+  /** Output tokens generated, and replies cut off by the length cap, so far. */
+  outputTokens = 0;
+  capped = 0;
 
   constructor(private readonly options: OllamaOptions) {
     super();
@@ -155,7 +171,13 @@ export class OllamaProvider extends PromptedProvider {
         headers: {},
         retry: this.retry,
         deps: this.deps,
-        parse: async (res) => readChatStream(await res.text()),
+        parse: async (res) => {
+          const text = await res.text();
+          const usage = streamUsage(text);
+          this.outputTokens += usage.outputTokens;
+          if (usage.capped) this.capped++;
+          return readChatStream(text);
+        },
       },
     );
     return reply as string;

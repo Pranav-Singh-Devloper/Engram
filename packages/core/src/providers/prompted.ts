@@ -29,7 +29,7 @@ import {
 import type { EmbedPurpose, MethodInput, MethodOutput, StructuredMethod } from './contracts.js';
 import { aliasIds } from './aliases.js';
 import type { Provider } from './provider.js';
-import { ProviderError } from './provider.js';
+import { ProviderError, ProviderOutputError } from './provider.js';
 import { generateStructured } from './structured.js';
 import type { ChatSend, StructuredRequest } from './structured.js';
 
@@ -47,10 +47,30 @@ export abstract class PromptedProvider implements Provider {
   /** The transport, or a rejection explaining why there is none (no model configured). */
   protected abstract chat(): ChatSend | Error;
 
+  /**
+   * Structured calls so far: how many needed the one repair round, and how
+   * many failed even after it. The off-schema rate (P08b decision 5).
+   */
+  readonly structuredStats = { calls: 0, repairs: 0, failures: 0 };
+
   /** JSON generation with zod validation and one repair attempt. Used by structured methods. */
-  generate<T>(request: StructuredRequest<T>): Promise<T> {
+  async generate<T>(request: StructuredRequest<T>): Promise<T> {
     const send = this.chat();
-    return send instanceof Error ? Promise.reject(send) : generateStructured(send, request);
+    if (send instanceof Error) throw send;
+    let sends = 0;
+    const counted: ChatSend = (r) => {
+      sends++;
+      return send(r);
+    };
+    this.structuredStats.calls++;
+    try {
+      return await generateStructured(counted, request);
+    } catch (err) {
+      if (err instanceof ProviderOutputError) this.structuredStats.failures++;
+      throw err;
+    } finally {
+      if (sends > 1) this.structuredStats.repairs++;
+    }
   }
 
   private notYet<M extends StructuredMethod>(method: M, where: string): Promise<MethodOutput<M>> {
