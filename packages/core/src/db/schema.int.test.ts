@@ -37,7 +37,7 @@ describe('portable migrations', () => {
     expect(row).toEqual({ v: '[1,2,3]', d: 5 });
   });
 
-  it('never touch supabase/hosted', async () => {
+  it('never touch sql/hosted', async () => {
     const rows = await sql`
       select 1 from engram.schema_migrations where filename like 'hosted/%'`;
     expect(rows).toHaveLength(0);

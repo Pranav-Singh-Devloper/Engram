@@ -1,4 +1,4 @@
-// Domain types mirroring the schema in supabase/migrations/0002_core_schema.sql.
+// Domain types mirroring the schema in sql/migrations/0002_core_schema.sql.
 // The value lists are the single source for zod enums and CHECK constraints.
 
 export const NAMESPACE_KINDS = ['user', 'demo', 'bench'] as const;

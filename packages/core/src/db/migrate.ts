@@ -11,17 +11,17 @@ export interface MigrationSource {
   prefix: string;
 }
 
-const SUPABASE_DIR = path.resolve(import.meta.dirname, '../../../../supabase');
+const SQL_DIR = path.resolve(import.meta.dirname, '../../../../sql');
 
 /** Portable SQL, applied to every database (SPEC §3). */
 export const PORTABLE: MigrationSource = {
-  dir: path.join(SUPABASE_DIR, 'migrations'),
+  dir: path.join(SQL_DIR, 'migrations'),
   prefix: 'migrations',
 };
 
-/** Supabase-only SQL (pg_cron, role revokes), applied only by `db:migrate:hosted`. */
+/** Hosted-only SQL (role revokes, the database search path), applied only by `db:migrate:hosted`. */
 export const HOSTED: MigrationSource = {
-  dir: path.join(SUPABASE_DIR, 'hosted'),
+  dir: path.join(SQL_DIR, 'hosted'),
   prefix: 'hosted',
 };
 
