@@ -122,8 +122,11 @@ export class GeminiProvider implements Provider {
           deps: this.deps,
         });
       } catch (err) {
-        const exhausted = err instanceof ProviderHttpError && err.quotaExhausted;
-        if (!exhausted || this.keyIndex >= this.keys.length - 1) throw err;
+        // Move on when this key can't serve requests today: its quota is
+        // exhausted, or its project has been denied access (403).
+        const unusable =
+          err instanceof ProviderHttpError && (err.quotaExhausted || err.status === 403);
+        if (!unusable || this.keyIndex >= this.keys.length - 1) throw err;
         this.keyIndex++;
         this.options.onKeySwitch?.(this.keyIndex, err.message.slice(0, 120));
       }

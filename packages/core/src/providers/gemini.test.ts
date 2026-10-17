@@ -457,6 +457,13 @@ describe('key fallback', () => {
     expect(k.provider.activeKey).toBe(1);
   });
 
+  it('skips a key whose project is denied access', async () => {
+    const denied = () => json({ error: { code: 403, status: 'PERMISSION_DENIED' } }, 403);
+    const k = keyed({ main: [denied] });
+    await k.provider.embed(['a'], { purpose: 'document' });
+    expect(k.used).toEqual(['main', 'spare']);
+  });
+
   it('rides out a per-minute limit on the same key', async () => {
     const k = keyed({ main: [minute] });
     await k.provider.embed(['a'], { purpose: 'document' });
