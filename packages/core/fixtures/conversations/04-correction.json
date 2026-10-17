@@ -18,7 +18,7 @@
   "recording": {
     "promptVersion": "25f6695a1099",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T17:53:08.399Z",
+    "recordedAt": "2026-10-16T18:32:43.135Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -32,11 +32,18 @@
             "birth_date",
             "is_named",
             "likes",
-            "visited"
+            "visited",
+            "occupation",
+            "sibling_of",
+            "partner_of",
+            "allergic_to",
+            "has_pet",
+            "plays",
+            "learning"
           ]
         },
         "output": {
-          "importance": 0.8,
+          "importance": 0.5,
           "candidates": [
             {
               "subject": {
@@ -50,7 +57,7 @@
                 "entity": {
                   "name": "Initech",
                   "type": "org",
-                  "description": "the organization the user works for"
+                  "description": "the company the user works for"
                 }
               },
               "statement": "The user works at Initech.",
@@ -69,12 +76,12 @@
                 "type": "person",
                 "description": "the user"
               },
-              "predicate": "job_title",
+              "predicate": "occupation",
               "object": {
                 "kind": "literal",
                 "value": "product manager"
               },
-              "statement": "The user works as a product manager.",
+              "statement": "The user's occupation is product manager.",
               "validFrom": {
                 "kind": "none"
               },
@@ -99,11 +106,18 @@
             "birth_date",
             "is_named",
             "likes",
-            "visited"
+            "visited",
+            "occupation",
+            "sibling_of",
+            "partner_of",
+            "allergic_to",
+            "has_pet",
+            "plays",
+            "learning"
           ]
         },
         "output": {
-          "importance": 0.6,
+          "importance": 0.5,
           "candidates": [
             {
               "subject": {
@@ -117,7 +131,7 @@
                 "entity": {
                   "name": "Acme",
                   "type": "org",
-                  "description": "the organization the user works for"
+                  "description": "the user's current employer"
                 }
               },
               "statement": "The user works at Acme.",

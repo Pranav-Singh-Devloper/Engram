@@ -5,22 +5,23 @@
     {
       "status": "processed",
       "importance": 0.6,
-      "extracted": 5,
+      "extracted": 7,
       "createdEntities": 3,
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
-        "inserted": 4,
+        "inserted": 5,
         "merged": 0,
         "updated": 0,
         "backfilled": 0,
         "corrected": 0,
-        "coexisted": 1,
+        "coexisted": 2,
         "rejected": 0
       }
     }
   ],
   "revisions": [
+    "coexist (rule): multi-valued predicate",
     "coexist (rule): multi-valued predicate"
   ],
   "entities": [
@@ -58,19 +59,29 @@
       "fact": "Jordan likes \"ramen\"",
       "status": "active",
       "adHoc": false,
-      "statement": "Jordan loves ramen.",
+      "statement": "Jordan likes ramen.",
       "validFrom": "2024-05-20 (episode)",
       "validTo": null,
       "confidence": 1,
       "sources": 1
     },
     {
-      "fact": "Jordan partner_of User",
-      "status": "active",
-      "adHoc": true,
-      "statement": "Jordan is the partner of the user.",
-      "validFrom": "2024-05-20 (episode)",
-      "validTo": null,
+      "fact": "Jordan visited Kyoto",
+      "status": "superseded",
+      "adHoc": false,
+      "statement": "Jordan visited Kyoto in April 2023.",
+      "validFrom": "2023-04-01 (explicit)",
+      "validTo": "2023-05-01",
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "Jordan visited Osaka",
+      "status": "superseded",
+      "adHoc": false,
+      "statement": "Jordan visited Osaka in April 2023.",
+      "validFrom": "2023-04-01 (explicit)",
+      "validTo": "2023-05-01",
       "confidence": 1,
       "sources": 1
     },
@@ -85,22 +96,32 @@
       "sources": 1
     },
     {
-      "fact": "User visited Kyoto",
+      "fact": "User partner_of Jordan",
       "status": "active",
       "adHoc": false,
-      "statement": "The user visited Kyoto.",
-      "validFrom": "2023-04-01 (explicit)",
+      "statement": "The user's partner is Jordan.",
+      "validFrom": "2024-05-20 (episode)",
       "validTo": null,
       "confidence": 1,
       "sources": 1
     },
     {
-      "fact": "User visited Osaka",
-      "status": "active",
+      "fact": "User visited Kyoto",
+      "status": "superseded",
       "adHoc": false,
-      "statement": "The user visited Osaka.",
+      "statement": "The user visited Kyoto in April 2023.",
       "validFrom": "2023-04-01 (explicit)",
-      "validTo": null,
+      "validTo": "2023-05-01",
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "User visited Osaka",
+      "status": "superseded",
+      "adHoc": false,
+      "statement": "The user visited Osaka in April 2023.",
+      "validFrom": "2023-04-01 (explicit)",
+      "validTo": "2023-05-01",
       "confidence": 1,
       "sources": 1
     }

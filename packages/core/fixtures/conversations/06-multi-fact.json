@@ -12,7 +12,7 @@
   "recording": {
     "promptVersion": "25f6695a1099",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T17:53:32.890Z",
+    "recordedAt": "2026-10-16T18:33:01.025Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -26,12 +26,44 @@
             "birth_date",
             "is_named",
             "likes",
-            "visited"
+            "visited",
+            "occupation",
+            "sibling_of",
+            "partner_of",
+            "allergic_to",
+            "has_pet",
+            "plays",
+            "learning"
           ]
         },
         "output": {
           "importance": 0.6,
           "candidates": [
+            {
+              "subject": {
+                "name": "SELF",
+                "type": "person",
+                "description": "the user"
+              },
+              "predicate": "partner_of",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Jordan",
+                  "type": "person",
+                  "description": "the user's partner"
+                }
+              },
+              "statement": "The user's partner is Jordan.",
+              "validFrom": {
+                "kind": "none"
+              },
+              "validTo": {
+                "kind": "none"
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
             {
               "subject": {
                 "name": "SELF",
@@ -47,7 +79,7 @@
                   "description": "a city in Japan"
                 }
               },
-              "statement": "The user visited Kyoto.",
+              "statement": "The user visited Kyoto in April 2023.",
               "validFrom": {
                 "kind": "named_period",
                 "year": 2023,
@@ -55,7 +87,10 @@
                 "season": null
               },
               "validTo": {
-                "kind": "none"
+                "kind": "named_period",
+                "year": 2023,
+                "month": 4,
+                "season": null
               },
               "isCorrection": false,
               "confidence": 1
@@ -75,7 +110,7 @@
                   "description": "a city in Japan"
                 }
               },
-              "statement": "The user visited Osaka.",
+              "statement": "The user visited Osaka in April 2023.",
               "validFrom": {
                 "kind": "named_period",
                 "year": 2023,
@@ -83,7 +118,10 @@
                 "season": null
               },
               "validTo": {
-                "kind": "none"
+                "kind": "named_period",
+                "year": 2023,
+                "month": 4,
+                "season": null
               },
               "isCorrection": false,
               "confidence": 1
@@ -94,21 +132,58 @@
                 "type": "person",
                 "description": "the user's partner"
               },
-              "predicate": "partner_of",
+              "predicate": "visited",
               "object": {
                 "kind": "entity",
                 "entity": {
-                  "name": "SELF",
-                  "type": "person",
-                  "description": "the user"
+                  "name": "Kyoto",
+                  "type": "place",
+                  "description": "a city in Japan"
                 }
               },
-              "statement": "Jordan is the partner of the user.",
+              "statement": "Jordan visited Kyoto in April 2023.",
               "validFrom": {
-                "kind": "none"
+                "kind": "named_period",
+                "year": 2023,
+                "month": 4,
+                "season": null
               },
               "validTo": {
-                "kind": "none"
+                "kind": "named_period",
+                "year": 2023,
+                "month": 4,
+                "season": null
+              },
+              "isCorrection": false,
+              "confidence": 1
+            },
+            {
+              "subject": {
+                "name": "Jordan",
+                "type": "person",
+                "description": "the user's partner"
+              },
+              "predicate": "visited",
+              "object": {
+                "kind": "entity",
+                "entity": {
+                  "name": "Osaka",
+                  "type": "place",
+                  "description": "a city in Japan"
+                }
+              },
+              "statement": "Jordan visited Osaka in April 2023.",
+              "validFrom": {
+                "kind": "named_period",
+                "year": 2023,
+                "month": 4,
+                "season": null
+              },
+              "validTo": {
+                "kind": "named_period",
+                "year": 2023,
+                "month": 4,
+                "season": null
               },
               "isCorrection": false,
               "confidence": 1
@@ -124,7 +199,7 @@
                 "kind": "literal",
                 "value": "ramen"
               },
-              "statement": "Jordan loves ramen.",
+              "statement": "Jordan likes ramen.",
               "validFrom": {
                 "kind": "none"
               },

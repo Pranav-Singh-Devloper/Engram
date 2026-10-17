@@ -23,7 +23,7 @@
       "status": "processed",
       "importance": 0.5,
       "extracted": 1,
-      "createdEntities": 1,
+      "createdEntities": 2,
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
@@ -50,14 +50,14 @@
       "name": "Leeds",
       "type": "place",
       "aliases": [],
-      "description": "a city in the UK",
+      "description": "a city",
       "isSelf": false
     },
     {
       "name": "Rob",
       "type": "person",
       "aliases": [],
-      "description": "an acquaintance or friend of the user",
+      "description": "the user's acquaintance who called today",
       "isSelf": false
     },
     {
@@ -66,14 +66,21 @@
       "aliases": [],
       "description": "the user's brother",
       "isSelf": false
+    },
+    {
+      "name": "the new job",
+      "type": "concept",
+      "aliases": [],
+      "description": "Rob's new job",
+      "isSelf": false
     }
   ],
   "facts": [
     {
-      "fact": "Rob has_job \"new job\"",
+      "fact": "Rob loves the new job",
       "status": "active",
       "adHoc": true,
-      "statement": "Rob has a new job.",
+      "statement": "Rob loves the new job.",
       "validFrom": "2024-02-20 (episode)",
       "validTo": null,
       "confidence": 0.9,
@@ -86,14 +93,14 @@
       "statement": "Robert lives in Leeds.",
       "validFrom": "2024-01-15 (episode)",
       "validTo": null,
-      "confidence": 1,
+      "confidence": 0.9,
       "sources": 1
     },
     {
-      "fact": "Robert sibling_of User",
+      "fact": "User sibling_of Robert",
       "status": "active",
-      "adHoc": true,
-      "statement": "Robert is the sibling of the user.",
+      "adHoc": false,
+      "statement": "The user has a brother named Robert.",
       "validFrom": "2024-01-15 (episode)",
       "validTo": null,
       "confidence": 1,

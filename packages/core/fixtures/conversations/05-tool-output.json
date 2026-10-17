@@ -24,7 +24,7 @@
   "recording": {
     "promptVersion": "25f6695a1099",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T17:53:25.575Z",
+    "recordedAt": "2026-10-16T18:32:53.956Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -38,7 +38,14 @@
             "birth_date",
             "is_named",
             "likes",
-            "visited"
+            "visited",
+            "occupation",
+            "sibling_of",
+            "partner_of",
+            "allergic_to",
+            "has_pet",
+            "plays",
+            "learning"
           ]
         },
         "output": {
@@ -58,7 +65,14 @@
             "birth_date",
             "is_named",
             "likes",
-            "visited"
+            "visited",
+            "occupation",
+            "sibling_of",
+            "partner_of",
+            "allergic_to",
+            "has_pet",
+            "plays",
+            "learning"
           ]
         },
         "output": {

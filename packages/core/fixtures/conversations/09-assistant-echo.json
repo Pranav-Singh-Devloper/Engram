@@ -24,7 +24,7 @@
   "recording": {
     "promptVersion": "25f6695a1099",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T17:55:02.023Z",
+    "recordedAt": "2026-10-17T10:32:35.935Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -38,7 +38,14 @@
             "birth_date",
             "is_named",
             "likes",
-            "visited"
+            "visited",
+            "occupation",
+            "sibling_of",
+            "partner_of",
+            "allergic_to",
+            "has_pet",
+            "plays",
+            "learning"
           ]
         },
         "output": {
@@ -67,7 +74,7 @@
                 "kind": "none"
               },
               "isCorrection": false,
-              "confidence": 0.95
+              "confidence": 1
             }
           ]
         }
@@ -84,7 +91,14 @@
             "birth_date",
             "is_named",
             "likes",
-            "visited"
+            "visited",
+            "occupation",
+            "sibling_of",
+            "partner_of",
+            "allergic_to",
+            "has_pet",
+            "plays",
+            "learning"
           ]
         },
         "output": {
@@ -102,7 +116,7 @@
                 "entity": {
                   "name": "Toronto",
                   "type": "place",
-                  "description": "the city where the user lives"
+                  "description": "a city in Canada"
                 }
               },
               "statement": "The user lives in Toronto.",
@@ -119,29 +133,6 @@
         }
       },
       {
-        "method": "disambiguate",
-        "input": {
-          "mention": {
-            "name": "Toronto",
-            "type": "place",
-            "description": "the city where the user lives"
-          },
-          "context": "Got it, you're living in Toronto now. Do you like it there?",
-          "candidates": [
-            {
-              "name": "Toronto",
-              "type": "place",
-              "description": "a city in Canada",
-              "aliases": []
-            }
-          ]
-        },
-        "output": {
-          "choice": 0,
-          "reason": "The mention refers to Toronto, the city in Canada where the user lives."
-        }
-      },
-      {
         "method": "processEpisode",
         "input": {
           "content": "Love it, honestly, even the winters.",
@@ -153,7 +144,14 @@
             "birth_date",
             "is_named",
             "likes",
-            "visited"
+            "visited",
+            "occupation",
+            "sibling_of",
+            "partner_of",
+            "allergic_to",
+            "has_pet",
+            "plays",
+            "learning"
           ]
         },
         "output": {

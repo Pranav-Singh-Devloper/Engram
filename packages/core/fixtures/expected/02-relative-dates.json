@@ -4,7 +4,7 @@
   "summaries": [
     {
       "status": "processed",
-      "importance": 0.8,
+      "importance": 0.7,
       "extracted": 2,
       "createdEntities": 0,
       "dropped": 0,
@@ -21,7 +21,7 @@
     },
     {
       "status": "processed",
-      "importance": 0.6,
+      "importance": 0.5,
       "extracted": 1,
       "createdEntities": 1,
       "dropped": 0,
@@ -50,21 +50,11 @@
       "name": "Kyoto",
       "type": "place",
       "aliases": [],
-      "description": "a city in Japan",
+      "description": "the city in Japan",
       "isSelf": false
     }
   ],
   "facts": [
-    {
-      "fact": "User likes \"cello lessons\"",
-      "status": "active",
-      "adHoc": false,
-      "statement": "The user takes cello lessons.",
-      "validFrom": "2024-03-01 (explicit)",
-      "validTo": null,
-      "confidence": 1,
-      "sources": 1
-    },
     {
       "fact": "User lives_in \"Berlin\"",
       "status": "active",
@@ -76,10 +66,20 @@
       "sources": 1
     },
     {
+      "fact": "User plays \"cello\"",
+      "status": "active",
+      "adHoc": false,
+      "statement": "The user plays the cello.",
+      "validFrom": "2024-03-01 (explicit)",
+      "validTo": null,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
       "fact": "User visited Kyoto",
       "status": "active",
       "adHoc": false,
-      "statement": "The user visited Kyoto.",
+      "statement": "The user visited Kyoto two years ago.",
       "validFrom": "2022-06-10 (explicit)",
       "validTo": null,
       "confidence": 1,

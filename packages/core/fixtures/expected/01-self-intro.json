@@ -49,8 +49,8 @@
       "fact": "User birth_date \"1990-07-04\"",
       "status": "active",
       "adHoc": false,
-      "statement": "The user was born on 1990-07-04.",
-      "validFrom": "1990-07-04 (explicit)",
+      "statement": "The user's birth date is 1990-07-04.",
+      "validFrom": "2024-02-01 (episode)",
       "validTo": null,
       "confidence": 1,
       "sources": 1
@@ -78,8 +78,8 @@
     {
       "fact": "User occupation \"data engineer\"",
       "status": "active",
-      "adHoc": true,
-      "statement": "The user works as a data engineer.",
+      "adHoc": false,
+      "statement": "The user's occupation is data engineer.",
       "validFrom": "2024-02-01 (episode)",
       "validTo": null,
       "confidence": 1,

@@ -81,7 +81,7 @@
       "statement": "The user lives in Toronto.",
       "validFrom": "2024-08-01 (episode)",
       "validTo": null,
-      "confidence": 0.95,
+      "confidence": 1,
       "sources": 1
     },
     {

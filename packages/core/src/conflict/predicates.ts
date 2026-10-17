@@ -54,6 +54,64 @@ export const PREDICATES: readonly PredicateSpec[] = [
     synonyms: [],
     description: 'a place someone has been to',
   },
+  // Added in P05 from the ad-hoc predicates the dev runs produced (34% ad hoc,
+  // SPEC §18). Synonyms are the spellings the model actually used.
+  {
+    name: 'occupation',
+    cardinality: 'one',
+    mutability: 'dynamic',
+    synonyms: ['has_occupation', 'job_title', 'profession', 'works_as', 'job', 'role', 'has_job'],
+    description: "someone's job or profession, as a literal",
+  },
+  {
+    name: 'sibling_of',
+    cardinality: 'many',
+    mutability: 'static',
+    synonyms: ['sister_of', 'brother_of', 'has_sister', 'has_brother', 'sibling', 'has_sibling'],
+    description: 'a sibling relationship between two people',
+  },
+  {
+    name: 'partner_of',
+    cardinality: 'one',
+    mutability: 'dynamic',
+    synonyms: [
+      'has_partner',
+      'partner',
+      'in_relationship_with',
+      'dating',
+      'married_to',
+      'spouse_of',
+    ],
+    description: "someone's romantic partner or spouse",
+  },
+  {
+    name: 'allergic_to',
+    cardinality: 'many',
+    mutability: 'dynamic',
+    synonyms: ['is_allergic_to', 'has_allergy', 'allergy'],
+    description: 'something someone is allergic to',
+  },
+  {
+    name: 'has_pet',
+    cardinality: 'many',
+    mutability: 'dynamic',
+    synonyms: ['pet', 'owns_pet', 'has_dog', 'has_cat'],
+    description: 'an animal someone keeps as a pet',
+  },
+  {
+    name: 'plays',
+    cardinality: 'many',
+    mutability: 'dynamic',
+    synonyms: ['plays_instrument', 'plays_the'],
+    description: 'an instrument or sport someone plays',
+  },
+  {
+    name: 'learning',
+    cardinality: 'many',
+    mutability: 'dynamic',
+    synonyms: ['is_learning', 'studying', 'studies', 'learning_language'],
+    description: 'something someone is learning, such as a language',
+  },
 ];
 
 const BY_NAME = new Map(PREDICATES.map((p) => [p.name, p]));

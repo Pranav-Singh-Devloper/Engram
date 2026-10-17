@@ -4,9 +4,9 @@
   "summaries": [
     {
       "status": "processed",
-      "importance": 0.6,
+      "importance": 0.8,
       "extracted": 3,
-      "createdEntities": 1,
+      "createdEntities": 2,
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
@@ -64,33 +64,30 @@
       "isSelf": true
     },
     {
-      "name": "Sam",
-      "type": "person",
+      "name": "Lyon",
+      "type": "place",
       "aliases": [],
-      "description": "the user's brother, a chef",
+      "description": "a city",
       "isSelf": false
     },
     {
       "name": "Sam",
       "type": "person",
       "aliases": [],
-      "description": "the user's manager at work",
+      "description": "the user's brother, a chef in Lyon",
+      "isSelf": false
+    },
+    {
+      "name": "Sam",
+      "type": "person",
+      "aliases": [],
+      "description": "the user's manager from work",
       "isSelf": false
     }
   ],
   "facts": [
     {
-      "fact": "Sam [the user's brother, a chef] cooked_dinner_for User",
-      "status": "active",
-      "adHoc": true,
-      "statement": "Sam cooked a birthday dinner for the user.",
-      "validFrom": "2024-07-02 (explicit)",
-      "validTo": null,
-      "confidence": 1,
-      "sources": 1
-    },
-    {
-      "fact": "Sam [the user's brother, a chef] lives_in \"Lyon\"",
+      "fact": "Sam [the user's brother, a chef in Lyon] lives_in Lyon",
       "status": "active",
       "adHoc": false,
       "statement": "Sam lives in Lyon.",
@@ -100,33 +97,43 @@
       "sources": 1
     },
     {
-      "fact": "Sam [the user's brother, a chef] profession \"chef\"",
+      "fact": "Sam [the user's brother, a chef in Lyon] occupation \"chef\"",
       "status": "active",
-      "adHoc": true,
-      "statement": "Sam's profession is chef.",
+      "adHoc": false,
+      "statement": "Sam works as a chef.",
       "validFrom": "2024-07-01 (episode)",
       "validTo": null,
       "confidence": 1,
       "sources": 1
     },
     {
-      "fact": "Sam [the user's brother, a chef] sibling_of User",
+      "fact": "Sam [the user's brother, a chef in Lyon] partner_of User",
       "status": "active",
-      "adHoc": true,
-      "statement": "Sam is the sibling of the user.",
-      "validFrom": "2024-07-01 (episode)",
+      "adHoc": false,
+      "statement": "Sam cooked a birthday dinner for the user.",
+      "validFrom": "2024-07-02 (explicit)",
       "validTo": null,
-      "confidence": 1,
+      "confidence": 0.7,
       "sources": 1
     },
     {
-      "fact": "Sam [the user's manager at work] manager_of User",
+      "fact": "Sam [the user's manager from work] manager_of User",
       "status": "active",
       "adHoc": true,
-      "statement": "Sam is the manager of The user.",
+      "statement": "Sam is the user's manager at work.",
       "validFrom": "2024-07-02 (episode)",
       "validTo": null,
-      "confidence": 0.95,
+      "confidence": 1,
+      "sources": 1
+    },
+    {
+      "fact": "User sibling_of Sam [the user's brother, a chef in Lyon]",
+      "status": "active",
+      "adHoc": false,
+      "statement": "The user has a brother named Sam who is a chef in Lyon.",
+      "validFrom": "2024-07-01 (episode)",
+      "validTo": null,
+      "confidence": 1,
       "sources": 1
     }
   ]

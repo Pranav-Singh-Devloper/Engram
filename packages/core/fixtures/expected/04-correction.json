@@ -4,7 +4,7 @@
   "summaries": [
     {
       "status": "processed",
-      "importance": 0.8,
+      "importance": 0.5,
       "extracted": 2,
       "createdEntities": 1,
       "dropped": 0,
@@ -21,7 +21,7 @@
     },
     {
       "status": "processed",
-      "importance": 0.6,
+      "importance": 0.5,
       "extracted": 1,
       "createdEntities": 1,
       "dropped": 0,
@@ -52,23 +52,23 @@
       "name": "Acme",
       "type": "org",
       "aliases": [],
-      "description": "the organization the user works for",
+      "description": "the user's current employer",
       "isSelf": false
     },
     {
       "name": "Initech",
       "type": "org",
       "aliases": [],
-      "description": "the organization the user works for",
+      "description": "the company the user works for",
       "isSelf": false
     }
   ],
   "facts": [
     {
-      "fact": "User job_title \"product manager\"",
+      "fact": "User occupation \"product manager\"",
       "status": "active",
-      "adHoc": true,
-      "statement": "The user works as a product manager.",
+      "adHoc": false,
+      "statement": "The user's occupation is product manager.",
       "validFrom": "2024-04-01 (episode)",
       "validTo": null,
       "confidence": 1,

@@ -18,7 +18,7 @@
   "recording": {
     "promptVersion": "25f6695a1099",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T17:52:42.646Z",
+    "recordedAt": "2026-10-16T18:32:30.318Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -32,11 +32,18 @@
             "birth_date",
             "is_named",
             "likes",
-            "visited"
+            "visited",
+            "occupation",
+            "sibling_of",
+            "partner_of",
+            "allergic_to",
+            "has_pet",
+            "plays",
+            "learning"
           ]
         },
         "output": {
-          "importance": 0.8,
+          "importance": 0.7,
           "candidates": [
             {
               "subject": {
@@ -68,12 +75,12 @@
                 "type": "person",
                 "description": "the user"
               },
-              "predicate": "likes",
+              "predicate": "plays",
               "object": {
                 "kind": "literal",
-                "value": "cello lessons"
+                "value": "cello"
               },
-              "statement": "The user takes cello lessons.",
+              "statement": "The user plays the cello.",
               "validFrom": {
                 "kind": "named_period",
                 "year": null,
@@ -101,11 +108,18 @@
             "birth_date",
             "is_named",
             "likes",
-            "visited"
+            "visited",
+            "occupation",
+            "sibling_of",
+            "partner_of",
+            "allergic_to",
+            "has_pet",
+            "plays",
+            "learning"
           ]
         },
         "output": {
-          "importance": 0.6,
+          "importance": 0.5,
           "candidates": [
             {
               "subject": {
@@ -119,10 +133,10 @@
                 "entity": {
                   "name": "Kyoto",
                   "type": "place",
-                  "description": "a city in Japan"
+                  "description": "the city in Japan"
                 }
               },
-              "statement": "The user visited Kyoto.",
+              "statement": "The user visited Kyoto two years ago.",
               "validFrom": {
                 "kind": "relative",
                 "amount": 2,

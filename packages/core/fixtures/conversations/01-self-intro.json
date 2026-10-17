@@ -12,7 +12,7 @@
   "recording": {
     "promptVersion": "25f6695a1099",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T17:52:22.808Z",
+    "recordedAt": "2026-10-16T18:32:03.520Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -26,7 +26,14 @@
             "birth_date",
             "is_named",
             "likes",
-            "visited"
+            "visited",
+            "occupation",
+            "sibling_of",
+            "partner_of",
+            "allergic_to",
+            "has_pet",
+            "plays",
+            "learning"
           ]
         },
         "output": {
@@ -36,7 +43,7 @@
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "the user, Priya"
+                "description": "the user"
               },
               "predicate": "is_named",
               "object": {
@@ -57,17 +64,16 @@
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "the user, Priya"
+                "description": "the user"
               },
               "predicate": "birth_date",
               "object": {
                 "kind": "literal",
                 "value": "1990-07-04"
               },
-              "statement": "The user was born on 1990-07-04.",
+              "statement": "The user's birth date is 1990-07-04.",
               "validFrom": {
-                "kind": "absolute",
-                "date": "1990-07-04"
+                "kind": "none"
               },
               "validTo": {
                 "kind": "none"
@@ -79,7 +85,7 @@
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "the user, Priya"
+                "description": "the user"
               },
               "predicate": "lives_in",
               "object": {
@@ -104,18 +110,14 @@
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "the user, Priya"
+                "description": "the user"
               },
-              "predicate": "works_at",
+              "predicate": "occupation",
               "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "Northwind",
-                  "type": "org",
-                  "description": "the organization where the user works"
-                }
+                "kind": "literal",
+                "value": "data engineer"
               },
-              "statement": "The user works at Northwind.",
+              "statement": "The user's occupation is data engineer.",
               "validFrom": {
                 "kind": "none"
               },
@@ -129,14 +131,18 @@
               "subject": {
                 "name": "SELF",
                 "type": "person",
-                "description": "the user, Priya"
+                "description": "the user"
               },
-              "predicate": "occupation",
+              "predicate": "works_at",
               "object": {
-                "kind": "literal",
-                "value": "data engineer"
+                "kind": "entity",
+                "entity": {
+                  "name": "Northwind",
+                  "type": "org",
+                  "description": "the organization where the user works"
+                }
               },
-              "statement": "The user works as a data engineer.",
+              "statement": "The user works at Northwind.",
               "validFrom": {
                 "kind": "none"
               },

@@ -13,13 +13,16 @@ describe('normalizePredicate', () => {
     ['employed_by', 'works_at'],
     ['Job at', 'works_at'],
     ['born_on', 'birth_date'],
+    ['is_allergic_to', 'allergic_to'],
+    ['has_occupation', 'occupation'],
+    ['sister_of', 'sibling_of'],
   ])('maps %s to the registry name %s', (raw, expected) => {
     expect(normalizePredicate(raw)).toEqual({ predicate: expected, adHoc: false });
   });
 
   it('flags predicates outside the registry as ad hoc, in snake_case', () => {
-    expect(normalizePredicate('Is Allergic To')).toEqual({
-      predicate: 'is_allergic_to',
+    expect(normalizePredicate('Collects Stamps From')).toEqual({
+      predicate: 'collects_stamps_from',
       adHoc: true,
     });
   });

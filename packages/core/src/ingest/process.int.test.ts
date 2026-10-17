@@ -161,19 +161,19 @@ describe('processEpisode', () => {
         candidates: [
           candidate({ predicate: 'based_in' }),
           candidate({
-            predicate: 'allergicTo',
-            object: { kind: 'literal', value: 'peanuts' },
-            statement: 'The user is allergic to peanuts.',
+            predicate: 'collectsStamps',
+            object: { kind: 'literal', value: 'vintage stamps' },
+            statement: 'The user collects vintage stamps.',
           }),
         ],
       });
-      const ep = await episode(ns, fake, 'I am based in Berlin and allergic to peanuts.');
+      const ep = await episode(ns, fake, 'I am based in Berlin and collect vintage stamps.');
       await processEpisode(db, fake, ep.id);
       const rows = await facts(db, ns.namespace.id);
       expect(
         rows.map((r) => [r.predicate, r.predicateAdHoc, r.objectName ?? r.objectLiteral]).sort(),
       ).toEqual([
-        ['allergic_to', true, 'peanuts'],
+        ['collects_stamps', true, 'vintage stamps'],
         ['lives_in', false, 'Berlin'],
       ]);
     });
