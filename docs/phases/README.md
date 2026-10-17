@@ -87,7 +87,7 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 8 | Assistant echoes merge, raising confidence only for new episodes | P02 | P03 | done (P03) |
 | 9 | Fixture 04 correction retracts Initech | P02 | P03 | done (P03) |
 | 10 | `engram_remember` returns the processing summary | P02 | P07 | done (P07) |
-| 11 | Tune the merge threshold (0.9) | P03 | P05 → P08 | re-shifted: P05 tuned ranker and floor only; dev/dev-long show no paraphrase misses. Check on dev-long before freezing test |
+| 11 | Tune the merge threshold (0.9) | P03 | P05 → P08 | done (P08, 2026-10-18): on dev-long, no paraphrase splits; the closest *distinct* values (Initech vs Globex) score 0.893, so lowering 0.9 would merge different employers. Kept at 0.9 |
 | 12 | Report the adjudication rate | P03 | P04 → P08 | re-shifted: not in reports yet; add to the report before the test run |
 | 13 | Document that multi-instance deploys need synced clocks | P03 | P10 | open (README limitations) |
 | 14 | Registry gaps (`occupation`, `sibling_of`) | P04 | P05 | done (ad-hoc 34% → 0%) |
