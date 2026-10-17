@@ -7,6 +7,8 @@
 //   pnpm bench:generate --split=dev-long          (dev plus filler sessions)
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { OllamaProvider } from '@engram/core';
+import { z } from 'zod';
 import { loadEnv, makeProviders } from '../runner/providers.js';
 import { FILLER_SESSIONS, fillerPlans, personaStrings, verbalizeFiller } from './filler.js';
 import { buildPersona, rng } from './personas.js';
@@ -16,6 +18,30 @@ import type { DraftItem } from './questions.js';
 import { CATEGORIES, SplitFile } from './schema.js';
 import type { BenchItem, Category, SetupSession } from './schema.js';
 import { VERBALIZER_MODEL, verbalizeSession } from './verbalize.js';
+import type { Verbalizer } from './verbalize.js';
+
+/** Filler sessions per persona in the test split: histories well past the 20-turn buffer (P08). */
+export const TEST_FILLER_SESSIONS = 12;
+
+/**
+ * Filler is small talk with no personal facts, so a local model writes it for
+ * free (P08). Same qwen family as the Groq verbalizer (SPEC §14).
+ */
+function localVerbalizer(
+  embedder: ConstructorParameters<typeof OllamaProvider>[0]['embedder'],
+): Verbalizer {
+  const ollama = new OllamaProvider({ model: process.env.OLLAMA_MODEL || undefined, embedder });
+  return {
+    generate: (r) =>
+      ollama.generate({
+        system: r.system,
+        user: r.user,
+        schema: r.schema,
+        jsonSchema: z.toJSONSchema(r.schema),
+        temperature: r.temperature,
+      }),
+  };
+}
 
 /** Category counts per split (SPEC §13.1 for test; a 40-item mix for dev). */
 export const TARGETS: Record<'dev' | 'test', Record<Category, number>> = {
@@ -150,8 +176,9 @@ async function main(): Promise<void> {
 
   if (split === 'dev-long') return generateLong(out);
 
-  const { verbalizer } = makeProviders();
+  const { verbalizer, gemini } = makeProviders();
   const llm = verbalizer(VERBALIZER_MODEL);
+  const fillerLlm = arg('filler', 'ollama') === 'groq' ? llm : localVerbalizer(gemini);
   const personas = Array.from({ length: count }, (_, i) => buildPersona(i, seed));
 
   const sessions = new Map<string, SetupSession[]>();
@@ -189,6 +216,32 @@ async function main(): Promise<void> {
       notes: draft.notes,
     };
   });
+
+  if (split === 'test') {
+    // Filler merged in by time, as for dev-long, so the modes have to search.
+    for (const p of personas) {
+      const mine = items.filter((i) => i.persona === p.id);
+      if (mine.length === 0) continue;
+      const askedAt = new Date(Math.max(...mine.map((i) => Date.parse(i.asked_at))));
+      const forbid = personaStrings(p);
+      const filler: SetupSession[] = [];
+      for (const plan of fillerPlans(p, seed, askedAt, TEST_FILLER_SESSIONS)) {
+        const turns = await verbalizeFiller(fillerLlm, plan, forbid);
+        filler.push({
+          session_id: plan.sessionId,
+          occurred_at: plan.occurredAt.toISOString(),
+          turns,
+        });
+        console.log(`${plan.sessionId} (${plan.topic}): ${turns.length} turn(s)`);
+      }
+      for (const item of mine) {
+        item.setup_sessions = [
+          ...item.setup_sessions,
+          ...filler.filter((f) => f.occurred_at < item.asked_at),
+        ].sort((a, b) => a.occurred_at.localeCompare(b.occurred_at));
+      }
+    }
+  }
 
   const file = SplitFile.parse({
     split,

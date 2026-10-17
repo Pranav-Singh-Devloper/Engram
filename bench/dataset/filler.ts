@@ -59,9 +59,14 @@ const DAY = 86_400_000;
  * session (so single-session items get noise too) and the rest between later
  * sessions, all before the questions are asked.
  */
-export function fillerPlans(p: Persona, seed: number, askedAt: Date): FillerPlan[] {
+export function fillerPlans(
+  p: Persona,
+  seed: number,
+  askedAt: Date,
+  count = FILLER_SESSIONS,
+): FillerPlan[] {
   const random = rng(seed * 7919 + Number(p.id.slice(1)));
-  const topics = sample(random, TOPICS, FILLER_SESSIONS);
+  const topics = sample(random, TOPICS, count);
   const times = p.sessions.map((s) => s.occurredAt.getTime());
   const first = times[0] ?? askedAt.getTime();
   const gaps: [number, number][] = [[first - 10 * DAY, first - DAY]];
