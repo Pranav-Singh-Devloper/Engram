@@ -16,9 +16,11 @@ The plan for building Engram, one file per phase. [`docs/SPEC.md`](../SPEC.md) i
 | P06b Consolidation + jobs | [P06b-consolidation-jobs.md](P06b-consolidation-jobs.md) | done | P06a | consolidation runs end-to-end on the local DB; the merge test passes |
 | P07 MCP | [P07-mcp.md](P07-mcp.md) | done | P06b | the SDK-client integration test passes; Claude Code can remember and recall |
 | P08 Bench full | [P08-bench-full.md](P08-bench-full.md) | planned | P07 | test and LongMemEval reports exist; the README table shows judge agreement |
+| P08b Local mode | [P08b-local-mode.md](P08b-local-mode.md) | in progress | P08 (runs in its quota waits) | Engram's processing works with no third-party call; dev-long ablation report |
 | P09a Web API | [P09a-web-api.md](P09a-web-api.md) | outline | P07 | route handlers, auth, demo sessions and rate limits are tested |
 | P09b Web UI | [P09b-web-ui.md](P09b-web-ui.md) | outline | P09a | `docs/demo.md` can be followed without improvising |
 | P10 Ship | [P10-ship.md](P10-ship.md) | outline | P08, P09b | three reviewer paths are verified from a fresh clone; the hosted demo is live |
+| P11 Local mode, extended | (outline in P08b) | outline | P10 | compact format, chunked embeddings, local goldens, test/LME local runs, light profile |
 
 Statuses are `outline` → `planned` → `in progress` → `done`. P08 and P09a/b can overlap if bench runs are waiting on quota.
 
@@ -113,4 +115,10 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 34 | Node: MCP Inspector 2.11 requires ≥ 22.19; the repo pins 22 via `.node-version`. Bump to the current 22 LTS and re-check the fresh clone | P07 | P10 | open (P10 DoD) |
 | 35 | Neon's pooled endpoint resets the search path (verified after a compute restart). Vercel uses the direct endpoint, unless traffic needs the pooler and every transaction then sets the path | Neon setup | P09a | open (P09a DoD) |
 | 36 | GitHub secrets for `nightly.yml` (`HOSTED_DATABASE_URL`, Gemini keys) | Neon setup | P08 | done (set 2026-10-17; a dispatched nightly run succeeded on Neon) |
+| 37 | Compact output format for local models; format ablation; whether Gemini adopts it (ADR-016 question) | P08b | P11 | open |
+| 38 | Chunked embeddings for turns over the embedder's input limit (evidence: P08b truncation rate) | P08b | P11 | open |
+| 39 | Local golden fixtures (`expected-local/`, "behavioral snapshots, not ground truth") with CI replay | P08b | P11 | open |
+| 40 | Test-split local run (all modes) and a 10-item LongMemEval local smoke run | P08b | P11 | open |
+| 41 | qwen3.5:4b "light" profile for 8–16 GB machines, measured first | P08b | P11 | open |
+| 42 | OpenAICompatibleProvider for other runtimes (unless the P08b llama.cpp spike adopts it) | P08b | P11 | open |
 
