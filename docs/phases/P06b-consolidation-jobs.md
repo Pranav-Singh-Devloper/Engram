@@ -24,6 +24,12 @@ P06a: decay function, purge. Summary regeneration on purge is completed here.
 - [ ] The demo-cleanup SQL function itself is portable and tested locally.
 - [ ] Purge now regenerates affected summaries instead of deleting them.
 
+## Carried in from P06a
+
+- **The sweep exists:** `engram.engram_decay_sweep(now, …)`, called from TS by `decaySweep()`. pg_cron must pass the same parameters as `config` (generate the schedule SQL from config, don't copy numbers by hand).
+- **The purge deletes summaries** over changed episodes; consolidation should regenerate them. Purged episodes also lose embeddings; re-embed them during consolidation.
+- **Budget:** consolidation is an LLM job (summaries plus re-extraction). Estimate calls against the 500/day free quota before scheduling it nightly.
+
 ## Risks and verify-at-build-time
 - **Verify:** pg_cron availability and syntax on the current Supabase free tier (`cron.schedule`), and the schema pg_cron must be created in.
 - **The keep-alive depends on the nightly workflow running.** GitHub disables schedules after 60 days of repo inactivity. Document re-enabling it in the README (P10).

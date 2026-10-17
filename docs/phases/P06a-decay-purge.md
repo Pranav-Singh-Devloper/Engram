@@ -1,6 +1,6 @@
 # P06a — Decay + purge
 
-**Status:** planned (expanded 2026-10-17)
+**Status:** done (2026-10-17)
 
 ## Goal
 Make forgetting principled and testable. A parameterized SQL decay sweep, driven by a simulated clock in tests, archives low-retention facts under the §9.1 invariant. `forget` offers three modes: archive (reversible), retract (the belief was wrong), and an explicit hard purge that leaves no trace of the information anywhere it was stored.
@@ -63,11 +63,11 @@ packages/core/src/decay/*.test.ts, forget/*.int.test.ts
   - a summary over a purged episode is deleted.
 
 ## Definition of done
-- [ ] `engram_decay_sweep` lives in a portable migration, parameterized from `config` and the registry.
-- [ ] The invariant, crossing times, access decay, exemptions, scope and revision tests pass on a simulated clock.
-- [ ] `forget` archive/restore/retract work through the existing mechanics.
-- [ ] The hard purge follows the §9.3 order in one transaction behind an explicit flag, and the no-trace tests pass.
-- [ ] SPEC §9 updated with the design's choices.
+- [x] `engram_decay_sweep` lives in a portable migration, parameterized from `config` and the registry.
+- [x] The invariant, crossing times, access decay, exemptions, scope and revision tests pass on a simulated clock.
+- [x] `forget` archive/restore/retract work through the existing mechanics.
+- [x] The hard purge follows the §9.3 order in one transaction behind an explicit flag, and the no-trace tests pass.
+- [x] SPEC §9 updated with the design's choices.
 
 ## Planned commits
 1. `feat(decay): add the retention score with its archival invariant`
@@ -83,3 +83,20 @@ packages/core/src/decay/*.test.ts, forget/*.int.test.ts
 - **Float drift** between `real` columns and TS doubles: compare within a tolerance, and compute the score in `double precision` in SQL.
 - **Redaction is coarse:** the whole episode text is replaced, not just the purged span. That's safe (no trace), but it loses the episode's other content; its other facts keep their own statements. Recorded as a limitation.
 - **pg_cron scheduling** is P06b, in `supabase/hosted/`.
+
+## Summary
+
+Done 2026-10-17, with 0 Gemini calls.
+- **Decay:** `engram_decay_sweep(now, …)` is a portable SQL function, parameterized from `config` and the registry. Tests on a simulated clock cover the 0.6 importance invariant, the 41.9/269.6-day crossings, exemptions, access decay, scope, one revision per archive, and agreement with the TS mirror within 1e-5.
+- **Forget:** `forget` archives (with `restore`), retracts, or hard-purges behind `confirmHard`.
+- **No-trace purge test:** a full-text search for the purged value finds nothing in facts, episodes, revision candidates or entities.
+
+Deviations from the plan above:
+- **Span redaction instead of whole-episode redaction** (ADR-011). The no-trace test showed the value surviving in an episode that only *mentioned* it, so the purge now redacts the value's terms wherever they appear, keeping the rest of each turn.
+- **The purge also deletes entities it orphans**, and revision rows whose candidate came from a purged turn.
+- **`NewFact` now carries `accessScore` and `lastAccessedAt`**, which versioning already copied untyped.
+- **Failover now also skips 403-denied keys.** A third account's key replaced the denied one, and it worked live on the first quota exhaustion.
+
+Follow-ups for P06b:
+- Regenerate summaries the purge deleted; schedule the sweep (and demo cleanup) with pg_cron in `supabase/hosted/`.
+- Re-embed episodes the purge changed, or accept full-text-only recall for them.
