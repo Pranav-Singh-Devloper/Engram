@@ -10,9 +10,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "25f6695a1099",
+    "promptVersion": "f761398a5e6f",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T18:32:03.520Z",
+    "recordedAt": "2026-10-17T18:36:39.786Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -71,7 +71,7 @@
                 "kind": "literal",
                 "value": "1990-07-04"
               },
-              "statement": "The user's birth date is 1990-07-04.",
+              "statement": "The user was born on 1990-07-04.",
               "validFrom": {
                 "kind": "none"
               },
@@ -93,7 +93,7 @@
                 "entity": {
                   "name": "Lisbon",
                   "type": "place",
-                  "description": "the city where the user lives"
+                  "description": "a city"
                 }
               },
               "statement": "The user lives in Lisbon.",
@@ -117,7 +117,7 @@
                 "kind": "literal",
                 "value": "data engineer"
               },
-              "statement": "The user's occupation is data engineer.",
+              "statement": "The user works as a data engineer.",
               "validFrom": {
                 "kind": "none"
               },
@@ -139,7 +139,7 @@
                 "entity": {
                   "name": "Northwind",
                   "type": "org",
-                  "description": "the organization where the user works"
+                  "description": "an organization"
                 }
               },
               "statement": "The user works at Northwind.",

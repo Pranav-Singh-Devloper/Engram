@@ -16,9 +16,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "25f6695a1099",
+    "promptVersion": "f761398a5e6f",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T18:33:15.648Z",
+    "recordedAt": "2026-10-17T18:40:35.448Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -47,20 +47,20 @@
           "candidates": [
             {
               "subject": {
-                "name": "SELF",
+                "name": "Robert",
                 "type": "person",
-                "description": "the user"
+                "description": "the user's brother"
               },
               "predicate": "sibling_of",
               "object": {
                 "kind": "entity",
                 "entity": {
-                  "name": "Robert",
+                  "name": "SELF",
                   "type": "person",
-                  "description": "the user's brother"
+                  "description": "the user"
                 }
               },
-              "statement": "The user has a brother named Robert.",
+              "statement": "Robert is the brother of The user.",
               "validFrom": {
                 "kind": "none"
               },
@@ -69,31 +69,6 @@
               },
               "isCorrection": false,
               "confidence": 1
-            },
-            {
-              "subject": {
-                "name": "Robert",
-                "type": "person",
-                "description": "the user's brother"
-              },
-              "predicate": "lives_in",
-              "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "Leeds",
-                  "type": "place",
-                  "description": "a city"
-                }
-              },
-              "statement": "Robert lives in Leeds.",
-              "validFrom": {
-                "kind": "none"
-              },
-              "validTo": {
-                "kind": "none"
-              },
-              "isCorrection": false,
-              "confidence": 0.9
             }
           ]
         }
@@ -127,18 +102,18 @@
               "subject": {
                 "name": "Rob",
                 "type": "person",
-                "description": "the user's acquaintance who called today"
+                "description": "the user's acquaintance"
               },
               "predicate": "loves",
               "object": {
                 "kind": "entity",
                 "entity": {
-                  "name": "the new job",
+                  "name": "new job",
                   "type": "concept",
                   "description": "Rob's new job"
                 }
               },
-              "statement": "Rob loves the new job.",
+              "statement": "Rob is loving the new job.",
               "validFrom": {
                 "kind": "none"
               },

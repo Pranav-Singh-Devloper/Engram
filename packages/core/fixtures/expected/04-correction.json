@@ -4,7 +4,7 @@
   "summaries": [
     {
       "status": "processed",
-      "importance": 0.5,
+      "importance": 0.8,
       "extracted": 2,
       "createdEntities": 1,
       "dropped": 0,
@@ -52,14 +52,14 @@
       "name": "Acme",
       "type": "org",
       "aliases": [],
-      "description": "the user's current employer",
+      "description": "the user's workplace",
       "isSelf": false
     },
     {
       "name": "Initech",
       "type": "org",
       "aliases": [],
-      "description": "the company the user works for",
+      "description": "the organization the user works for",
       "isSelf": false
     }
   ],

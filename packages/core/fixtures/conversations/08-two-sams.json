@@ -22,9 +22,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "25f6695a1099",
+    "promptVersion": "f761398a5e6f",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-17T10:32:29.454Z",
+    "recordedAt": "2026-10-17T18:41:07.455Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -53,20 +53,20 @@
           "candidates": [
             {
               "subject": {
-                "name": "SELF",
+                "name": "Sam",
                 "type": "person",
-                "description": "the user"
+                "description": "the user's brother, a chef"
               },
               "predicate": "sibling_of",
               "object": {
                 "kind": "entity",
                 "entity": {
-                  "name": "Sam",
+                  "name": "SELF",
                   "type": "person",
-                  "description": "the user's brother, a chef in Lyon"
+                  "description": "the user"
                 }
               },
-              "statement": "The user has a brother named Sam who is a chef in Lyon.",
+              "statement": "Sam is the sibling of the user.",
               "validFrom": {
                 "kind": "none"
               },
@@ -80,14 +80,14 @@
               "subject": {
                 "name": "Sam",
                 "type": "person",
-                "description": "the user's brother, a chef in Lyon"
+                "description": "the user's brother, a chef"
               },
               "predicate": "occupation",
               "object": {
                 "kind": "literal",
                 "value": "chef"
               },
-              "statement": "Sam works as a chef.",
+              "statement": "Sam's occupation is chef.",
               "validFrom": {
                 "kind": "none"
               },
@@ -101,7 +101,7 @@
               "subject": {
                 "name": "Sam",
                 "type": "person",
-                "description": "the user's brother, a chef in Lyon"
+                "description": "the user's brother, a chef"
               },
               "predicate": "lives_in",
               "object": {
@@ -148,13 +148,13 @@
           ]
         },
         "output": {
-          "importance": 0.6,
+          "importance": 0.5,
           "candidates": [
             {
               "subject": {
                 "name": "Sam",
                 "type": "person",
-                "description": "the user's manager from work"
+                "description": "the user's manager at work"
               },
               "predicate": "manager_of",
               "object": {
@@ -165,7 +165,7 @@
                   "description": "the user"
                 }
               },
-              "statement": "Sam is the user's manager at work.",
+              "statement": "Sam is the manager of the user.",
               "validFrom": {
                 "kind": "none"
               },
@@ -184,21 +184,21 @@
           "mention": {
             "name": "Sam",
             "type": "person",
-            "description": "the user's manager from work"
+            "description": "the user's manager at work"
           },
           "context": "Sam from work, my manager, gave me a great review today.",
           "candidates": [
             {
               "name": "Sam",
               "type": "person",
-              "description": "the user's brother, a chef in Lyon",
+              "description": "the user's brother, a chef",
               "aliases": []
             }
           ]
         },
         "output": {
           "choice": null,
-          "reason": "The mention refers to the user's manager from work, whereas the candidate is the user's brother and a chef."
+          "reason": "The mention refers to the user's manager at work, whereas the candidate is the user's brother."
         }
       },
       {
@@ -224,15 +224,15 @@
           ]
         },
         "output": {
-          "importance": 0.8,
+          "importance": 0.5,
           "candidates": [
             {
               "subject": {
                 "name": "Sam",
                 "type": "person",
-                "description": "an acquaintance or friend of the user"
+                "description": "someone who cooked dinner for the user's birthday"
               },
-              "predicate": "partner_of",
+              "predicate": "birthday_of",
               "object": {
                 "kind": "entity",
                 "entity": {
@@ -241,7 +241,7 @@
                   "description": "the user"
                 }
               },
-              "statement": "Sam cooked a birthday dinner for the user.",
+              "statement": "Sam cooked dinner for the user's birthday.",
               "validFrom": {
                 "kind": "relative",
                 "amount": 1,
@@ -252,7 +252,7 @@
                 "kind": "none"
               },
               "isCorrection": false,
-              "confidence": 0.7
+              "confidence": 0.9
             }
           ]
         }
@@ -263,27 +263,27 @@
           "mention": {
             "name": "Sam",
             "type": "person",
-            "description": "an acquaintance or friend of the user"
+            "description": "someone who cooked dinner for the user's birthday"
           },
           "context": "Sam cooked an amazing dinner for my birthday last night.",
           "candidates": [
             {
               "name": "Sam",
               "type": "person",
-              "description": "the user's brother, a chef in Lyon",
+              "description": "the user's brother, a chef",
               "aliases": []
             },
             {
               "name": "Sam",
               "type": "person",
-              "description": "the user's manager from work",
+              "description": "the user's manager at work",
               "aliases": []
             }
           ]
         },
         "output": {
           "choice": 0,
-          "reason": "Candidate c1 is a chef who cooks, matching the context of cooking a dinner."
+          "reason": "Sam is a chef and cooked dinner for the user's birthday, matching candidate c1."
         }
       }
     ]

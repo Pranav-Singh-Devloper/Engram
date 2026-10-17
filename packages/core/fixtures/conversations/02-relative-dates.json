@@ -16,9 +16,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "25f6695a1099",
+    "promptVersion": "f761398a5e6f",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T18:32:30.318Z",
+    "recordedAt": "2026-10-17T18:36:44.897Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -43,7 +43,7 @@
           ]
         },
         "output": {
-          "importance": 0.7,
+          "importance": 0.8,
           "candidates": [
             {
               "subject": {
@@ -53,8 +53,12 @@
               },
               "predicate": "lives_in",
               "object": {
-                "kind": "literal",
-                "value": "Berlin"
+                "kind": "entity",
+                "entity": {
+                  "name": "Berlin",
+                  "type": "place",
+                  "description": "a city"
+                }
               },
               "statement": "The user lives in Berlin.",
               "validFrom": {
@@ -77,8 +81,12 @@
               },
               "predicate": "plays",
               "object": {
-                "kind": "literal",
-                "value": "cello"
+                "kind": "entity",
+                "entity": {
+                  "name": "cello",
+                  "type": "thing",
+                  "description": "a musical instrument"
+                }
               },
               "statement": "The user plays the cello.",
               "validFrom": {
@@ -133,15 +141,15 @@
                 "entity": {
                   "name": "Kyoto",
                   "type": "place",
-                  "description": "the city in Japan"
+                  "description": "a city in Japan"
                 }
               },
-              "statement": "The user visited Kyoto two years ago.",
+              "statement": "The user visited Kyoto.",
               "validFrom": {
-                "kind": "relative",
-                "amount": 2,
-                "unit": "year",
-                "direction": "ago"
+                "kind": "named_period",
+                "year": null,
+                "month": null,
+                "season": "summer"
               },
               "validTo": {
                 "kind": "relative",

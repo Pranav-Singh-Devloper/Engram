@@ -4,9 +4,9 @@
   "summaries": [
     {
       "status": "processed",
-      "importance": 0.6,
+      "importance": 0.8,
       "extracted": 7,
-      "createdEntities": 3,
+      "createdEntities": 5,
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
@@ -52,11 +52,25 @@
       "aliases": [],
       "description": "a city in Japan",
       "isSelf": false
+    },
+    {
+      "name": "ramen",
+      "type": "thing",
+      "aliases": [],
+      "description": "a Japanese noodle dish",
+      "isSelf": false
+    },
+    {
+      "name": "sushi",
+      "type": "thing",
+      "aliases": [],
+      "description": "a Japanese dish of prepared vinegared rice",
+      "isSelf": false
     }
   ],
   "facts": [
     {
-      "fact": "Jordan likes \"ramen\"",
+      "fact": "Jordan likes ramen",
       "status": "active",
       "adHoc": false,
       "statement": "Jordan likes ramen.",
@@ -67,26 +81,26 @@
     },
     {
       "fact": "Jordan visited Kyoto",
-      "status": "superseded",
+      "status": "active",
       "adHoc": false,
       "statement": "Jordan visited Kyoto in April 2023.",
       "validFrom": "2023-04-01 (explicit)",
-      "validTo": "2023-05-01",
+      "validTo": null,
       "confidence": 1,
       "sources": 1
     },
     {
       "fact": "Jordan visited Osaka",
-      "status": "superseded",
+      "status": "active",
       "adHoc": false,
       "statement": "Jordan visited Osaka in April 2023.",
       "validFrom": "2023-04-01 (explicit)",
-      "validTo": "2023-05-01",
+      "validTo": null,
       "confidence": 1,
       "sources": 1
     },
     {
-      "fact": "User likes \"sushi\"",
+      "fact": "User likes sushi",
       "status": "active",
       "adHoc": false,
       "statement": "The user likes sushi.",
@@ -107,21 +121,21 @@
     },
     {
       "fact": "User visited Kyoto",
-      "status": "superseded",
+      "status": "active",
       "adHoc": false,
       "statement": "The user visited Kyoto in April 2023.",
       "validFrom": "2023-04-01 (explicit)",
-      "validTo": "2023-05-01",
+      "validTo": null,
       "confidence": 1,
       "sources": 1
     },
     {
       "fact": "User visited Osaka",
-      "status": "superseded",
+      "status": "active",
       "adHoc": false,
       "statement": "The user visited Osaka in April 2023.",
       "validFrom": "2023-04-01 (explicit)",
-      "validTo": "2023-05-01",
+      "validTo": null,
       "confidence": 1,
       "sources": 1
     }

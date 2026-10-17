@@ -4,9 +4,9 @@
   "summaries": [
     {
       "status": "processed",
-      "importance": 0.7,
+      "importance": 0.8,
       "extracted": 2,
-      "createdEntities": 0,
+      "createdEntities": 2,
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
@@ -47,16 +47,30 @@
       "isSelf": true
     },
     {
+      "name": "Berlin",
+      "type": "place",
+      "aliases": [],
+      "description": "a city",
+      "isSelf": false
+    },
+    {
+      "name": "cello",
+      "type": "thing",
+      "aliases": [],
+      "description": "a musical instrument",
+      "isSelf": false
+    },
+    {
       "name": "Kyoto",
       "type": "place",
       "aliases": [],
-      "description": "the city in Japan",
+      "description": "a city in Japan",
       "isSelf": false
     }
   ],
   "facts": [
     {
-      "fact": "User lives_in \"Berlin\"",
+      "fact": "User lives_in Berlin",
       "status": "active",
       "adHoc": false,
       "statement": "The user lives in Berlin.",
@@ -66,7 +80,7 @@
       "sources": 1
     },
     {
-      "fact": "User plays \"cello\"",
+      "fact": "User plays cello",
       "status": "active",
       "adHoc": false,
       "statement": "The user plays the cello.",
@@ -79,8 +93,8 @@
       "fact": "User visited Kyoto",
       "status": "active",
       "adHoc": false,
-      "statement": "The user visited Kyoto two years ago.",
-      "validFrom": "2022-06-10 (explicit)",
+      "statement": "The user visited Kyoto.",
+      "validFrom": "2024-06-01 (explicit)",
       "validTo": null,
       "confidence": 1,
       "sources": 1

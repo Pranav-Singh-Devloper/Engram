@@ -16,9 +16,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "25f6695a1099",
+    "promptVersion": "f761398a5e6f",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T18:32:43.135Z",
+    "recordedAt": "2026-10-17T18:36:51.028Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -43,7 +43,7 @@
           ]
         },
         "output": {
-          "importance": 0.5,
+          "importance": 0.8,
           "candidates": [
             {
               "subject": {
@@ -57,7 +57,7 @@
                 "entity": {
                   "name": "Initech",
                   "type": "org",
-                  "description": "the company the user works for"
+                  "description": "the organization the user works for"
                 }
               },
               "statement": "The user works at Initech.",
@@ -131,7 +131,7 @@
                 "entity": {
                   "name": "Acme",
                   "type": "org",
-                  "description": "the user's current employer"
+                  "description": "the user's workplace"
                 }
               },
               "statement": "The user works at Acme.",

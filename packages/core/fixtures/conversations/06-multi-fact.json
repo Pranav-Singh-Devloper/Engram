@@ -10,9 +10,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "25f6695a1099",
+    "promptVersion": "f761398a5e6f",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-16T18:33:01.025Z",
+    "recordedAt": "2026-10-17T18:40:31.722Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -37,7 +37,7 @@
           ]
         },
         "output": {
-          "importance": 0.6,
+          "importance": 0.8,
           "candidates": [
             {
               "subject": {
@@ -87,10 +87,7 @@
                 "season": null
               },
               "validTo": {
-                "kind": "named_period",
-                "year": 2023,
-                "month": 4,
-                "season": null
+                "kind": "none"
               },
               "isCorrection": false,
               "confidence": 1
@@ -118,10 +115,7 @@
                 "season": null
               },
               "validTo": {
-                "kind": "named_period",
-                "year": 2023,
-                "month": 4,
-                "season": null
+                "kind": "none"
               },
               "isCorrection": false,
               "confidence": 1
@@ -149,10 +143,7 @@
                 "season": null
               },
               "validTo": {
-                "kind": "named_period",
-                "year": 2023,
-                "month": 4,
-                "season": null
+                "kind": "none"
               },
               "isCorrection": false,
               "confidence": 1
@@ -180,10 +171,7 @@
                 "season": null
               },
               "validTo": {
-                "kind": "named_period",
-                "year": 2023,
-                "month": 4,
-                "season": null
+                "kind": "none"
               },
               "isCorrection": false,
               "confidence": 1
@@ -196,8 +184,12 @@
               },
               "predicate": "likes",
               "object": {
-                "kind": "literal",
-                "value": "ramen"
+                "kind": "entity",
+                "entity": {
+                  "name": "ramen",
+                  "type": "thing",
+                  "description": "a Japanese noodle dish"
+                }
               },
               "statement": "Jordan likes ramen.",
               "validFrom": {
@@ -217,8 +209,12 @@
               },
               "predicate": "likes",
               "object": {
-                "kind": "literal",
-                "value": "sushi"
+                "kind": "entity",
+                "entity": {
+                  "name": "sushi",
+                  "type": "thing",
+                  "description": "a Japanese dish of prepared vinegared rice"
+                }
               },
               "statement": "The user likes sushi.",
               "validFrom": {

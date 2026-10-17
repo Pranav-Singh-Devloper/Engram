@@ -69,7 +69,7 @@
       "name": "Toronto",
       "type": "place",
       "aliases": [],
-      "description": "a city in Canada",
+      "description": "a city where the user is based",
       "isSelf": false
     }
   ],
@@ -81,7 +81,7 @@
       "statement": "The user lives in Toronto.",
       "validFrom": "2024-08-01 (episode)",
       "validTo": null,
-      "confidence": 1,
+      "confidence": 0.9,
       "sources": 1
     },
     {

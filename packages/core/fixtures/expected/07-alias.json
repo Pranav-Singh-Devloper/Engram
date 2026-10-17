@@ -5,12 +5,12 @@
     {
       "status": "processed",
       "importance": 0.6,
-      "extracted": 2,
-      "createdEntities": 2,
+      "extracted": 1,
+      "createdEntities": 1,
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
-        "inserted": 2,
+        "inserted": 1,
         "merged": 0,
         "updated": 0,
         "backfilled": 0,
@@ -47,17 +47,17 @@
       "isSelf": true
     },
     {
-      "name": "Leeds",
-      "type": "place",
+      "name": "new job",
+      "type": "concept",
       "aliases": [],
-      "description": "a city",
+      "description": "Rob's new job",
       "isSelf": false
     },
     {
       "name": "Rob",
       "type": "person",
       "aliases": [],
-      "description": "the user's acquaintance who called today",
+      "description": "the user's acquaintance",
       "isSelf": false
     },
     {
@@ -66,32 +66,15 @@
       "aliases": [],
       "description": "the user's brother",
       "isSelf": false
-    },
-    {
-      "name": "the new job",
-      "type": "concept",
-      "aliases": [],
-      "description": "Rob's new job",
-      "isSelf": false
     }
   ],
   "facts": [
     {
-      "fact": "Rob loves the new job",
+      "fact": "Rob loves new job",
       "status": "active",
       "adHoc": true,
-      "statement": "Rob loves the new job.",
+      "statement": "Rob is loving the new job.",
       "validFrom": "2024-02-20 (episode)",
-      "validTo": null,
-      "confidence": 0.9,
-      "sources": 1
-    },
-    {
-      "fact": "Robert lives_in Leeds",
-      "status": "active",
-      "adHoc": false,
-      "statement": "Robert lives in Leeds.",
-      "validFrom": "2024-01-15 (episode)",
       "validTo": null,
       "confidence": 0.9,
       "sources": 1
@@ -100,7 +83,7 @@
       "fact": "User sibling_of Robert",
       "status": "active",
       "adHoc": false,
-      "statement": "The user has a brother named Robert.",
+      "statement": "Robert is the brother of The user.",
       "validFrom": "2024-01-15 (episode)",
       "validTo": null,
       "confidence": 1,
