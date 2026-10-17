@@ -2,6 +2,7 @@
 // talk with no personal facts, interleaved with the persona's fact sessions so
 // histories outgrow the buffer window and retrieval has to search. Registry-
 // blind like the rest of the dataset code.
+import { ProviderOutputError } from '@engram/core';
 import { z } from 'zod';
 import type { Persona } from './personas.js';
 import { rng, sample } from './personas.js';
@@ -139,19 +140,28 @@ export async function verbalizeFiller(
   llm: Verbalizer,
   plan: FillerPlan,
   forbid: readonly string[],
-  attempts = 3,
+  attempts = 5,
 ): Promise<string[]> {
   let feedback = '';
   for (let i = 0; i < attempts; i++) {
-    const { turns } = await llm.generate({
-      system: SYSTEM,
-      user: [`Topic: ${plan.topic}`, `Never mention: ${forbid.join(', ')}`, feedback]
-        .filter(Boolean)
-        .join('\n\n'),
-      schema: Turns,
-      schemaName: 'filler_turns',
-      temperature: 0.7,
-    });
+    let turns: string[];
+    try {
+      ({ turns } = await llm.generate({
+        system: SYSTEM,
+        user: [`Topic: ${plan.topic}`, `Never mention: ${forbid.join(', ')}`, feedback]
+          .filter(Boolean)
+          .join('\n\n'),
+        schema: Turns,
+        schemaName: 'filler_turns',
+        temperature: 0.7,
+      }));
+    } catch (err) {
+      // A malformed reply (a small local model off the schema) is one more problem to fix.
+      if (!(err instanceof ProviderOutputError)) throw err;
+      feedback =
+        'Your previous reply was not valid. Reply with exactly {"turns": ["...", "...", "..."]}.';
+      continue;
+    }
     const problems = checkFiller(turns, forbid);
     if (problems.length === 0) return turns;
     feedback = `Your previous attempt had problems: ${problems.join('; ')}. Remove them.`;
