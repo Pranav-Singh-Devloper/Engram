@@ -433,18 +433,21 @@ For a default-importance fact (0.5) that is never accessed, the score crosses θ
 
 ### 9.2 Sweep rules
 
-- Any non-archived fact with `score < θ_archive` → `tier = 'archived'`, except:
+- Only current beliefs are scored (`invalidated_at is null`); replaced versions never are. Closed history rows are current beliefs and decay like any other.
+- `access_score` decays by `exp(−Δt / τ_tier)`, where Δt is the time since the previous sweep that covered the namespace, recorded in `engram.decay_sweeps` (which also answers stats' "last sweep").
+- Any non-archived current belief with `score < θ_archive` → `tier = 'archived'`, except:
   - pinned facts;
-  - facts with static predicates;
+  - facts with static predicates (from the registry: `birth_date`, `is_named`, `sibling_of`);
   - current-belief facts whose subject is the `is_self` entity and whose predicate is `is_named`.
-- Each archive logs a `fact_revisions` row with `kind = 'archive'`, `resolver = 'decay'`.
+- Each archive logs a `fact_revisions` row with `kind = 'archive'`, `resolver = 'decay'`, stamped with the sweep's `now`.
 - Decay never moves facts between `working` and `long_term`. Archived facts are excluded from default retrieval and restored to `working` on an `include_archived` hit or manually.
 - Weights, τ values, and thresholds live in `packages/core/src/config` (source of truth) and are passed as arguments to the SQL function. The dev split is the regression harness for tuning them.
 
 ### 9.3 `forget` modes
 
-- **`archive`** (default) — reversible.
-- **`retract`** — the belief was wrong. Sets `invalidated_at`.
+- **`archive`** (default) — reversible: `restore` returns the fact to `working`. Both log a `manual` revision.
+- **`retract`** — the belief was wrong. Sets `invalidated_at` (status `retracted`) and logs a `retraction` revision.
+- `forget` targets a fact id, or an entity's current beliefs (optionally for one predicate).
 - **`hard`** — irreversible purge; requires an explicit flag. It cascades to every place the information lives:
   1. the fact rows and all their versions (`revises` chain);
   2. `fact_revisions` rows referencing them, including `candidate` payloads;
@@ -455,10 +458,13 @@ For a default-importance fact (0.5) that is never accessed, the score crosses θ
   The purge runs in one transaction, in this order, because facts reference each other (`revises`, `superseded_by`) and `fact_revisions` references facts:
   1. compute the purge set: the target facts plus their whole `revises` chain in both directions;
   2. null out `superseded_by` and `revises` on rows *outside* the purge set that point into it;
-  3. delete `fact_revisions` rows whose `old_fact_id` or `new_fact_id` is in the set;
+  3. delete `fact_revisions` rows whose `old_fact_id` or `new_fact_id` is in the set, and any whose candidate came from a purged turn;
   4. delete the fact rows (their embeddings go with them);
-  5. delete or redact the source episodes;
-  6. regenerate or delete the summaries that summarize purged episodes.
+  5. episodes: a source episode that backs no remaining fact is deleted. In every other episode of the namespace, mentions of the purged value's *terms* are redacted in place, so the rest of the turn survives; a source episode where the value was only implied is redacted whole. Changed episodes lose their embeddings. The terms are the purged literals no remaining fact uses, plus the names and aliases of entities the purge leaves without facts.
+  6. delete the summaries over any changed or deleted episode (consolidation regenerates them, P06b);
+  7. delete the entities the purge left without facts (never the self entity).
+
+  Values still known elsewhere (an entity other facts use) are not redacted: the purge removes *this* information, not every mention of a shared name.
 
   A purge test asserts that a full-text search for the purged literal returns nothing afterwards.
 
