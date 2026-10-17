@@ -28,7 +28,10 @@
     "bench:lme": "pnpm --filter @engram/bench bench:lme",
     "bench:label": "pnpm --filter @engram/bench bench:label",
     "bench:agreement": "pnpm --filter @engram/bench bench:agreement",
-    "db:reembed": "pnpm --filter @engram/scripts reembed"
+    "db:reembed": "pnpm --filter @engram/scripts reembed",
+    "local:setup": "pnpm --filter @engram/scripts local:setup",
+    "local:doctor": "pnpm --filter @engram/scripts local:doctor",
+    "bench:calibrate": "pnpm --filter @engram/bench bench:calibrate"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

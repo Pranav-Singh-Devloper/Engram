@@ -12,7 +12,8 @@
     "bench:inspect": "tsx runner/inspect.ts",
     "bench:lme": "tsx longmemeval/prepare.ts",
     "bench:label": "tsx runner/label-cli.ts",
-    "bench:agreement": "tsx runner/label-cli.ts agreement"
+    "bench:agreement": "tsx runner/label-cli.ts agreement",
+    "bench:calibrate": "tsx calibration/calibrate.ts"
   },
   "dependencies": {
     "@engram/core": "workspace:*",
