@@ -94,3 +94,7 @@ export { crossingDays, decayedAccess, retentionScore, tauDays } from './decay/sc
 export type { RetentionInput } from './decay/score.js';
 export { STATIC_PREDICATES, decaySweep, lastSweep } from './decay/sweep.js';
 export type { SweepOptions } from './decay/sweep.js';
+export { ForgetError, forget, restore } from './forget/forget.js';
+export type { ForgetMode, ForgetOptions, ForgetResult, ForgetTarget } from './forget/forget.js';
+export { REDACTED, purgeFacts } from './forget/purge.js';
+export type { PurgeReport } from './forget/purge.js';
