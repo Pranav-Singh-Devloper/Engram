@@ -75,3 +75,21 @@ describe('nightly workflow', () => {
     for (const step of rest) expect(step).toContain("if: env.HOSTED_DATABASE_URL != ''");
   });
 });
+
+describe('bench workflow', () => {
+  const workflow = readFileSync(
+    path.resolve(import.meta.dirname, '../.github/workflows/bench.yml'),
+    'utf8',
+  );
+
+  it('is manual only, so it never spends quota unattended', () => {
+    expect(workflow).toContain('workflow_dispatch:');
+    expect(workflow).not.toMatch(/^\s*schedule:/m);
+    expect(workflow).not.toMatch(/^\s*(push|pull_request):/m);
+  });
+
+  it('runs against its own database, never the hosted one', () => {
+    expect(workflow).toContain('DATABASE_URL: postgres://engram:engram@localhost:54329/engram');
+    expect(workflow).not.toContain('HOSTED_DATABASE_URL');
+  });
+});

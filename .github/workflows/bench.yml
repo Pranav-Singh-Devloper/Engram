@@ -1,0 +1,106 @@
+name: bench
+
+# Full bench runs (SPEC §13.7): manual only, never scheduled, so nothing
+# spends free quota unattended. The response cache travels between runs as a
+# GitHub cache entry, so a run that stops on quota resumes the next day.
+# Runs use their own pgvector service, never the hosted database.
+on:
+  workflow_dispatch:
+    inputs:
+      split:
+        type: choice
+        options: [test, dev, dev-long, longmemeval]
+        default: test
+      memory:
+        description: Modes, comma-separated, or "all"
+        type: string
+        default: all
+      extraction:
+        type: choice
+        options: [session, packed, turn]
+        default: session
+      run:
+        description: Run id (reuse one to resume)
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bench
+  cancel-in-progress: false
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    services:
+      db:
+        # Keep this tag in sync with docker-compose.yml.
+        image: pgvector/pgvector:0.8.7-pg17
+        env:
+          POSTGRES_USER: engram
+          POSTGRES_PASSWORD: engram
+          POSTGRES_DB: engram
+        ports:
+          - 54329:5432
+        options: >-
+          --health-cmd "pg_isready -U engram -d engram"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+
+    env:
+      DATABASE_URL: postgres://engram:engram@localhost:54329/engram
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_API_KEY_FALLBACK: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+      GEMINI_CHAT_MODEL: ${{ vars.GEMINI_CHAT_MODEL || 'gemini-3.5-flash-lite' }}
+      GEMINI_EMBED_MODEL: ${{ vars.GEMINI_EMBED_MODEL || 'gemini-embedding-2' }}
+      JUDGE_PROVIDER: groq
+      JUDGE_API_KEY: ${{ secrets.JUDGE_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v7
+      # Reads the pnpm version from package.json#packageManager.
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:migrate
+
+      - name: Restore the response cache
+        uses: actions/cache@v6
+        with:
+          path: bench/cache
+          key: bench-cache-${{ inputs.run }}-${{ github.run_id }}
+          restore-keys: |
+            bench-cache-${{ inputs.run }}-
+            bench-cache-
+
+      - name: Fetch LongMemEval-S (MIT)
+        if: inputs.split == 'longmemeval'
+        run: |
+          mkdir -p bench/longmemeval/data
+          curl -sSL --fail -o bench/longmemeval/data/longmemeval_s_cleaned.json \
+            https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_s_cleaned.json
+          pnpm bench:lme
+
+      - name: Run the bench
+        # Without a judge key, only exact/contains judges run.
+        run: >-
+          pnpm bench --split=${{ inputs.split }} --memory=${{ inputs.memory }}
+          --extraction=${{ inputs.extraction }} --run=${{ inputs.run }}
+          ${{ secrets.JUDGE_API_KEY == '' && '--no-llm-judge' || '' }}
+
+      - name: Upload the report and results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: bench-${{ inputs.run }}
+          path: |
+            bench/reports/${{ inputs.run }}.*
+            bench/runs/${{ inputs.run }}/
