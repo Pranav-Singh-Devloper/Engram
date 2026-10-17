@@ -10,7 +10,9 @@
     "test": "vitest run",
     "lint": "eslint .",
     "bench:inspect": "tsx runner/inspect.ts",
-    "bench:lme": "tsx longmemeval/prepare.ts"
+    "bench:lme": "tsx longmemeval/prepare.ts",
+    "bench:label": "tsx runner/label-cli.ts",
+    "bench:agreement": "tsx runner/label-cli.ts agreement"
   },
   "dependencies": {
     "@engram/core": "workspace:*",

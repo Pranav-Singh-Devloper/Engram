@@ -1,0 +1,121 @@
+// Judge validity (SPEC §13.4, P08 decision 5): a human labels a stratified
+// sample of llm-judged answers, without seeing the judge's verdict, and we
+// report how often the judge agrees, with Cohen's κ.
+import { rng } from '../dataset/personas.js';
+import type { ItemResult } from './run.js';
+
+export interface LabelRow {
+  n: number;
+  itemId: string;
+  mode: string;
+  category: string;
+  question: string;
+  expected: string;
+  answer: string;
+  /** The judge's verdict: kept out of the sheet the human sees. */
+  judgeCorrect: boolean;
+}
+
+/** About `size` llm-judged results, round-robin across categories and modes, seeded. */
+export function sampleForLabels(
+  results: readonly ItemResult[],
+  size: number,
+  seed: number,
+): LabelRow[] {
+  const pool = results.filter((r) => r.verdict.judge === 'llm');
+  const groups = new Map<string, ItemResult[]>();
+  for (const r of [...pool].sort(
+    (a, b) => a.itemId.localeCompare(b.itemId) || a.mode.localeCompare(b.mode),
+  )) {
+    const key = `${r.category}/${r.mode}`;
+    groups.set(key, [...(groups.get(key) ?? []), r]);
+  }
+  const random = rng(seed);
+  for (const list of groups.values()) {
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [list[i], list[j]] = [list[j] as ItemResult, list[i] as ItemResult];
+    }
+  }
+  const keys = [...groups.keys()].sort();
+  const picked: ItemResult[] = [];
+  while (picked.length < size && keys.some((k) => (groups.get(k)?.length ?? 0) > 0)) {
+    for (const k of keys) {
+      const next = groups.get(k)?.shift();
+      if (next && picked.length < size) picked.push(next);
+    }
+  }
+  return picked.map((r, i) => ({
+    n: i + 1,
+    itemId: r.itemId,
+    mode: r.mode,
+    category: r.category,
+    question: r.question,
+    expected: r.expected,
+    answer: r.answer.answer,
+    judgeCorrect: r.verdict.correct,
+  }));
+}
+
+const cell = (s: string) => s.replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim();
+
+/** The sheet a human fills in: no verdicts, one blank label column. */
+export function renderLabelSheet(rows: readonly LabelRow[], runId: string): string {
+  return [
+    `# Label sheet — run ${runId}`,
+    '',
+    'For each row, decide whether **answer** is correct given the question and the **expected** answer, as a careful grader would: same meaning counts, extra correct detail is fine, a wrong or missing key fact is incorrect. Put `c` (correct) or `i` (incorrect) in the last column. The judge’s verdicts are hidden until you are done.',
+    '',
+    '| # | category | question | expected | answer | label (c/i) |',
+    '|---|---|---|---|---|---|',
+    ...rows.map(
+      (r) =>
+        `| ${r.n} | ${r.category} | ${cell(r.question)} | ${cell(r.expected)} | ${cell(r.answer)} |  |`,
+    ),
+    '',
+  ].join('\n');
+}
+
+/** Reads the human labels back: row number → correct? Unlabelled rows are absent. */
+export function parseLabels(sheet: string): Map<number, boolean> {
+  const labels = new Map<number, boolean>();
+  for (const line of sheet.split('\n')) {
+    const m = /^\|\s*(\d+)\s*\|.*\|\s*([ciCI])\s*\|\s*$/.exec(line);
+    if (m) labels.set(Number(m[1]), m[2]?.toLowerCase() === 'c');
+  }
+  return labels;
+}
+
+export interface Agreement {
+  n: number;
+  agreement: number;
+  kappa: number;
+  /** Judge said correct, human said incorrect; and the reverse. */
+  judgeTooLenient: number;
+  judgeTooStrict: number;
+}
+
+/** Agreement and Cohen's κ between judge and human on the labelled rows. */
+export function agreement(
+  rows: readonly LabelRow[],
+  labels: ReadonlyMap<number, boolean>,
+): Agreement {
+  const pairs = rows.flatMap((r) => {
+    const human = labels.get(r.n);
+    return human === undefined ? [] : [{ judge: r.judgeCorrect, human }];
+  });
+  const n = pairs.length;
+  if (n === 0) return { n: 0, agreement: 0, kappa: 0, judgeTooLenient: 0, judgeTooStrict: 0 };
+  const agree = pairs.filter((p) => p.judge === p.human).length;
+  const po = agree / n;
+  const pJudge = pairs.filter((p) => p.judge).length / n;
+  const pHuman = pairs.filter((p) => p.human).length / n;
+  const pe = pJudge * pHuman + (1 - pJudge) * (1 - pHuman);
+  return {
+    n,
+    agreement: po,
+    kappa: pe === 1 ? 1 : (po - pe) / (1 - pe),
+    judgeTooLenient: pairs.filter((p) => p.judge && !p.human).length,
+    judgeTooStrict: pairs.filter((p) => !p.judge && p.human).length,
+  };
+}
