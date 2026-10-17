@@ -22,7 +22,9 @@ import {
   ComposeInput,
   DisambiguateInput,
   ProcessEpisodeInput,
+  SummarizeInput,
 } from './contracts.js';
+import { SUMMARIZE_SYSTEM, WireSummarize, summarizeUser } from '../consolidate/prompt.js';
 import type { EmbedPurpose, MethodInput, MethodOutput, StructuredMethod } from './contracts.js';
 import { aliasIds } from './aliases.js';
 import { DEFAULT_RETRY, defaultHttpDeps, postJson } from './http.js';
@@ -39,6 +41,7 @@ const PROCESS_EPISODE_JSON_SCHEMA = jsonSchemaFor(WireProcessEpisode);
 const DISAMBIGUATE_JSON_SCHEMA = jsonSchemaFor(WireDisambiguate);
 const ADJUDICATE_JSON_SCHEMA = jsonSchemaFor(WireAdjudicate);
 const COMPOSE_JSON_SCHEMA = jsonSchemaFor(WireCompose);
+const SUMMARIZE_JSON_SCHEMA = jsonSchemaFor(WireSummarize);
 
 /** batchEmbedContents accepts at most 100 requests per call. */
 const EMBED_BATCH = 100;
@@ -239,7 +242,31 @@ export class GeminiProvider implements Provider {
     });
     return normalizeCompose({ ...out, usedMemoryIds: out.usedMemoryIds.map(ids.resolve) }, parsed);
   };
-  summarize = () => this.notYet('summarize', 'P06b');
+  summarize = async (input: MethodInput<'summarize'>) => {
+    const parsed = SummarizeInput.parse(input);
+    const turns = aliasIds(
+      parsed.episodes.map((e) => e.id),
+      't',
+    );
+    const out = await this.generate({
+      system: SUMMARIZE_SYSTEM,
+      user: summarizeUser({
+        ...parsed,
+        episodes: parsed.episodes.map((e) => ({ ...e, id: turns.label(e.id) })),
+      }),
+      schema: WireSummarize,
+      jsonSchema: SUMMARIZE_JSON_SCHEMA,
+    });
+    // Cited labels map back to episode ids; a candidate citing no real turn has no provenance.
+    const known = new Set(parsed.episodes.map((e) => e.id));
+    const candidates = out.candidates
+      .map((c) => ({
+        ...c,
+        sourceEpisodeIds: c.sourceEpisodeIds.map(turns.resolve).filter((id) => known.has(id)),
+      }))
+      .filter((c) => c.sourceEpisodeIds.length > 0);
+    return { summary: out.summary, candidates };
+  };
   /** The bench judge runs on a different model family (GroqProvider). */
   judge = () => this.notYet('judge', 'GroqProvider');
 }

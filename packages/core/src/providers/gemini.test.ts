@@ -479,3 +479,54 @@ describe('key fallback', () => {
     expect(k.used).toEqual(['main', 'spare']);
   });
 });
+
+describe('GeminiProvider.summarize', () => {
+  const none = {
+    kind: 'none',
+    date: null,
+    amount: null,
+    unit: null,
+    direction: null,
+    year: null,
+    month: null,
+    season: null,
+  };
+  const wire = (turns: string[]) => ({
+    subject: { name: 'SELF', type: 'person', description: null },
+    predicate: 'lives_in',
+    objectKind: 'entity',
+    objectName: 'Osaka',
+    objectType: 'place',
+    objectDescription: null,
+    statement: 'The user lives in Osaka.',
+    validFrom: none,
+    validTo: none,
+    isCorrection: false,
+    confidence: 0.9,
+    turns,
+  });
+  const reply = (body: unknown) =>
+    json({ candidates: [{ content: { parts: [{ text: JSON.stringify(body) }] } }] });
+  const episodes = ['ep-a', 'ep-b'].map((id, i) => ({
+    id,
+    role: 'user' as const,
+    content: `turn ${i}`,
+    occurredAt: new Date('2024-06-18T09:00:00Z'),
+  }));
+
+  it('labels turns t1… in the prompt and maps cited labels back to episode ids', async () => {
+    const { provider, requests } = setup(() =>
+      reply({
+        summary: 'The user moved to Osaka.',
+        candidates: [wire(['t2']), wire(['t9']), wire(['t1', 't9'])],
+      }),
+    );
+    const out = await provider.summarize({ episodes, predicates: ['lives_in'] });
+    expect(out.summary).toBe('The user moved to Osaka.');
+    // An invented label is dropped; a candidate citing only invented labels is dropped.
+    expect(out.candidates.map((c) => c.sourceEpisodeIds)).toEqual([['ep-b'], ['ep-a']]);
+    const sent = JSON.stringify(requests[0]?.body);
+    expect(sent).toContain('[t1]');
+    expect(sent).not.toContain('ep-a');
+  });
+});

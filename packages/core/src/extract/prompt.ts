@@ -37,7 +37,7 @@ function toHint(w: z.infer<typeof WireHint>): unknown {
  * are reported through `ctx` rather than thrown: zod lets a throw escape
  * `safeParse`, which would skip the structured-output repair round.
  */
-function refineInto<T>(contract: z.ZodType<T>, value: unknown, ctx: z.RefinementCtx): T {
+export function refineInto<T>(contract: z.ZodType<T>, value: unknown, ctx: z.RefinementCtx): T {
   const result = contract.safeParse(value);
   if (result.success) return result.data;
   for (const issue of result.error.issues) {
@@ -52,7 +52,7 @@ const WireEntity = z.object({
   description: z.string().nullable(),
 });
 
-const WireCandidate = z.object({
+export const WireCandidate = z.object({
   subject: WireEntity,
   predicate: z.string(),
   objectKind: z.enum(['entity', 'literal']),
@@ -66,7 +66,7 @@ const WireCandidate = z.object({
   confidence: z.number().min(0).max(1),
 });
 
-function toCandidate(w: z.infer<typeof WireCandidate>): unknown {
+export function toCandidate(w: z.infer<typeof WireCandidate>): unknown {
   return {
     subject: w.subject,
     predicate: w.predicate,

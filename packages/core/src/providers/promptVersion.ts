@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { ADJUDICATE_SYSTEM, WireAdjudicate, adjudicateUser } from '../conflict/prompt.js';
+import { SUMMARIZE_SYSTEM, WireSummarize, summarizeUser } from '../consolidate/prompt.js';
 import {
   DISAMBIGUATE_SYSTEM,
   PROCESS_EPISODE_SYSTEM,
@@ -53,5 +54,15 @@ export const PROMPT_VERSION = version(
       isCorrection: false,
     },
     existing: [{ id: 'a', statement: 's', validFrom: sampleDate, validTo: null, confidence: 0.5 }],
+  }),
+);
+
+/** The consolidation prompt's own version, so its fixtures don't invalidate extraction's. */
+export const CONSOLIDATION_PROMPT_VERSION = version(
+  SUMMARIZE_SYSTEM,
+  JSON.stringify(jsonSchemaFor(WireSummarize)),
+  summarizeUser({
+    episodes: [{ id: 't1', role: 'user', content: 'sample', occurredAt: sampleDate }],
+    predicates: ['lives_in'],
   }),
 );

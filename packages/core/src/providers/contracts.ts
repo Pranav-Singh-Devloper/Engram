@@ -132,10 +132,17 @@ export const SummarizeInput = z.object({
       }),
     )
     .min(1),
+  /** Registry predicate names, as for extraction. */
+  predicates: z.array(z.string()),
 });
+/** A consolidation candidate cites the turns that support it: its provenance. */
+export const ConsolidatedCandidate = FactCandidate.extend({
+  sourceEpisodeIds: z.array(z.string()).min(1),
+});
+export type ConsolidatedCandidate = z.infer<typeof ConsolidatedCandidate>;
 export const SummarizeOutput = z.object({
   summary: z.string().min(1),
-  candidates: z.array(FactCandidate),
+  candidates: z.array(ConsolidatedCandidate),
 });
 
 export const ComposeInput = z.object({
