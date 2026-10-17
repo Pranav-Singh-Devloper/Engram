@@ -25,12 +25,10 @@ export const TEST_FILLER_SESSIONS = 12;
 
 /**
  * Filler is small talk with no personal facts, so a local model writes it for
- * free (P08). Same qwen family as the Groq verbalizer (SPEC §14).
+ * free (P08). Same qwen family as the Groq verbalizer (SPEC §14). It goes
+ * through the bench's response cache, so an interrupted run resumes.
  */
-function localVerbalizer(
-  embedder: ConstructorParameters<typeof OllamaProvider>[0]['embedder'],
-): Verbalizer {
-  const ollama = new OllamaProvider({ model: process.env.OLLAMA_MODEL || undefined, embedder });
+function localVerbalizer(ollama: OllamaProvider): Verbalizer {
   return {
     generate: (r) =>
       ollama.generate({
@@ -176,9 +174,10 @@ async function main(): Promise<void> {
 
   if (split === 'dev-long') return generateLong(out);
 
-  const { verbalizer, gemini } = makeProviders();
+  const { verbalizer, system } = makeProviders({ system: 'ollama' });
   const llm = verbalizer(VERBALIZER_MODEL);
-  const fillerLlm = arg('filler', 'ollama') === 'groq' ? llm : localVerbalizer(gemini);
+  const fillerLlm =
+    arg('filler', 'ollama') === 'groq' ? llm : localVerbalizer(system as OllamaProvider);
   const personas = Array.from({ length: count }, (_, i) => buildPersona(i, seed));
 
   const sessions = new Map<string, SetupSession[]>();
