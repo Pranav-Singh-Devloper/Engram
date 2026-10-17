@@ -71,6 +71,11 @@ export const config = {
     /** Access term is min(1, ln(1 + access_score) / ln(1 + accessSaturation)). */
     accessSaturation: 20,
   },
+  schedules: {
+    /** pg_cron schedules on the hosted database (UTC), generated into supabase/hosted/. */
+    decaySweep: '15 3 * * *',
+    demoCleanup: '5 * * * *',
+  },
 } as const;
 
 export type EngramConfig = typeof config;

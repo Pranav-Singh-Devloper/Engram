@@ -22,7 +22,9 @@
     "demo:offline": "pnpm --filter @engram/scripts demo:offline",
     "bench": "pnpm --filter @engram/bench bench",
     "bench:generate": "pnpm --filter @engram/bench bench:generate",
-    "bench:inspect": "pnpm --filter @engram/bench bench:inspect"
+    "bench:inspect": "pnpm --filter @engram/bench bench:inspect",
+    "db:hosted-cron": "pnpm --filter @engram/scripts hosted-cron",
+    "jobs:consolidate": "pnpm --filter @engram/scripts consolidate"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

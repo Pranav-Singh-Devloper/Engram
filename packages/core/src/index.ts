@@ -105,3 +105,4 @@ export { consolidate } from './consolidate/consolidate.js';
 export type { ConsolidateOptions, ConsolidateSummary } from './consolidate/consolidate.js';
 export { resolveCandidates } from './ingest/candidates.js';
 export type { CandidateBatch, CandidateSource } from './ingest/candidates.js';
+export { CRON_SCHEDULES_FILE, cronSchedulesSql } from './jobs/schedules.js';

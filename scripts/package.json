@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "gemini:check": "tsx gemini-check.ts",
     "fixtures:record": "tsx record-fixtures.ts",
-    "demo:offline": "tsx demo-offline.ts"
+    "demo:offline": "tsx demo-offline.ts",
+    "consolidate": "tsx consolidate.ts",
+    "hosted-cron": "tsx hosted-cron.ts"
   },
   "devDependencies": {
     "tsx": "^4.23.15"

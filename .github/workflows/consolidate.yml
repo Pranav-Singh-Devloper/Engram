@@ -1,0 +1,56 @@
+name: consolidate
+
+# Nightly consolidation on the hosted database (SPEC §6.4, §8). It also keeps
+# the free Supabase project from pausing for inactivity (SPEC §14). Decay and
+# demo cleanup run inside the database through pg_cron instead.
+on:
+  schedule:
+    # 09:17 UTC is just after Gemini's daily quota resets at midnight Pacific
+    # (in both PST and PDT), so a run starts on a fresh quota.
+    - cron: '17 9 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: consolidate
+  cancel-in-progress: false
+
+jobs:
+  consolidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      # The session pooler or a direct connection, not the transaction pooler.
+      HOSTED_DATABASE_URL: ${{ secrets.HOSTED_DATABASE_URL }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_API_KEY_FALLBACK: ${{ secrets.GEMINI_API_KEY_FALLBACK }}
+      GEMINI_CHAT_MODEL: ${{ vars.GEMINI_CHAT_MODEL || 'gemini-3.5-flash-lite' }}
+      GEMINI_EMBED_MODEL: ${{ vars.GEMINI_EMBED_MODEL || 'gemini-embedding-2' }}
+
+    # Forks and fresh clones have no hosted database: every step below skips.
+    steps:
+      - name: Skip without a hosted database
+        if: env.HOSTED_DATABASE_URL == ''
+        run: echo "HOSTED_DATABASE_URL is not set; nothing to consolidate."
+
+      - uses: actions/checkout@v7
+        if: env.HOSTED_DATABASE_URL != ''
+
+      # Reads the pnpm version from package.json#packageManager.
+      - uses: pnpm/action-setup@v6
+        if: env.HOSTED_DATABASE_URL != ''
+
+      - uses: actions/setup-node@v7
+        if: env.HOSTED_DATABASE_URL != ''
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+        if: env.HOSTED_DATABASE_URL != ''
+
+      - run: pnpm jobs:consolidate --hosted
+        if: env.HOSTED_DATABASE_URL != ''

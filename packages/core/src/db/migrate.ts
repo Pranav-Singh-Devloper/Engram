@@ -24,6 +24,15 @@ export const HOSTED: MigrationSource = {
   prefix: 'hosted',
 };
 
+/**
+ * A Flyway-style repeatable file (`R__*.sql`): re-applied whenever its content
+ * changes, after the numbered files (lexical order puts it last). Its SQL must
+ * be idempotent. Generated files, such as the pg_cron schedules, use it.
+ */
+export function isRepeatable(name: string): boolean {
+  return path.basename(name).startsWith('R__');
+}
+
 export interface Migration {
   name: string;
   sql: string;
@@ -94,7 +103,7 @@ export async function migrate(sql: Sql, options: MigrateOptions): Promise<string
   }
   for (const m of migrations) {
     const recorded = applied.get(m.name);
-    if (recorded !== undefined && recorded !== m.checksum) {
+    if (recorded !== undefined && recorded !== m.checksum && !isRepeatable(m.name)) {
       throw new Error(
         `Applied migration ${m.name} has changed on disk. Add a new migration instead of editing it.`,
       );
@@ -103,17 +112,18 @@ export async function migrate(sql: Sql, options: MigrateOptions): Promise<string
 
   const done: string[] = [];
   for (const m of migrations) {
-    if (applied.has(m.name)) continue;
+    if (applied.get(m.name) === m.checksum) continue;
     const ran = await sql.begin(async (tx) => {
       await tx.unsafe(`select pg_advisory_xact_lock(${LOCK})`);
       // Another runner may have applied it while we waited for the lock.
       const [existing] = await tx<{ checksum: string }[]>`
         select checksum from ${tx(schema)}.schema_migrations where filename = ${m.name}`;
-      if (existing) return false;
+      if (existing?.checksum === m.checksum) return false;
       await tx.unsafe(m.sql);
       await tx`
         insert into ${tx(schema)}.schema_migrations (filename, checksum)
-        values (${m.name}, ${m.checksum})`;
+        values (${m.name}, ${m.checksum})
+        on conflict (filename) do update set checksum = excluded.checksum, applied_at = now()`;
       return true;
     });
     if (ran) {

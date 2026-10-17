@@ -85,6 +85,28 @@ describe('migrate', () => {
     expect(await tables()).toEqual(['a']);
   });
 
+  it('re-applies a repeatable file when it changes, and only then', async () => {
+    const src = await source('hosted', {
+      '0001_a.sql': `create table ${schema}.a (id int);`,
+      'R__view.sql': `create or replace view ${schema}.v as select 1 as one;`,
+    });
+    expect(await migrate(sql, { sources: [src], trackingSchema: schema })).toEqual([
+      'hosted/0001_a.sql',
+      'hosted/R__view.sql',
+    ]);
+    expect(await migrate(sql, { sources: [src], trackingSchema: schema })).toEqual([]);
+
+    await writeFile(
+      path.join(src.dir, 'R__view.sql'),
+      `create or replace view ${schema}.v as select 1 as one, 2 as two;`,
+    );
+    expect(await migrate(sql, { sources: [src], trackingSchema: schema })).toEqual([
+      'hosted/R__view.sql',
+    ]);
+    const [row] = await sql<{ two: number }[]>`select two from ${sql(schema)}.v`;
+    expect(row?.two).toBe(2);
+  });
+
   it('fails when an applied file is missing on disk', async () => {
     const src = await source('migrations', { '0001_a.sql': `create table ${schema}.a (id int);` });
     await migrate(sql, { sources: [src], trackingSchema: schema });
