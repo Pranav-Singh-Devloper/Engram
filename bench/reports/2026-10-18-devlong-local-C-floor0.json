@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "runId": "2026-10-18-devlong-local-C-floor0",
+  "split": "dev-long",
+  "date": "2026-10-18",
+  "finishedAt": "2026-10-18T02:10:37.201Z",
+  "model": "ollama qwen3.5:9b",
+  "judge": "openai/gpt-oss-120b",
+  "items": 40,
+  "retrievalOnly": true,
+  "modes": {
+    "engram": {
+      "accuracy": 0.1,
+      "n": 40,
+      "recallAt8": 0.972
+    }
+  }
+}
