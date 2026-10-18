@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BenchSummary } from '@engram/core';
-import { renderReport, summarizeRun } from './report.js';
+import { providerCounters, renderReport, summarizeRun } from './report.js';
 import type { ItemResult } from './run.js';
 
 const meta = { runId: 'r', split: 'dev-long', model: 'm', judge: 'j', date: '2026-10-17' };
@@ -37,6 +37,46 @@ describe('renderReport', () => {
     );
     expect(report).toContain('| rrf | 50% (1/2) |');
     expect(report).toContain('| linear | 50% (1/2) |');
+  });
+
+  it('reports the system model reliability counters when the run recorded them', () => {
+    const report = renderReport([result({ answer: {} })], {
+      ...meta,
+      provider: {
+        structuredCalls: 40,
+        repairs: 4,
+        failures: 1,
+        capped: 0,
+        outputTokens: 9000,
+        embedTruncated: 2,
+      },
+    });
+    expect(report).toContain('Needed a repair round: 4 (10%); failed after it: 1 (3%)');
+    expect(report).toContain('Replies cut off by the output cap: 0; output tokens: 9000.');
+    expect(report).toContain('Texts truncated before embedding: 2.');
+    expect(renderReport([result({ answer: {} })], meta)).not.toContain('System model reliability');
+  });
+
+  it('reads counters from whichever provider fields exist', () => {
+    expect(
+      providerCounters(
+        { structuredStats: { calls: 3, repairs: 1, failures: 0 }, capped: 0, outputTokens: 5 },
+        { truncated: 1 },
+      ),
+    ).toEqual({
+      structuredCalls: 3,
+      repairs: 1,
+      failures: 0,
+      capped: 0,
+      outputTokens: 5,
+      embedTruncated: 1,
+    });
+    expect(
+      providerCounters({ structuredStats: { calls: 1, repairs: 0, failures: 0 } }, {}),
+    ).toMatchObject({
+      capped: null,
+      embedTruncated: null,
+    });
   });
 
   it('simulates abstention floors from one floor-0 run', () => {

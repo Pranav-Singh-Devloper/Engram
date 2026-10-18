@@ -5,7 +5,7 @@
 //
 // --offline       replay recorded responses only (no network, no keys); fails on a miss
 // --record-smoke  record the smoke subset's responses into bench/fixtures/smoke-cache
-import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { DEFAULT_DATABASE_URL, createDb } from '@engram/core';
 import { PORTABLE, migrate } from '@engram/core/migrate';
@@ -15,7 +15,8 @@ import { describeEstimate, estimate } from './estimate.js';
 import { ALL_MODES, EXTRACTIONS, MODES } from './modes.js';
 import type { Extraction, Mode } from './modes.js';
 import { BENCH_DIR, DEFAULT_CACHE_DIR, loadEnv, makeProviders } from './providers.js';
-import { renderReport, summarizeRun } from './report.js';
+import { providerCounters, renderReport, summarizeRun } from './report.js';
+import type { ProviderCounters } from './report.js';
 import { QuotaStop, loadResults, resultFiles, runItems } from './run.js';
 
 export const SMOKE_CACHE_DIR = path.join(BENCH_DIR, 'fixtures', 'smoke-cache');
@@ -65,6 +66,7 @@ async function main(): Promise<void> {
   const runId =
     arg('run') ?? `${new Date().toISOString().slice(0, 10)}-${split}${smoke ? '-smoke' : ''}`;
   const runDir = path.join(BENCH_DIR, 'runs', runId);
+  const statsFile = path.join(runDir, 'provider-stats.json');
   const llmJudge = !flag('no-llm-judge') && !offline && !smoke;
   const cacheDir = smoke ? SMOKE_CACHE_DIR : (arg('cache-dir') ?? DEFAULT_CACHE_DIR);
   const reportFile = path.join(BENCH_DIR, 'reports', `${runId}.md`);
@@ -117,6 +119,11 @@ async function main(): Promise<void> {
       process.exitCode = 2;
     } finally {
       await db.end();
+      mkdirSync(runDir, { recursive: true });
+      writeFileSync(
+        statsFile,
+        `${JSON.stringify(providerCounters(providers.system, providers.systemEmbedder), null, 2)}\n`,
+      );
     }
   }
 
@@ -132,6 +139,9 @@ async function main(): Promise<void> {
     judge: llmJudge ? process.env.JUDGE_MODEL || 'openai/gpt-oss-120b' : 'exact/contains only',
     // The run's own date when its id carries one, so --report-only keeps it.
     date: /^\d{4}-\d{2}-\d{2}/.exec(runId)?.[0] ?? new Date().toISOString().slice(0, 10),
+    ...(existsSync(statsFile) && {
+      provider: JSON.parse(readFileSync(statsFile, 'utf8')) as ProviderCounters,
+    }),
   };
   const report = renderReport(results, meta);
   if (!smoke) {

@@ -20,6 +20,37 @@ export interface ReportMeta {
   model: string;
   judge: string;
   date: string;
+  /** The system model's reliability counters from the run's last invocation (provider-stats.json). */
+  provider?: ProviderCounters;
+}
+
+/** Structured-output and length counters of the system provider (P08b). */
+export interface ProviderCounters {
+  structuredCalls: number;
+  repairs: number;
+  failures: number;
+  /** Local models only: replies cut off by the output cap, and tokens generated. */
+  capped: number | null;
+  outputTokens: number | null;
+  /** Texts cut to the embedder's input limit before embedding. */
+  embedTruncated: number | null;
+}
+
+/** Reads the counters a provider and its embedder keep, whichever they have. */
+export function providerCounters(system: object, embedder: object): ProviderCounters {
+  const num = (o: object, k: string) => {
+    const v = (o as Record<string, unknown>)[k];
+    return typeof v === 'number' ? v : null;
+  };
+  const stats = (system as { structuredStats?: Record<string, number> }).structuredStats;
+  return {
+    structuredCalls: stats?.calls ?? 0,
+    repairs: stats?.repairs ?? 0,
+    failures: stats?.failures ?? 0,
+    capped: num(system, 'capped'),
+    outputTokens: num(system, 'outputTokens'),
+    embedTruncated: num(embedder, 'truncated'),
+  };
 }
 
 /** The machine-readable side of a report (bench/reports/<run>.json), read by engram://stats. */
@@ -201,6 +232,28 @@ export function renderReport(results: readonly ItemResult[], meta: ReportMeta): 
           sum((r) => r.answer.store?.revisions ?? 0),
         )} of fact revisions were decided by the LLM adjudicator rather than the rules.`,
       );
+    }
+    lines.push('');
+  }
+
+  const c = meta.provider;
+  if (c && c.structuredCalls > 0) {
+    lines.push('## System model reliability', '');
+    lines.push(
+      'Counted over the last invocation, cache replays included, so replaying a run from cache recounts it exactly.',
+      '',
+    );
+    lines.push(`- Structured calls: ${c.structuredCalls}.`);
+    lines.push(
+      `- Needed a repair round: ${c.repairs} (${pct(c.repairs, c.structuredCalls)}); failed after it: ${c.failures} (${pct(c.failures, c.structuredCalls)}). A failed session pack is re-extracted turn by turn; a failed turn adds no facts.`,
+    );
+    if (c.capped !== null) {
+      lines.push(
+        `- Replies cut off by the output cap: ${c.capped}; output tokens: ${c.outputTokens ?? 0}.`,
+      );
+    }
+    if (c.embedTruncated !== null) {
+      lines.push(`- Texts truncated before embedding: ${c.embedTruncated}.`);
     }
     lines.push('');
   }

@@ -29,8 +29,10 @@ const rpm = (name: string, fallback: number) => Number(process.env[name] ?? fall
 
 export interface Providers {
   gemini: GeminiProvider;
-  /** The system model under test: Gemini, or a local Ollama model (embeddings stay Gemini). */
+  /** The system model under test: Gemini, or a local Ollama model (local or Gemini embeddings). */
   system: Provider;
+  /** The system's embedder, for its truncation counter. */
+  systemEmbedder: object;
   judge: GroqProvider;
   verbalizer: (model: string) => GroqProvider;
   meter: UsageMeter;
@@ -85,23 +87,25 @@ export function makeProviders(options: ProviderOptions = {}): Providers {
     chatModel: process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash-lite',
     http,
   });
+  const local = options.system === 'ollama' && options.embeddings !== 'gemini';
+  const systemEmbedder = local
+    ? new OllamaEmbedder({
+        model: process.env.OLLAMA_EMBED_MODEL || DEFAULT_OLLAMA_EMBED_MODEL,
+        http,
+      })
+    : gemini;
   const system: Provider =
     options.system === 'ollama'
       ? new OllamaProvider({
           model: process.env.OLLAMA_MODEL || DEFAULT_OLLAMA_MODEL,
-          embedder:
-            options.embeddings === 'gemini'
-              ? gemini
-              : new OllamaEmbedder({
-                  model: process.env.OLLAMA_EMBED_MODEL || DEFAULT_OLLAMA_EMBED_MODEL,
-                  http,
-                }),
+          embedder: systemEmbedder,
           http,
         })
       : gemini;
   return {
     gemini,
     system,
+    systemEmbedder,
     judge: groq(process.env.JUDGE_MODEL || DEFAULT_JUDGE_MODEL),
     verbalizer: groq,
     meter,
