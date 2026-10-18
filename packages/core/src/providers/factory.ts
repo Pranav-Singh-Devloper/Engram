@@ -3,16 +3,20 @@
 //   gemini (default)  Gemini generation and embeddings (needs GEMINI_API_KEY)
 //   ollama            local generation (OLLAMA_MODEL) and local embeddings
 //                     (OLLAMA_EMBED_MODEL); no API key is read
+//   openai-compatible generation on any /v1/chat/completions server
+//                     (OPENAI_COMPAT_BASE_URL, OPENAI_COMPAT_MODEL): llama.cpp,
+//                     LM Studio, vLLM. Embeddings stay local through Ollama.
 // OLLAMA_EMBEDDINGS=gemini keeps Gemini embeddings under local generation
 // (the bench ablation's row B).
 import { GeminiProvider, geminiKeysFromEnv } from './gemini.js';
 import type { HttpDeps, RetryOptions } from './http.js';
 import { DEFAULT_OLLAMA_MODEL, OLLAMA_BASE_URL, OllamaProvider } from './ollama.js';
 import { DEFAULT_OLLAMA_EMBED_MODEL, OllamaEmbedder } from './ollamaEmbed.js';
+import { OpenAICompatibleProvider } from './openaiCompat.js';
 import type { Provider } from './provider.js';
 import { ProviderError } from './provider.js';
 
-export const PROVIDER_KINDS = ['gemini', 'ollama'] as const;
+export const PROVIDER_KINDS = ['gemini', 'ollama', 'openai-compatible'] as const;
 export type ProviderKind = (typeof PROVIDER_KINDS)[number];
 
 type Env = Record<string, string | undefined>;
@@ -56,15 +60,20 @@ function gemini(env: Env, options: FactoryOptions): GeminiProvider {
   });
 }
 
-export function providerFromEnv(env: Env, options: FactoryOptions = {}): Provider {
-  if (providerKind(env) === 'gemini') return gemini(env, options);
-
-  const baseUrl = env.OLLAMA_BASE_URL?.trim() || OLLAMA_BASE_URL;
-  if (!isLoopbackUrl(baseUrl) && env.OLLAMA_ALLOW_REMOTE !== '1') {
+function requireLoopback(url: string, optIn: string | undefined, name: string, optInName: string) {
+  if (!isLoopbackUrl(url) && optIn !== '1') {
     throw new ProviderError(
-      `OLLAMA_BASE_URL (${baseUrl}) is not a loopback address. Ollama has no authentication; set OLLAMA_ALLOW_REMOTE=1 only for a server you control.`,
+      `${name} (${url}) is not a loopback address, so memory content would leave this machine. Set ${optInName}=1 only for a server you control.`,
     );
   }
+}
+
+export function providerFromEnv(env: Env, options: FactoryOptions = {}): Provider {
+  const kind = providerKind(env);
+  if (kind === 'gemini') return gemini(env, options);
+
+  const baseUrl = env.OLLAMA_BASE_URL?.trim() || OLLAMA_BASE_URL;
+  requireLoopback(baseUrl, env.OLLAMA_ALLOW_REMOTE, 'OLLAMA_BASE_URL', 'OLLAMA_ALLOW_REMOTE');
   const embedder =
     env.OLLAMA_EMBEDDINGS === 'gemini'
       ? gemini(env, options)
@@ -73,6 +82,31 @@ export function providerFromEnv(env: Env, options: FactoryOptions = {}): Provide
           baseUrl,
           http: options.http,
         });
+  if (kind === 'openai-compatible') {
+    const url = env.OPENAI_COMPAT_BASE_URL?.trim();
+    const model = env.OPENAI_COMPAT_MODEL?.trim();
+    if (!url || !model) {
+      throw new ProviderError(
+        'openai-compatible needs OPENAI_COMPAT_BASE_URL and OPENAI_COMPAT_MODEL.',
+      );
+    }
+    requireLoopback(
+      url,
+      env.OPENAI_COMPAT_ALLOW_REMOTE,
+      'OPENAI_COMPAT_BASE_URL',
+      'OPENAI_COMPAT_ALLOW_REMOTE',
+    );
+    return new OpenAICompatibleProvider({
+      baseUrl: url,
+      model,
+      apiKey: env.OPENAI_COMPAT_API_KEY || undefined,
+      embedder,
+      maxTokens: env.OPENAI_COMPAT_MAX_TOKENS ? Number(env.OPENAI_COMPAT_MAX_TOKENS) : undefined,
+      // llama.cpp reads this; other servers ignore unknown fields.
+      extra: { chat_template_kwargs: { enable_thinking: false } },
+      http: options.http,
+    });
+  }
   return new OllamaProvider({
     model: env.OLLAMA_MODEL || DEFAULT_OLLAMA_MODEL,
     baseUrl,

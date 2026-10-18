@@ -38,7 +38,7 @@ async function main(): Promise<void> {
   log(`serving namespace "${slug}"`);
 
   // Local extraction takes seconds a turn: remember returns at once there (P08b).
-  const rememberWaitDefault = providerKind(env) !== 'ollama';
+  const rememberWaitDefault = providerKind(env) === 'gemini';
   serveStdio(() =>
     createEngramServer({ db, provider, namespaceId: namespace.id, log, rememberWaitDefault }),
   );

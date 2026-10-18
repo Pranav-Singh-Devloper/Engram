@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { isLoopbackUrl, providerFromEnv, providerKind } from './factory.js';
 import { GeminiProvider } from './gemini.js';
 import { OllamaProvider } from './ollama.js';
+import { OpenAICompatibleProvider } from './openaiCompat.js';
 
 describe('providerFromEnv', () => {
   it('defaults to Gemini, which needs a key', () => {
@@ -34,6 +35,21 @@ describe('providerFromEnv', () => {
         OLLAMA_ALLOW_REMOTE: '1',
       }),
     ).toBeInstanceOf(OllamaProvider);
+  });
+
+  it('builds an openai-compatible provider for llama.cpp, LM Studio or vLLM', () => {
+    const env = {
+      ENGRAM_PROVIDER: 'openai-compatible',
+      OPENAI_COMPAT_BASE_URL: 'http://127.0.0.1:8091',
+      OPENAI_COMPAT_MODEL: 'qwen3.5-9b',
+    };
+    expect(providerFromEnv(env)).toBeInstanceOf(OpenAICompatibleProvider);
+    expect(() => providerFromEnv({ ENGRAM_PROVIDER: 'openai-compatible' })).toThrow(
+      /OPENAI_COMPAT_BASE_URL/,
+    );
+    expect(() =>
+      providerFromEnv({ ...env, OPENAI_COMPAT_BASE_URL: 'https://api.example.com' }),
+    ).toThrow(/OPENAI_COMPAT_ALLOW_REMOTE/);
   });
 
   it('knows loopback addresses', () => {

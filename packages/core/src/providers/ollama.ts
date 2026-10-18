@@ -34,6 +34,14 @@ export interface OllamaOptions {
    * prompt. Default: try 'format', and switch for good on a 501.
    */
   structured?: 'format' | 'prompt';
+  /**
+   * Overrides the model's sampling defaults for structured calls. qwen3.5
+   * ships presence_penalty 1.5, which fights JSON's repeated keys but also
+   * guards against loops; P08b measures it (decision 5).
+   */
+  presencePenalty?: number;
+  /** Hard cap on reply tokens (num_predict) for every structured call; capped replies are counted. */
+  maxTokens?: number;
   retry?: Partial<RetryOptions>;
   http?: Partial<HttpDeps>;
 }
@@ -165,6 +173,10 @@ export class OllamaProvider extends PromptedProvider {
           temperature,
           seed: this.options.seed ?? 42,
           num_ctx: this.options.numCtx ?? 32_768,
+          ...(this.options.presencePenalty !== undefined && {
+            presence_penalty: this.options.presencePenalty,
+          }),
+          ...(this.options.maxTokens !== undefined && { num_predict: this.options.maxTokens }),
         },
       },
       {
