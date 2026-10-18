@@ -134,6 +134,6 @@ const summary = {
 };
 console.log(JSON.stringify(summary));
 writeFileSync(
-  path.resolve(import.meta.dirname, `transport-${transport}.json`),
+  path.resolve(import.meta.dirname, `transport-${tag}.json`),
   `${JSON.stringify({ summary, rows }, null, 2)}\n`,
 );
