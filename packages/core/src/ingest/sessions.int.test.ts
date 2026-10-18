@@ -4,6 +4,7 @@ import { getEpisode } from '../db/episodes.js';
 import type { NamespaceWithSelf } from '../db/namespaces.js';
 import type { FactCandidate, MethodInput } from '../providers/contracts.js';
 import { FakeProvider } from '../providers/fake.js';
+import { ProviderOutputError } from '../providers/provider.js';
 import { factsAsOf } from '../temporal/asOf.js';
 import { testDb, withTestNamespace } from '../testing/db.js';
 import { aboutSelf, hint } from '../testing/scenario.js';
@@ -189,6 +190,40 @@ describe('processSessions', () => {
       const [input] = fake.callsTo('extractSessions') as MethodInput<'extractSessions'>[];
       expect(input?.turns.some((t) => t.role === 'tool')).toBe(false);
       expect((await getEpisode(db, ids[3] ?? ''))?.processedAt).not.toBeNull();
+    });
+  });
+
+  it('falls back to per-turn extraction when a pack reply fails validation', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const ids = await store(ns, history);
+      const fake = new FakeProvider()
+        .when(
+          'extractSessions',
+          () => true,
+          () => {
+            throw new ProviderOutputError('Reply failed validation after one repair', '{}');
+          },
+        )
+        .when('processEpisode', (i) => i.content === PARIS, {
+          importance: 0.6,
+          candidates: [aboutSelf('lives_in', 'Paris')],
+        })
+        .when(
+          'processEpisode',
+          (i) => i.content === BERLIN,
+          () => {
+            throw new ProviderOutputError('Reply failed validation after one repair', '{}');
+          },
+        )
+        .when('processEpisode', () => true, { importance: 0.3, candidates: [] });
+      const r = await processSessions(db, fake, ids, { recordTime: 'cited' });
+      expect(r).toMatchObject({ fallbacks: 1, failed: 1, extracted: 1, episodes: 3 });
+      expect(await livesIn(ns, {})).toEqual(['The user lives in Paris.']);
+      for (const id of ids) expect((await getEpisode(db, id))?.processedAt).not.toBeNull();
+      // Recorded at the turn's own time, as the pack would have.
+      const [row] = await db<{ recordedAt: Date }[]>`
+        select recorded_at from facts where namespace_id = ${ns.namespace.id}`;
+      expect(row?.recordedAt.toISOString()).toBe('2024-01-15T09:00:00.000Z');
     });
   });
 

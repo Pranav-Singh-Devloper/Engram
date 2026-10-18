@@ -12,11 +12,13 @@ import type { Sql } from '../db/client.js';
 import { markEpisodeProcessed } from '../db/episodes.js';
 import { PREDICATE_NAMES } from '../conflict/predicates.js';
 import { createConflictResolver } from '../conflict/resolver.js';
+import { ProviderOutputError } from '../providers/provider.js';
 import type { Provider } from '../providers/provider.js';
 import type { Episode } from '../types/index.js';
 import { emptyOutcomes, resolveCandidates } from './candidates.js';
 import type { CandidateSource } from './candidates.js';
 import type { CandidateResolver, ResolutionKind } from './resolver.js';
+import { processEpisode } from './process.js';
 
 export interface SessionsOptions {
   clock?: Clock;
@@ -41,6 +43,10 @@ export interface SessionsSummary {
   dropped: number;
   createdEntities: number;
   outcomes: Record<ResolutionKind, number>;
+  /** Packs whose reply failed validation, re-extracted one turn at a time. */
+  fallbacks: number;
+  /** Turns whose per-turn reply also failed: marked processed with no facts (ADR-016). */
+  failed: number;
 }
 
 /** Rough tokens for packing: content plus the per-line label and date. */
@@ -106,6 +112,8 @@ export async function processSessions(
     dropped: 0,
     createdEntities: 0,
     outcomes: emptyOutcomes(),
+    fallbacks: 0,
+    failed: 0,
   };
   if (episodeIds.length === 0) return summary;
 
@@ -134,16 +142,25 @@ export async function processSessions(
     maxSessions: options.maxSessions ?? Number.POSITIVE_INFINITY,
   });
   for (const pack of packs) {
-    const out = await provider.extractSessions({
-      turns: pack.map((e) => ({
-        id: e.id,
-        sessionId: e.sessionId,
-        role: e.role,
-        content: e.content,
-        occurredAt: e.occurredAt,
-      })),
-      predicates: [...PREDICATE_NAMES],
-    });
+    let out;
+    try {
+      out = await provider.extractSessions({
+        turns: pack.map((e) => ({
+          id: e.id,
+          sessionId: e.sessionId,
+          role: e.role,
+          content: e.content,
+          occurredAt: e.occurredAt,
+        })),
+        predicates: [...PREDICATE_NAMES],
+      });
+    } catch (err) {
+      // A bad reply (local models, ~3%) costs one pack's batching, not the import.
+      if (!(err instanceof ProviderOutputError)) throw err;
+      summary.fallbacks++;
+      await perTurn(pack);
+      continue;
+    }
     summary.calls++;
     summary.episodes += pack.length;
     summary.extracted += out.candidates.length;
@@ -194,4 +211,30 @@ export async function processSessions(
     }
   }
   return summary;
+
+  async function perTurn(pack: Episode[]): Promise<void> {
+    for (const e of pack) {
+      const at = recordAt(e);
+      try {
+        const r = await processEpisode(db, provider, e.id, {
+          clock: options.recordTime === 'cited' ? { now: () => at } : clock,
+          resolver,
+          extractFromToolOutput: extractTools,
+        });
+        summary.calls++;
+        summary.episodes++;
+        summary.extracted += r.extracted;
+        summary.dropped += r.dropped;
+        summary.createdEntities += r.createdEntities;
+        for (const [k, n] of Object.entries(r.outcomes) as [ResolutionKind, number][]) {
+          summary.outcomes[k] += n;
+        }
+      } catch (err) {
+        if (!(err instanceof ProviderOutputError)) throw err;
+        summary.failed++;
+        summary.episodes++;
+        await markEpisodeProcessed(db, e.id, { at });
+      }
+    }
+  }
 }
