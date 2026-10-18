@@ -261,3 +261,35 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 - Local structured calls fail validation about 3% of the time after repair. Those turns contribute no facts, and their episodes are still stored and recallable.
 - Runs aren't bit-reproducible (greedy decoding isn't a guarantee); the response cache makes reruns repeatable.
 - The llama.cpp GGUF (5.7 GB) was deleted after the spike.
+
+---
+
+## ADR-017 — Embedding spaces are recorded per namespace, and similarity thresholds come from a per-model profile
+
+**Date:** 2026-10-18 · **Status:** Accepted (P08b)
+
+**Context.** Local mode embeds with embeddinggemma:300m (768-d, like gemini-embedding-2), but cosine scales differ between models: embeddinggemma scores related labels about 0.15 lower. Every similarity cut-off in Engram was tuned on Gemini, so reusing them on another model silently breaks entity resolution, conflict detection, entity search, consolidation and recall. Vectors from two models also can't be compared, so a namespace must never mix them.
+
+**Decision.**
+
+- **Each namespace records its embedding space** as `name@digest12` (`namespaces.embedding_model`, migration 0007; existing vector-bearing namespaces backfilled to `gemini-embedding-2`, null meaning "no vectors yet"). The first write binds it. A different space is refused with `EmbeddingSpaceError` until `pnpm db:reembed --namespace=` converts the namespace. `local:doctor` lists namespaces whose model changed (for example, after `ollama pull` moved a tag).
+- **Thresholds live in `SIMILARITY_PROFILES[model]`** (`packages/core/src/config/profiles.ts`): entity match, description conflict, merge, entity search, drift and recall floor. Every read site takes the namespace's profile. An unknown model fails loudly instead of falling back to Gemini's values.
+- **Profiles are calibrated from a labelled pair set that no embedder influences:** 537 pairs built from the dev personas' code-defined ground truth and dev-long's turns (`bench/calibration/pairs.ts`), never from test. `pnpm bench:calibrate --embedder=gemini|local` reports each family's error rates at a threshold and the lowest threshold with ≤1% false merges (`bench/calibration/<space>.json`). The script suggests a value; this ADR decides it.
+
+embeddinggemma:300m@85462619ee72, at Gemini's thresholds vs the chosen profile:
+
+| family               | Gemini value: false pos / false neg                        | same-class range       | other-class range      | chosen    | why                                                                                                                                                                                                                  |
+| -------------------- | ---------------------------------------------------------- | ---------------------- | ---------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| entity match         | 0.85: 0 / 0.53                                             | 0.789–0.865            | 0.584–0.757            | **0.775** | the gap's middle; 0 false merges, all positives kept                                                                                                                                                                 |
+| description conflict | 0.95: 0 / 1.00                                             | 0.816–0.880            | 0.766–0.847            | **0.848** | above every different-person pair; the 25% of same-person pairs below it go to disambiguation, which is safe                                                                                                         |
+| merge                | 0.90: 0 / 0                                                | 0.950–0.997            | 0.645–0.810            | **0.90**  | already separates; keeps parity with Gemini                                                                                                                                                                          |
+| entity search        | 0.70: 0 / 1.00                                             | 0.435–0.616            | 0.073–0.236            | **0.335** | the gap's middle; Gemini's value found nothing                                                                                                                                                                       |
+| drift                | 0.50: 0.02 / 0.64                                          | p5 0.288               | p50 0.296              | **0.25**  | the classes overlap; splitting too rarely only makes a summary longer, splitting too often fragments sessions                                                                                                        |
+| recall floor         | 0.50: abstains on 20/36 answerable items (dev-long, local) | answerable 0.363–0.710 | abstention 0.289–0.395 | **0.25**  | the classes overlap, as with Gemini (ADR-010): the floor is a safety net under every answerable item and the composer abstains. 0.30 would catch 2/4 abstention items with a 0.063 margin, too thin to carry to test |
+
+**Consequences.**
+
+- Switching embedders is an explicit conversion (`db:reembed`), never a silent mix.
+- Adding an embedding model means running the calibration and adding a profile; the error says so.
+- Gemini's own values are checked on the same pairs once its daily embedding quota allows (a P08b close-out item).
+- Drift has no clean threshold for embeddinggemma. Consolidation splits rarely, and summaries cover more turns.
