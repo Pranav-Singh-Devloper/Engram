@@ -100,12 +100,12 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 19 | Budget 10% above the cache-based call count | P05 | P08 | open (P08 carry-in) |
 | 20 | MCP recall tracks access to everything returned | P05 | P07 | done (P07, tested) |
 | 21 | Chat tracks access via `usedMemoryIds` | P05 | P09a | open (P09a DoD) |
-| 22 | Prompt pass: fixture 08 maps the brother to `partner_of` | P05 | P08 | open (P08 prompt pass, before re-recording) |
+| 22 | Prompt pass: fixture 08 maps the brother to `partner_of` | P05 | P08 | done (P08, 3d84aab: fixtures and smoke cache re-recorded) |
 | 23 | Regenerate purged summaries; re-embed redacted turns | P06a | P06b | done (P06b) |
 | 24 | pg_cron schedules for decay and demo cleanup | P06a | P06b | done (P06b), then replaced by `jobs:maintain` in `nightly.yml` (ADR-014) |
 | 25 | Verify pg_cron on Supabase (`select * from cron.job`) | P06b | P10 | re-shifted: no pg_cron on Neon (ADR-014). P10 instead checks that a `nightly.yml` run sweeps and consolidates on Neon |
 | 26 | `engram_forget` modes and stats' "last sweep" | P06a | P07 | done (P07) |
-| 27 | Prompt pass: summaries say "the user", never he/she | P06b | P08 | open (P08 prompt pass) |
+| 27 | Prompt pass: summaries say "the user", never he/she | P06b | P08 | done (P08, 3d84aab) |
 | 28 | Watch weak inferred facts (`visited`) on test | P06b | P08 | open (P08 carry-in) |
 | 29 | README: re-enable paused scheduled workflows, and Neon's monthly compute/egress limits | P06b | P10 | open (P10 DoD; Supabase pausing no longer applies) |
 | 30 | Smoke cache size (4.2 MB) | P04 | P08 | watch (P08 carry-in) |
@@ -121,5 +121,5 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 40 | Test-split local run (all modes) and a 10-item LongMemEval local smoke run | P08b | P11 | open |
 | 41 | qwen3.5:4b "light" profile for 8–16 GB machines, measured first | P08b | P11 | open |
 | 42 | OpenAICompatibleProvider for other runtimes (unless the P08b llama.cpp spike adopts it) | P08b | P11 → P08b | done (P08b): built for the spike; `ENGRAM_PROVIDER=openai-compatible` (llama.cpp, LM Studio, vLLM) |
-| 43 | Prompt pass: a clause that only places another fact in time isn't a new statement. Add to the candidate rules: "A clause that only places another fact in time isn't a new statement. In \"Before I moved to Lyon, I lived in Rome from 2015 to 2018\", extract lives_in Rome with its dates, not lives_in Lyon: Lyon is a reference point, already known." Evidence: dev-long local 88% → 95% (knowledge update 4/8 → 7/8; reports `2026-10-18-devlong-local-C*`). Lands with rows 22 and 27: re-record the Gemini goldens and smoke cache, rerun dev-long row A for no regression, all before the P08 test run | P08b | P08 | open (P08 prompt pass) |
+| 43 | Prompt pass: a clause that only places another fact in time isn't a new statement. Add to the candidate rules: "A clause that only places another fact in time isn't a new statement. In \"Before I moved to Lyon, I lived in Rome from 2015 to 2018\", extract lives_in Rome with its dates, not lives_in Lyon: Lyon is a reference point, already known." Evidence: dev-long local 88% → 95% (knowledge update 4/8 → 7/8; reports `2026-10-18-devlong-local-C*`). Lands as a second prompt pass (rows 22 and 27 went in 3d84aab): re-record the Gemini goldens and smoke cache, rerun dev-long row A for no regression, all before the P08 test run | P08b | P08 | open (P08 prompt pass) |
 
