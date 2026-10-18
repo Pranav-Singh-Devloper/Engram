@@ -10,7 +10,6 @@
 import { randomUUID } from 'node:crypto';
 import {
   SimClock,
-  config,
   consolidate,
   cosine,
   ensureNamespace,
@@ -18,6 +17,7 @@ import {
   ingestMany,
   processEpisode,
   processSessions,
+  similarityProfile,
   recall,
 } from '@engram/core';
 import type { Provider, RecallOptions, Sql } from '@engram/core';
@@ -345,7 +345,7 @@ async function engram(
       ...answer,
       retrieved: memories.map((m) => m.text),
       bestSimilarity: result.bestSimilarity,
-      floor: deps.recall?.floor ?? config.recall.floor,
+      floor: deps.recall?.floor ?? (await similarityProfile(provider)).recallFloor,
       store: await storeStats(db, namespace.id),
       ...(options.consolidate ? { consolidation } : {}),
     };

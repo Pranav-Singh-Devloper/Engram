@@ -2,6 +2,8 @@ export const ENGRAM_VERSION = '0.0.0';
 
 export { EMBEDDING_DIM, config } from './config/index.js';
 export type { EngramConfig } from './config/index.js';
+export { SIMILARITY_PROFILES, profileForSpace, similarityProfile } from './config/profiles.js';
+export type { SimilarityProfile } from './config/profiles.js';
 export * from './types/index.js';
 
 export {
