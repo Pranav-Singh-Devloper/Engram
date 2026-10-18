@@ -94,6 +94,9 @@ describe('cachingFetch', () => {
     expect(compact({ embeddings: [{ values: [0.123456789, -0.5] }] })).toEqual({
       embeddings: [{ values: [0.123457, -0.5] }],
     });
+    expect(compact({ embeddings: [[0.123456789, -0.5]] })).toEqual({
+      embeddings: [[0.123457, -0.5]],
+    });
     expect(compact({ text: 'x' })).toEqual({ text: 'x' });
   });
 });

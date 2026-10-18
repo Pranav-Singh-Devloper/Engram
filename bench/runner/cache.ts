@@ -48,16 +48,21 @@ export function tokensOf(json: unknown): { promptTokens: number; outputTokens: n
   };
 }
 
-/** Rounds embedding values so entries stay small; vectors are renormalized on read anyway. */
+/**
+ * Rounds embedding values so entries stay small; vectors are renormalized on
+ * read anyway. Gemini replies `embeddings: [{values}]`, Ollama `embeddings: number[][]`.
+ */
 export function compact(json: unknown): unknown {
-  const j = json as { embeddings?: { values?: number[] }[] };
+  const j = json as { embeddings?: unknown[] };
   if (!Array.isArray(j.embeddings)) return json;
+  const round = (xs: number[]) => xs.map((v) => Math.round(v * 1e6) / 1e6);
   return {
     ...j,
-    embeddings: j.embeddings.map((e) => ({
-      ...e,
-      values: e.values?.map((v) => Math.round(v * 1e6) / 1e6),
-    })),
+    embeddings: j.embeddings.map((e) => {
+      if (Array.isArray(e)) return round(e as number[]);
+      const g = e as { values?: number[] };
+      return Array.isArray(g.values) ? { ...g, values: round(g.values) } : e;
+    }),
   };
 }
 
