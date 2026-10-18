@@ -17,7 +17,8 @@ import { applyDecision } from './apply.js';
 import { getPredicate } from './predicates.js';
 import type { PredicateSpec } from './predicates.js';
 import { classify, fromAdjudication } from './rules.js';
-import type { Belief, ResolvedDecision } from './rules.js';
+import { similarityProfile } from '../config/profiles.js';
+import type { Belief, ConflictConfig, ResolvedDecision } from './rules.js';
 
 /** Current beliefs for (subject, predicate), closed history included (§7.2 step 1). */
 export async function currentBeliefs(
@@ -62,10 +63,25 @@ function adjudicationInput(
   };
 }
 
-export function createConflictResolver(provider: Pick<Provider, 'adjudicate'>): CandidateResolver {
+export function createConflictResolver(
+  provider: Pick<Provider, 'adjudicate'> & Partial<Pick<Provider, 'embeddingSpace'>>,
+): CandidateResolver {
+  // The merge threshold depends on the embedder's similarity scale (ADR-017).
+  let rules: Promise<ConflictConfig> | undefined;
+  const rulesConfig = (): Promise<ConflictConfig> => {
+    const space = provider.embeddingSpace?.bind(provider);
+    rules ??= space
+      ? similarityProfile({ embeddingSpace: space }).then((p) => ({
+          ...config.conflict,
+          mergeThreshold: p.merge,
+        }))
+      : Promise.resolve(config.conflict);
+    return rules;
+  };
   return {
     async resolve(db, c, { clock }) {
       const spec = getPredicate(c.predicate);
+      const cfg = await rulesConfig();
       // An adjudication is only valid for the beliefs it was asked about.
       let adjudicated: { fingerprint: string; decision: ResolvedDecision } | undefined;
 
@@ -73,7 +89,7 @@ export function createConflictResolver(provider: Pick<Provider, 'adjudicate'>): 
         const result = await transaction(db, async (tx) => {
           await lockNamespace(tx, c.namespaceId);
           const existing = await currentBeliefs(tx, c);
-          const proposed = classify(c, existing, spec);
+          const proposed = classify(c, existing, spec, cfg);
           // Rule decisions are pure and fast, so they apply under the lock
           // straight away; concurrent writers can't starve them.
           if (proposed.kind !== 'adjudicate') return applyDecision(tx, proposed, c, clock.now());

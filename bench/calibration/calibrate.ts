@@ -34,7 +34,13 @@ export interface FamilyReport {
   /** Ranges, to see the margin between the classes. */
   positiveRange: [number, number];
   negativeRange: [number, number];
+  /** Positives' 5th/10th/50th and negatives' 50th/90th/95th percentiles. */
+  percentiles: { positive: [number, number, number]; negative: [number, number, number] };
 }
+
+/** The q-quantile of sorted values (nearest rank). */
+const pct = (sorted: number[], q: number) =>
+  sorted[Math.min(sorted.length - 1, Math.max(0, Math.ceil(q * sorted.length) - 1))] ?? 0;
 
 /** Pure: given scored pairs, the report for one family. Exported for tests. */
 export function reportFamily(
@@ -71,6 +77,10 @@ export function reportFamily(
     },
     positiveRange: [round(pos[0] ?? 0), round(pos.at(-1) ?? 0)],
     negativeRange: [round(neg[0] ?? 0), round(neg.at(-1) ?? 0)],
+    percentiles: {
+      positive: [round(pct(pos, 0.05)), round(pct(pos, 0.1)), round(pct(pos, 0.5))],
+      negative: [round(pct(neg, 0.5)), round(pct(neg, 0.9)), round(pct(neg, 0.95))],
+    },
   };
 }
 
@@ -125,7 +135,8 @@ async function main(): Promise<void> {
         `${r.suggested.threshold.toFixed(3)} (${r.suggested.falsePositive} / ${r.suggested.positivesKept})`.padEnd(
           25,
         ) +
-        `${r.positiveRange.join('–').padEnd(16)}${r.negativeRange.join('–')}`,
+        `${r.positiveRange.join('–').padEnd(16)}${r.negativeRange.join('–').padEnd(14)}` +
+        `pos p5/p10/p50 ${r.percentiles.positive.join('/')}  neg p50/p90/p95 ${r.percentiles.negative.join('/')}`,
     );
   }
   console.log(`wrote ${path.relative(process.cwd(), file)}`);

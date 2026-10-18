@@ -83,11 +83,14 @@ export function sameObject(c: CandidateView, e: Belief, mergeThreshold: number):
   return e.embedding !== null && cosine(c.embedding, e.embedding) >= mergeThreshold;
 }
 
+/** The conflict settings, widened so the merge threshold can follow the embedder (ADR-017). */
+export type ConflictConfig = { readonly [K in keyof typeof config.conflict]: number };
+
 export function classify(
   c: CandidateView,
   existing: readonly Belief[],
   spec: PredicateSpec | undefined,
-  cfg: typeof config.conflict = config.conflict,
+  cfg: ConflictConfig = config.conflict,
 ): Decision {
   // Ad-hoc predicates are treated as multi-valued and dynamic: unknown
   // relations coexist rather than wrongly superseding each other.

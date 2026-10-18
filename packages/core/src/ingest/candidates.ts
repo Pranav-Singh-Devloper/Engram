@@ -6,6 +6,7 @@ import { lookupPredicate } from '../conflict/predicates.js';
 import { UNKNOWN_START } from '../db/client.js';
 import type { Sql } from '../db/client.js';
 import { bindEmbeddingSpace, getSelfEntity } from '../db/namespaces.js';
+import { similarityProfile } from '../config/profiles.js';
 import { normalizePredicate } from '../extract/normalize.js';
 import { resolveHint } from '../extract/temporal.js';
 import type { EntityRef, FactCandidate } from '../providers/contracts.js';
@@ -122,6 +123,7 @@ export async function resolveCandidates(
   };
   if (sources.length === 0) return result;
   await bindEmbeddingSpace(db, namespaceId, provider);
+  const profile = await similarityProfile(provider);
 
   // One embedding call for the batch: entity labels and statements together.
   const refs = mentions(sources.map((s) => s.raw));
@@ -149,6 +151,7 @@ export async function resolveCandidates(
         namespaceId,
         selfEntity,
         context: source.context,
+        thresholds: profile,
       });
       if (r.created) result.createdEntities++;
       return r.entity;

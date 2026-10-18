@@ -11,6 +11,7 @@ import type { Provider } from '../providers/provider.js';
 import type { FactStatus, EpisodeRole } from '../types/index.js';
 import { trackUse } from './access.js';
 import { aboutUser, minMax, recency, rrf, withPriors } from './fuse.js';
+import { similarityProfile } from '../config/profiles.js';
 import { bindEmbeddingSpace, getSelfEntity } from '../db/namespaces.js';
 import {
   graphNeighbours,
@@ -92,6 +93,7 @@ export async function recall(
     includeArchived: options.includeArchived ?? false,
   };
   await bindEmbeddingSpace(db, options.namespaceId, provider);
+  const profile = await similarityProfile(provider);
   const [query] = await provider.embed([options.query], { purpose: 'query' });
   if (!query) throw new Error('Query embedding failed.');
 
@@ -134,7 +136,7 @@ export async function recall(
   const candidates = [...byKey.values()];
   const similarity = new Map(candidates.map((c) => [c.key, cosine(query, c.embedding)]));
   const bestSimilarity = Math.max(0, ...similarity.values());
-  if (candidates.length === 0 || bestSimilarity < (options.floor ?? cfg.floor)) {
+  if (candidates.length === 0 || bestSimilarity < (options.floor ?? profile.recallFloor)) {
     return { memories: [], abstained: true, bestSimilarity };
   }
 

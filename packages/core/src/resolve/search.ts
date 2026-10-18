@@ -1,10 +1,10 @@
 // Entity search for agents (SPEC §10 `engram_entities`): names and aliases that
 // contain the query, then entities whose label embedding is close to it.
 // Ordering is deterministic: match strength, then similarity, then name.
-import { config } from '../config/index.js';
 import type { Queryable } from '../db/client.js';
 import { findSimilarEntities, parseEntity } from '../db/entities.js';
 import { bindEmbeddingSpace } from '../db/namespaces.js';
+import { similarityProfile } from '../config/profiles.js';
 import type { EntityRow } from '../db/entities.js';
 import { normalizeName } from '../extract/normalize.js';
 import type { Provider } from '../providers/provider.js';
@@ -53,7 +53,7 @@ export async function searchEntities(
         db,
         options.namespaceId,
         query,
-        config.entities.searchMinSimilarity,
+        (await similarityProfile(provider)).entitySearch,
         limit,
       )
     : [];

@@ -8,3 +8,4 @@ docs/
 packages/core/fixtures/
 bench/reports/
 bench/fixtures/
+bench/calibration/*.json

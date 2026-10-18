@@ -8,6 +8,7 @@ import { config } from '../config/index.js';
 import type { Queryable, Sql } from '../db/client.js';
 import { insertEpisode } from '../db/episodes.js';
 import { bindEmbeddingSpace } from '../db/namespaces.js';
+import { similarityProfile } from '../config/profiles.js';
 import { setFactTier } from '../db/facts.js';
 import { toSql } from '../db/vector.js';
 import { PREDICATE_NAMES } from '../conflict/predicates.js';
@@ -86,7 +87,11 @@ export async function consolidate(
 ): Promise<ConsolidateSummary> {
   const clock = options.clock ?? systemClock;
   const resolver = options.resolver ?? createConflictResolver(provider);
-  const cfg: ConsolidationConfig = options.cfg ?? config.consolidation;
+  // Drift is a similarity threshold, so it follows the embedder's profile (ADR-017).
+  const cfg: ConsolidationConfig = options.cfg ?? {
+    ...config.consolidation,
+    driftThreshold: (await similarityProfile(provider)).drift,
+  };
   const result: ConsolidateSummary = {
     clusters: 0,
     summarized: 0,

@@ -33,6 +33,8 @@ export interface ResolveContext {
   selfEntity: Entity;
   /** The episode text, shown to the disambiguator. */
   context: string;
+  /** The embedder's thresholds (ADR-017); Gemini's when omitted. */
+  thresholds?: { entityMatch: number; descriptionConflict: number };
 }
 
 export type ResolvedVia = 'self' | 'exact' | 'alias' | 'embedding' | 'disambiguation' | 'new';
@@ -65,10 +67,15 @@ export function isSelfRef(ref: EntityRef): boolean {
  * ("where I live", later "where I used to live"), and the dev bench showed
  * that drift splitting one city into two entities.
  */
-function conflicts(mention: EntityRef, embedding: readonly number[], entity: Entity): boolean {
+function conflicts(
+  mention: EntityRef,
+  embedding: readonly number[],
+  entity: Entity,
+  threshold: number,
+): boolean {
   if (mention.type !== 'person' && entity.type !== 'person') return false;
   if (!mention.description || !entity.description || !entity.embedding) return false;
-  return cosine(embedding, entity.embedding) < config.entities.descriptionConflictThreshold;
+  return cosine(embedding, entity.embedding) < threshold;
 }
 
 async function plan(
@@ -76,6 +83,7 @@ async function plan(
   namespaceId: string,
   mention: EntityRef,
   embedding: readonly number[],
+  thresholds: { entityMatch: number; descriptionConflict: number },
 ): Promise<Plan> {
   const name = normalizeName(mention.name);
   for (const [via, find] of [
@@ -86,14 +94,14 @@ async function plan(
     const [only] = found;
     if (found.length > 1) return { kind: 'ambiguous', candidates: found };
     if (only) {
-      return conflicts(mention, embedding, only)
+      return conflicts(mention, embedding, only, thresholds.descriptionConflict)
         ? { kind: 'ambiguous', candidates: [only] }
         : { kind: 'match', entity: only, via };
     }
   }
   // Similar labels only count when the names themselves could be variants.
   const similar = (
-    await findSimilarEntities(db, namespaceId, embedding, config.entities.matchThreshold)
+    await findSimilarEntities(db, namespaceId, embedding, thresholds.entityMatch)
   ).filter(
     (e) =>
       namesCompatible(mention.name, e.name) ||
@@ -162,6 +170,10 @@ export async function resolveEntity(
   ctx: ResolveContext,
 ): Promise<EntityResolution> {
   if (isSelfRef(mention)) return { entity: ctx.selfEntity, created: false, via: 'self' };
+  const thresholds = ctx.thresholds ?? {
+    entityMatch: config.entities.matchThreshold,
+    descriptionConflict: config.entities.descriptionConflictThreshold,
+  };
 
   const apply = async (tx: TransactionSql, decision: Decision): Promise<EntityResolution> => {
     if (decision.kind === 'create') {
@@ -189,7 +201,7 @@ export async function resolveEntity(
   for (let attempt = 0; attempt < config.entities.maxResolveAttempts; attempt++) {
     const result = await transaction(db, async (tx) => {
       await lockNamespace(tx, ctx.namespaceId);
-      const now = await plan(tx, ctx.namespaceId, mention, embedding);
+      const now = await plan(tx, ctx.namespaceId, mention, embedding, thresholds);
       let decision: Decision;
       if (now.kind !== 'ambiguous') {
         // No LLM needed: apply under the lock straight away.

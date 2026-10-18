@@ -1,0 +1,178 @@
+{
+  "space": "embeddinggemma:300m@85462619ee72",
+  "generatedAt": "2026-10-18T00:32:31.627Z",
+  "maxFalse": 0.01,
+  "pairs": 537,
+  "families": {
+    "entityMatch": {
+      "positives": 19,
+      "negatives": 87,
+      "current": {
+        "threshold": 0.85,
+        "falsePositive": 0,
+        "falseNegative": 0.526
+      },
+      "suggested": {
+        "threshold": 0.758,
+        "falsePositive": 0,
+        "positivesKept": 1
+      },
+      "positiveRange": [
+        0.789,
+        0.865
+      ],
+      "negativeRange": [
+        0.584,
+        0.757
+      ],
+      "percentiles": {
+        "positive": [
+          0.789,
+          0.81,
+          0.849
+        ],
+        "negative": [
+          0.672,
+          0.713,
+          0.726
+        ]
+      }
+    },
+    "descriptionConflict": {
+      "positives": 16,
+      "negatives": 16,
+      "current": {
+        "threshold": 0.95,
+        "falsePositive": 0,
+        "falseNegative": 1
+      },
+      "suggested": {
+        "threshold": 0.848,
+        "falsePositive": 0,
+        "positivesKept": 0.75
+      },
+      "positiveRange": [
+        0.816,
+        0.88
+      ],
+      "negativeRange": [
+        0.766,
+        0.847
+      ],
+      "percentiles": {
+        "positive": [
+          0.816,
+          0.833,
+          0.86
+        ],
+        "negative": [
+          0.783,
+          0.847,
+          0.847
+        ]
+      }
+    },
+    "merge": {
+      "positives": 32,
+      "negatives": 87,
+      "current": {
+        "threshold": 0.9,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "suggested": {
+        "threshold": 0.811,
+        "falsePositive": 0,
+        "positivesKept": 1
+      },
+      "positiveRange": [
+        0.95,
+        0.997
+      ],
+      "negativeRange": [
+        0.645,
+        0.81
+      ],
+      "percentiles": {
+        "positive": [
+          0.954,
+          0.956,
+          0.979
+        ],
+        "negative": [
+          0.717,
+          0.768,
+          0.778
+        ]
+      }
+    },
+    "entitySearch": {
+      "positives": 16,
+      "negatives": 23,
+      "current": {
+        "threshold": 0.7,
+        "falsePositive": 0,
+        "falseNegative": 1
+      },
+      "suggested": {
+        "threshold": 0.237,
+        "falsePositive": 0,
+        "positivesKept": 1
+      },
+      "positiveRange": [
+        0.435,
+        0.616
+      ],
+      "negativeRange": [
+        0.073,
+        0.236
+      ],
+      "percentiles": {
+        "positive": [
+          0.435,
+          0.442,
+          0.464
+        ],
+        "negative": [
+          0.145,
+          0.21,
+          0.225
+        ]
+      }
+    },
+    "drift": {
+      "positives": 193,
+      "negatives": 48,
+      "current": {
+        "threshold": 0.5,
+        "falsePositive": 0.021,
+        "falseNegative": 0.637
+      },
+      "suggested": {
+        "threshold": 0.531,
+        "falsePositive": 0,
+        "positivesKept": 0.28
+      },
+      "positiveRange": [
+        0.174,
+        1
+      ],
+      "negativeRange": [
+        0.201,
+        0.53
+      ],
+      "percentiles": {
+        "positive": [
+          0.288,
+          0.313,
+          0.439
+        ],
+        "negative": [
+          0.296,
+          0.394,
+          0.471
+        ]
+      }
+    }
+  }
+}

@@ -120,5 +120,5 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 39 | Local golden fixtures (`expected-local/`, "behavioral snapshots, not ground truth") with CI replay | P08b | P11 | open |
 | 40 | Test-split local run (all modes) and a 10-item LongMemEval local smoke run | P08b | P11 | open |
 | 41 | qwen3.5:4b "light" profile for 8–16 GB machines, measured first | P08b | P11 | open |
-| 42 | OpenAICompatibleProvider for other runtimes (unless the P08b llama.cpp spike adopts it) | P08b | P11 | open |
+| 42 | OpenAICompatibleProvider for other runtimes (unless the P08b llama.cpp spike adopts it) | P08b | P11 → P08b | done (P08b): built for the spike; `ENGRAM_PROVIDER=openai-compatible` (llama.cpp, LM Studio, vLLM) |
 
