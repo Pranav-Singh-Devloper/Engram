@@ -51,7 +51,7 @@ describe('OllamaProvider', () => {
       model: 'qwen3.5:9b',
       stream: true,
       think: false,
-      options: { temperature: 0, seed: 42, num_ctx: 32768 },
+      options: { temperature: 0, seed: 42, num_ctx: 32768, num_predict: 4096 },
     });
     const messages = req?.body.messages as { role: string; content: string }[];
     expect(messages.map((m) => m.role)).toEqual(['system', 'user']);

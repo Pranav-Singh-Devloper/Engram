@@ -1,0 +1,114 @@
+{
+  "summary": {
+    "transport": "llamacpp",
+    "wallSeconds": 804,
+    "structuredCalls": 30,
+    "repairs": 1,
+    "failures": 0,
+    "outputTokens": 17278,
+    "capped": 0,
+    "goldRecall": "27/33"
+  },
+  "rows": [
+    {
+      "conv": "01-self-intro",
+      "turns": 1,
+      "turnMs": 62210,
+      "sessionMs": 64632,
+      "candidates": 5,
+      "sessionCandidates": 5,
+      "gold": 5,
+      "goldFound": 5
+    },
+    {
+      "conv": "02-relative-dates",
+      "turns": 2,
+      "turnMs": 50412,
+      "sessionMs": 36220,
+      "candidates": 3,
+      "sessionCandidates": 3,
+      "gold": 3,
+      "goldFound": 3
+    },
+    {
+      "conv": "03-family-ad-hoc",
+      "turns": 1,
+      "turnMs": 24020,
+      "sessionMs": 24957,
+      "candidates": 2,
+      "sessionCandidates": 2,
+      "gold": 2,
+      "goldFound": 2
+    },
+    {
+      "conv": "04-correction",
+      "turns": 2,
+      "turnMs": 37081,
+      "sessionMs": 13607,
+      "candidates": 3,
+      "sessionCandidates": 1,
+      "gold": 3,
+      "goldFound": 3
+    },
+    {
+      "conv": "05-tool-output",
+      "turns": 3,
+      "turnMs": 27564,
+      "sessionMs": 25628,
+      "candidates": 2,
+      "sessionCandidates": 2,
+      "gold": 0,
+      "goldFound": 0
+    },
+    {
+      "conv": "06-multi-fact",
+      "turns": 1,
+      "turnMs": 45143,
+      "sessionMs": 58535,
+      "candidates": 4,
+      "sessionCandidates": 5,
+      "gold": 7,
+      "goldFound": 4
+    },
+    {
+      "conv": "07-alias",
+      "turns": 2,
+      "turnMs": 49242,
+      "sessionMs": 25693,
+      "candidates": 4,
+      "sessionCandidates": 2,
+      "gold": 2,
+      "goldFound": 1
+    },
+    {
+      "conv": "08-two-sams",
+      "turns": 3,
+      "turnMs": 72072,
+      "sessionMs": 59877,
+      "candidates": 6,
+      "sessionCandidates": 5,
+      "gold": 5,
+      "goldFound": 3
+    },
+    {
+      "conv": "09-assistant-echo",
+      "turns": 3,
+      "turnMs": 38439,
+      "sessionMs": 13710,
+      "candidates": 3,
+      "sessionCandidates": 1,
+      "gold": 2,
+      "goldFound": 2
+    },
+    {
+      "conv": "10-past-windows",
+      "turns": 2,
+      "turnMs": 37775,
+      "sessionMs": 37012,
+      "candidates": 3,
+      "sessionCandidates": 3,
+      "gold": 4,
+      "goldFound": 4
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "summary": {
+    "transport": "ollama-p1.5-cap4096",
+    "wallSeconds": 550,
+    "structuredCalls": 30,
+    "repairs": 5,
+    "failures": 1,
+    "outputTokens": 18853,
+    "capped": 0,
+    "goldRecall": "28/33"
+  },
+  "rows": [
+    {
+      "conv": "01-self-intro",
+      "turns": 1,
+      "turnMs": 36852,
+      "sessionMs": 36754,
+      "candidates": 5,
+      "sessionCandidates": 5,
+      "gold": 5,
+      "goldFound": 5
+    },
+    {
+      "conv": "02-relative-dates",
+      "turns": 2,
+      "turnMs": 38041,
+      "sessionMs": 25278,
+      "candidates": 3,
+      "sessionCandidates": 3,
+      "gold": 3,
+      "goldFound": 3
+    },
+    {
+      "conv": "03-family-ad-hoc",
+      "turns": 1,
+      "turnMs": 14206,
+      "sessionMs": 1851,
+      "candidates": 2,
+      "sessionCandidates": 0,
+      "gold": 2,
+      "goldFound": 2
+    },
+    {
+      "conv": "04-correction",
+      "turns": 2,
+      "turnMs": 22354,
+      "sessionMs": 9620,
+      "candidates": 3,
+      "sessionCandidates": 1,
+      "gold": 3,
+      "goldFound": 3
+    },
+    {
+      "conv": "05-tool-output",
+      "sessionError": "ProviderOutputError: Reply failed validation after one repair: ✖ Invalid option: expected one of \"entity\"|\"literal\"\n  → "
+    },
+    {
+      "conv": "05-tool-output",
+      "turns": 3,
+      "turnMs": 7116,
+      "sessionMs": 34808,
+      "candidates": 1,
+      "sessionCandidates": 0,
+      "gold": 0,
+      "goldFound": 0
+    },
+    {
+      "conv": "06-multi-fact",
+      "turns": 1,
+      "turnMs": 35141,
+      "sessionMs": 37133,
+      "candidates": 5,
+      "sessionCandidates": 5,
+      "gold": 7,
+      "goldFound": 6
+    },
+    {
+      "conv": "07-alias",
+      "turns": 2,
+      "turnMs": 52263,
+      "sessionMs": 36392,
+      "candidates": 4,
+      "sessionCandidates": 2,
+      "gold": 2,
+      "goldFound": 1
+    },
+    {
+      "conv": "08-two-sams",
+      "turns": 3,
+      "turnMs": 26854,
+      "sessionMs": 24461,
+      "candidates": 3,
+      "sessionCandidates": 3,
+      "gold": 5,
+      "goldFound": 2
+    },
+    {
+      "conv": "09-assistant-echo",
+      "turns": 3,
+      "turnMs": 18199,
+      "sessionMs": 17157,
+      "candidates": 2,
+      "sessionCandidates": 2,
+      "gold": 2,
+      "goldFound": 2
+    },
+    {
+      "conv": "10-past-windows",
+      "turns": 2,
+      "turnMs": 22973,
+      "sessionMs": 52634,
+      "candidates": 3,
+      "sessionCandidates": 3,
+      "gold": 4,
+      "goldFound": 4
+    }
+  ]
+}

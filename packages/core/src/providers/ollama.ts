@@ -19,6 +19,8 @@ import type { ChatSend } from './structured.js';
 
 export const OLLAMA_BASE_URL = 'http://localhost:11434';
 export const DEFAULT_OLLAMA_MODEL = 'qwen3.5:9b';
+/** Reply-token cap for local structured calls (P08b decision 5). */
+export const DEFAULT_LOCAL_MAX_TOKENS = 4096;
 
 export interface OllamaOptions {
   model?: string;
@@ -40,7 +42,11 @@ export interface OllamaOptions {
    * guards against loops; P08b measures it (decision 5).
    */
   presencePenalty?: number;
-  /** Hard cap on reply tokens (num_predict) for every structured call; capped replies are counted. */
+  /**
+   * Hard cap on reply tokens (num_predict) for every structured call; capped
+   * replies are counted. Default 4096: no reply in P08b's 120 measured calls
+   * reached it, and it bounds a runaway generation to ~2.4 min at 28 tokens/s.
+   */
   maxTokens?: number;
   retry?: Partial<RetryOptions>;
   http?: Partial<HttpDeps>;
@@ -176,7 +182,7 @@ export class OllamaProvider extends PromptedProvider {
           ...(this.options.presencePenalty !== undefined && {
             presence_penalty: this.options.presencePenalty,
           }),
-          ...(this.options.maxTokens !== undefined && { num_predict: this.options.maxTokens }),
+          num_predict: this.options.maxTokens ?? DEFAULT_LOCAL_MAX_TOKENS,
         },
       },
       {

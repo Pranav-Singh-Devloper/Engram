@@ -230,3 +230,34 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 - **Unchanged:** live writes stay per turn; the local model is used for free iteration and test-split filler, never for reported numbers.
 
 **Consequences.** The reports state the extraction mode. Packing risks missing small details. Raw turns stay embedded for episode recall, which is the main path for LongMemEval's detail questions, and the parity gate measures any loss.
+
+---
+
+## ADR-016 — Local mode: Ollama with the schema in the prompt, model-default sampling, a 4,096-token cap
+
+**Date:** 2026-10-18 · **Status:** Accepted (P08b)
+
+**Context.** Ollama 0.40.5 can't constrain qwen3.5's output on any route: `/api/chat` `format`, `/v1/chat/completions` `response_format`, and raw `/api/generate` all return 501 "structured output is unavailable" ([ollama#14645](https://github.com/ollama/ollama/issues/14645)). Two questions were measured on the 10 golden fixture conversations (30 structured calls: per-turn and per-session extraction, M3 Pro), using `bench/spikes/transport.ts`, with results in `bench/spikes/transport-*.json`:
+
+1. Does grammar-constrained decoding (llama.cpp's server, same model, Q4_K_M) beat Ollama with the schema in the prompt (NVFP4)?
+2. Is qwen3.5's default `presence_penalty 1.5` the cause of off-schema replies?
+
+| run                                             | wall      | needed repair | failed | output tokens | Gemini golden facts recovered |
+| ----------------------------------------------- | --------- | ------------- | ------ | ------------- | ----------------------------- |
+| Ollama, schema in prompt (penalty 1.5, default) | **550 s** | 5             | 1      | 18,853        | 28/33                         |
+| llama.cpp, json_schema grammar                  | 804 s     | **1**         | **0**  | 17,278        | 27/33                         |
+| Ollama, penalty 0.5                             | 554 s     | 5             | 1      | 19,751        | 28/33                         |
+| Ollama, penalty 0                               | 965 s     | 5             | 2      | 20,975        | 29/33                         |
+
+**Decision.**
+
+- **Transport: Ollama with the schema in the prompt stays the default.** The adoption rule set in advance required zero off-schema replies _at comparable speed_. The grammar removes most bad replies but runs 53% slower here, with the same recall, and the one-round repair already absorbs most of Ollama's bad replies (1 failure in 30). `OpenAICompatibleProvider` stays available as `ENGRAM_PROVIDER=openai-compatible` for llama.cpp, LM Studio and vLLM users.
+- **Sampling: the model's defaults stay.** The presence penalty doesn't explain the repairs (5 at every setting). Dropping it to 0 was 75% slower, with longer outputs and twice the failures, which matches the Qwen card's note that it prevents repetition. Structured calls send only `temperature 0` and `think: false`.
+- **Output cap: `num_predict` 4,096 on every structured call** (no reply in the 120 measured calls reached it); capped replies are counted.
+- **Question left open (P11, ledger row 37):** whether a compact output format would let both Gemini and local models drop the verbose time-hint objects. One wire format beats two.
+
+**Consequences.**
+
+- Local structured calls fail validation about 3% of the time after repair. Those turns contribute no facts, and their episodes are still stored and recallable.
+- Runs aren't bit-reproducible (greedy decoding isn't a guarantee); the response cache makes reruns repeatable.
+- The llama.cpp GGUF (5.7 GB) was deleted after the spike.

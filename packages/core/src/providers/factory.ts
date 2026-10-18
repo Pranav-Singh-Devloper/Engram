@@ -10,7 +10,12 @@
 // (the bench ablation's row B).
 import { GeminiProvider, geminiKeysFromEnv } from './gemini.js';
 import type { HttpDeps, RetryOptions } from './http.js';
-import { DEFAULT_OLLAMA_MODEL, OLLAMA_BASE_URL, OllamaProvider } from './ollama.js';
+import {
+  DEFAULT_LOCAL_MAX_TOKENS,
+  DEFAULT_OLLAMA_MODEL,
+  OLLAMA_BASE_URL,
+  OllamaProvider,
+} from './ollama.js';
 import { DEFAULT_OLLAMA_EMBED_MODEL, OllamaEmbedder } from './ollamaEmbed.js';
 import { OpenAICompatibleProvider } from './openaiCompat.js';
 import type { Provider } from './provider.js';
@@ -101,7 +106,9 @@ export function providerFromEnv(env: Env, options: FactoryOptions = {}): Provide
       model,
       apiKey: env.OPENAI_COMPAT_API_KEY || undefined,
       embedder,
-      maxTokens: env.OPENAI_COMPAT_MAX_TOKENS ? Number(env.OPENAI_COMPAT_MAX_TOKENS) : undefined,
+      maxTokens: env.OPENAI_COMPAT_MAX_TOKENS
+        ? Number(env.OPENAI_COMPAT_MAX_TOKENS)
+        : DEFAULT_LOCAL_MAX_TOKENS,
       // llama.cpp reads this; other servers ignore unknown fields.
       extra: { chat_template_kwargs: { enable_thinking: false } },
       http: options.http,
