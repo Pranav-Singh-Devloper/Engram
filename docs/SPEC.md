@@ -14,6 +14,7 @@
 3. MCP-first: usable from any MCP client through a handful of well-designed tools.
 4. Credible measurement: a held-out test set with per-category accuracy, compared against buffer, naive RAG, and full-context baselines, plus an external number on a LongMemEval subset.
 5. A web dashboard that makes the invisible visible: chat playground demonstrating cross-session recall, memory inspector, entity timelines, and eval results.
+6. A local mode (P08b): Engram's own processing (extraction, adjudication, disambiguation, consolidation, composition, embeddings) runs on the user's machine through Ollama, with a free ~9B model, no API key and no request to any third party. When Engram runs behind a cloud agent, whatever recall returns still enters that agent's context and goes to its model provider; only local mode plus a local agent model keeps everything on the machine.
 
 **Non-goals (v1)**
 - Multi-tenant SaaS, orgs/teams, billing. (Namespaces exist for isolation, not as an auth model.)
@@ -683,13 +684,16 @@ A deterministic `FakeProvider` backs the unit tests, which never hit the network
 | DB, local / tests / CI | `pgvector/pgvector` Docker image | Via `docker-compose.yml` locally and as a GitHub Actions service container. Small and offline |
 | DB, hosted (vectors / FTS) | Neon free tier (ADR-014) | Postgres 18 with pgvector 0.8.6. 1 GB storage per project, 100 CU-hours a month, 5 GB egress a month, scale to zero after 5 idle minutes (verified 2026-10-17). Exceeding compute or egress suspends the compute until the next month; exceeding storage makes writes fail. Nothing is deleted. Wake-ups cost a few hundred ms on the first query |
 | Embeddings + LLM | Gemini API free tier (AI Studio key) | Verify current model names, embedding dimensions, and rate/daily quotas at build time. **Free-tier inputs may be used by Google to improve its products** — stated in README limitations and in the demo UI, since Engram stores personal facts |
+| Embeddings + LLM, local mode (P08b) | Ollama: `qwen3.5:9b` (Apache-2.0) and `embeddinggemma:300m` (Gemma terms) | `ENGRAM_PROVIDER=ollama`. No structured-output constraint for qwen3.5 in Ollama, so the schema goes in the prompt and replies are validated and repaired once (ADR-016). `ENGRAM_PROVIDER=openai-compatible` serves llama.cpp, LM Studio and vLLM |
 | Judge LLM | Groq free tier: `openai/gpt-oss-120b` with strict JSON-schema output; fallbacks: Mistral free tier, Cohere trial | A different family from Gemini, as §13.4 requires. Dataset verbalization uses a third family (`qwen/qwen3.8-27b` on Groq). Verify current models and limits at build time |
 | Hosting | Vercel Hobby | web, API, HTTP MCP endpoint. No long-running jobs here; check function duration limits. Connect to Neon's direct endpoint with a small pool (§11) |
 | CI + jobs | GitHub Actions free | ci.yml, bench.yml, nightly.yml. Scheduled workflows are auto-disabled after 60 days of repository inactivity; document re-enabling |
 
-Secrets only via `.env` (never committed); `.env.example` kept current. Required keys: `DATABASE_URL`, `GEMINI_API_KEY`, `JUDGE_*`, `ENGRAM_API_TOKEN`, `ENGRAM_NAMESPACE`. Hosted-only: `HOSTED_DATABASE_URL` (Neon direct endpoint, for migrations and jobs) and optionally `HOSTED_POOLED_DATABASE_URL` (pooled endpoint; see §11 before using it).
+Secrets only via `.env` (never committed); `.env.example` kept current. Required keys: `DATABASE_URL`, `GEMINI_API_KEY`, `JUDGE_*`, `ENGRAM_API_TOKEN`, `ENGRAM_NAMESPACE`; local mode needs only `ENGRAM_PROVIDER=ollama` (plus optional `OLLAMA_*`) and no key. Hosted-only: `HOSTED_DATABASE_URL` (Neon direct endpoint, for migrations and jobs) and optionally `HOSTED_POOLED_DATABASE_URL` (pooled endpoint; see §11 before using it).
 
-**Offline mode.** With no API keys set, `pnpm demo:offline` runs the engine against the local database with the FakeProvider. It exists so anyone can see the bitemporal mechanics without signing up for anything.
+**Offline mode.** With no API keys set, `pnpm demo:offline` runs the engine against the local database with the FakeProvider. It exists so anyone can see the bitemporal mechanics without signing up for anything. `pnpm demo:offline --live` replays the same story through the configured model, which in local mode works with the network off.
+
+**Embedding spaces and similarity profiles (ADR-017).** Each namespace records the embedding model (`name@digest`) its vectors came from and refuses another until `pnpm db:reembed` converts it. Similarity thresholds (entity match, description conflict, merge, entity search, drift, recall floor) come from a per-model profile calibrated by `pnpm bench:calibrate` on labelled dev pairs; an uncalibrated model is refused.
 
 ---
 
@@ -781,12 +785,12 @@ git log --format='%B' | grep -iE 'co-authored|generated'   # no output expected
 
 1. Hero gif of the chat demo: remember → new session → recall → contradiction → timeline.
 2. What and why in five sentences.
-3. Quickstart in under 10 minutes (Docker database path), plus the no-key `pnpm demo:offline` path and the hosted demo link.
+3. Quickstart in under 10 minutes (Docker database path), plus the no-key `pnpm demo:offline` path, the local-mode path (`pnpm local:setup`, docs/local.md) and the hosted demo link.
 4. Architecture diagram.
 5. **Benchmark tables:** buffer vs. rag vs. full_context vs. engram per category, the LongMemEval subset number, judge agreement, and cost per item. Present wins and losses honestly.
 6. MCP client setup snippets (Claude Code, Claude Desktop, Cursor).
 7. Design notes: the bitemporal model and the canonical query, versioned fact rows, the decay function and its archival invariant, the consolidation loop.
-8. Limitations: free-tier data terms, entity disambiguation, extraction error rates, dependence on clients calling remember.
+8. Limitations: free-tier data terms, entity disambiguation, extraction error rates, dependence on clients calling remember, and local mode's measured quality gap. State the local privacy boundary exactly: local mode keeps Engram's own processing on the machine, not what a cloud agent does with recalled memories.
 9. Prior art (Appendix C).
 
 No hype adjectives; let the tables talk.
