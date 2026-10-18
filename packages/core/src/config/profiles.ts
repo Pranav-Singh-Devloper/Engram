@@ -41,7 +41,7 @@ export const SIMILARITY_PROFILES: Readonly<Record<string, SimilarityProfile>> = 
     merge: 0.9, // paraphrases ≥ 0.95, different values ≤ 0.81
     entitySearch: 0.335, // related 0.435–0.616, unrelated ≤ 0.236
     drift: 0.25, // below the 5th percentile of consecutive same-session turns (0.288)
-    recallFloor: 0.3, // provisional until the dev-long floor simulation (P08b task 9)
+    recallFloor: 0.25, // a safety net under every answerable dev-long item (lowest 0.363); abstention 0.289–0.395 overlaps, so the composer abstains
   },
 };
 
