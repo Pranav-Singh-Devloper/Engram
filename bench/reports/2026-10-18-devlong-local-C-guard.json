@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "runId": "2026-10-18-devlong-local-C-guard",
+  "split": "dev-long",
+  "date": "2026-10-18",
+  "finishedAt": "2026-10-18T05:06:22.814Z",
+  "model": "ollama qwen3.5:9b",
+  "judge": "openai/gpt-oss-120b",
+  "items": 40,
+  "retrievalOnly": false,
+  "modes": {
+    "engram": {
+      "accuracy": 0.95,
+      "n": 40,
+      "recallAt8": 0.972
+    }
+  }
+}

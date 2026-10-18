@@ -121,4 +121,5 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 40 | Test-split local run (all modes) and a 10-item LongMemEval local smoke run | P08b | P11 | open |
 | 41 | qwen3.5:4b "light" profile for 8–16 GB machines, measured first | P08b | P11 | open |
 | 42 | OpenAICompatibleProvider for other runtimes (unless the P08b llama.cpp spike adopts it) | P08b | P11 → P08b | done (P08b): built for the spike; `ENGRAM_PROVIDER=openai-compatible` (llama.cpp, LM Studio, vLLM) |
+| 43 | Prompt pass: a clause that only places another fact in time isn't a new statement. Add to the candidate rules: "A clause that only places another fact in time isn't a new statement. In \"Before I moved to Lyon, I lived in Rome from 2015 to 2018\", extract lives_in Rome with its dates, not lives_in Lyon: Lyon is a reference point, already known." Evidence: dev-long local 88% → 95% (knowledge update 4/8 → 7/8; reports `2026-10-18-devlong-local-C*`). Lands with rows 22 and 27: re-record the Gemini goldens and smoke cache, rerun dev-long row A for no regression, all before the P08 test run | P08b | P08 | open (P08 prompt pass) |
 

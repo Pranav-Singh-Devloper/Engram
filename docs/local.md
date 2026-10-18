@@ -70,9 +70,12 @@ qwen3.5 is Apache-2.0. embeddinggemma is under Google's [Gemma terms](https://ai
 | A | Gemini 3.5 flash-lite | gemini-embedding-2 | **100%** | 97% | 8/8 | 4/4 |
 | B | qwen3.5:9b | gemini-embedding-2 | _pending: Gemini embedding quota_ | | | |
 | C | qwen3.5:9b | embeddinggemma:300m | **88%** | 97% | 4/8 | 4/4 |
+| C′ | C, plus one extraction rule (below) | embeddinggemma:300m | **95%** | 97% | 7/8 | 4/4 |
 
 **Reading it.** Fully local retrieval is as good as Gemini's (recall@8 97% in both), and local recall never wrongly abstains with the calibrated floor (ADR-017). Four of row C's five misses are the same mistake. A later turn mentions an old city only as a time reference ("before I moved to Edinburgh, I was in Berlin from 2014 to 2016"), qwen re-extracts "lives in Edinburgh" as current, and that reopens the old city after the move. The engine handles the candidate it gets correctly; the gap is extraction. The fifth answered "April" without the year.
 
+**C′** adds one rule to the shared extraction prompt (a clause that only places another fact in time isn't a new statement), which fixes three of the four. It isn't merged yet: it changes Gemini's prompt too, so it lands only after the Gemini goldens are re-recorded and row A shows no regression (ledger row 43).
+
 **Reliability (row C).** 514 structured calls: 9% needed a repair round and 2% still failed. A failed session pack is re-extracted turn by turn, and a failed turn adds no facts. No reply hit the 4,096-token cap and no turn was cut before embedding. Store health: 0% ad-hoc predicates, 2% duplicate entities (row A: 0%).
 
-**Time.** Ingesting dev-long cold generated 303k output tokens, about 2.9 hours at 29 tokens/s: roughly 4–5 minutes of background work per 37-turn history. Recall's model cost is one local query embedding: p50 47 ms and p95 264 ms while extraction runs on the same GPU.
+**Time.** Ingesting dev-long cold generated 303k output tokens, about 2.9 hours at 29 tokens/s: roughly 4–5 minutes of background work per 37-turn history. Recall's model cost is one local query embedding: p50 44 ms and p95 117 ms when idle, and p50 47 ms and p95 264 ms while extraction runs on the same GPU (`bench/spikes/recall-latency.ts`).
