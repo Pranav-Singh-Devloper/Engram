@@ -30,7 +30,12 @@ ENGRAM_PROVIDER=ollama pnpm demo:offline --live   # the bitemporal demo, extract
 ```
 Everything works except steps that need the internet by design (pulling a model, the hosted demo).
 
-Measured 2026-10-18 on an M3 Pro, with qwen3.5:9b, in 2 min 46 s: 9 of 10 answers were right. The miss is "And before that, Marseille.": each turn is extracted on its own, so the local model can't tell what "that" refers to and stores no dates. The scripted run (`pnpm demo:offline`, no model) gets all 10.
+Without turning Wi-Fi off, macOS can cut a single process off the network instead:
+```bash
+echo '(version 1)(allow default)(deny network-outbound (remote ip "*:*"))(allow network-outbound (remote ip "localhost:*"))' > offline.sb
+sandbox-exec -f offline.sb env ENGRAM_PROVIDER=ollama scripts/node_modules/.bin/tsx scripts/demo-offline.ts --live
+```
+Run 2026-10-18 that way on an M3 Pro with qwen3.5:9b: 9 of 10 answers right in about a minute, with every non-localhost connection refused. The same command with `ENGRAM_PROVIDER=gemini` fails at once with "fetch failed", which shows the block is real. With the network up, the same demo also got 9 of 10. The miss is "And before that, Marseille.": each turn is extracted on its own, so the local model can't tell what "that" refers to and stores no dates. The scripted run (`pnpm demo:offline`, no model) gets all 10.
 
 ## Hardware
 | RAM | generation model | notes |

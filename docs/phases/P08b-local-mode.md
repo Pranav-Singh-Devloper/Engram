@@ -190,7 +190,7 @@ DECISIONS.md                                       # ADR-016 local transport and
 
 ## Definition of done
 - [x] The llama.cpp spike ran, its numbers are recorded, and the local transport is chosen by the stated rule (ADR-016).
-- [ ] `ENGRAM_PROVIDER` selects the provider for MCP stdio, jobs, fixtures and the bench; the automated no-egress test passes and is mutation-checked; the manual offline demo is recorded in `docs/local.md`. _Open: everything but the Wi-Fi-off run. `demo:offline --live` ran on qwen (9/10, recorded) with the network up; the Wi-Fi-off repeat needs someone at the machine._
+- [x] `ENGRAM_PROVIDER` selects the provider for MCP stdio, jobs, fixtures and the bench; the automated no-egress test passes and is mutation-checked; the manual offline demo is recorded in `docs/local.md`. _The offline run used a macOS `sandbox-exec` profile that refuses every non-localhost connection (9/10; Gemini under the same profile fails)._
 - [x] embeddinggemma runs locally with a ~7k-character cap, and the truncation rate is reported.
 - [x] Embedding spaces are recorded as name@digest, backfilled (no null meaning), enforced, and converted by `db:reembed`.
 - [x] Sampling for structured calls is chosen from measurements; every structured call is capped and capped replies are counted.
