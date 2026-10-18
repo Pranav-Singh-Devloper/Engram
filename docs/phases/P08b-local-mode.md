@@ -189,16 +189,16 @@ DECISIONS.md                                       # ADR-016 local transport and
 - **MCP:** in local mode `wait` defaults to false, and recall reports pending episodes.
 
 ## Definition of done
-- [ ] The llama.cpp spike ran, its numbers are recorded, and the local transport is chosen by the stated rule (ADR-016).
-- [ ] `ENGRAM_PROVIDER` selects the provider for MCP stdio, jobs, fixtures and the bench; the automated no-egress test passes and is mutation-checked; the manual offline demo is recorded in `docs/local.md`.
-- [ ] embeddinggemma runs locally with a ~7k-character cap, and the truncation rate is reported.
-- [ ] Embedding spaces are recorded as name@digest, backfilled (no null meaning), enforced, and converted by `db:reembed`.
-- [ ] Sampling for structured calls is chosen from measurements; every structured call is capped and capped replies are counted.
-- [ ] Threshold profiles are calibrated from the labelled dev pair set by a rerunnable script; Gemini's values are checked on the same pairs (ADR-017).
-- [ ] In local mode `engram_remember` defaults to `wait: false`, and recall reports pending work.
-- [ ] `pnpm local:setup` and `pnpm local:doctor` work from a fresh checkout.
-- [ ] A dev-long report has the ablation rows (A vs B vs C, plus D if adopted) with accuracy, recall@8, store health, truncation, off-schema and capped counts, and timings.
-- [ ] `docs/local.md` and SPEC §1/§14/§17 use the precise privacy wording; every deferred item is a ledger row targeting P11.
+- [x] The llama.cpp spike ran, its numbers are recorded, and the local transport is chosen by the stated rule (ADR-016).
+- [ ] `ENGRAM_PROVIDER` selects the provider for MCP stdio, jobs, fixtures and the bench; the automated no-egress test passes and is mutation-checked; the manual offline demo is recorded in `docs/local.md`. _Open: everything but the Wi-Fi-off run. `demo:offline --live` ran on qwen (9/10, recorded) with the network up; the Wi-Fi-off repeat needs someone at the machine._
+- [x] embeddinggemma runs locally with a ~7k-character cap, and the truncation rate is reported.
+- [x] Embedding spaces are recorded as name@digest, backfilled (no null meaning), enforced, and converted by `db:reembed`.
+- [x] Sampling for structured calls is chosen from measurements; every structured call is capped and capped replies are counted.
+- [ ] Threshold profiles are calibrated from the labelled dev pair set by a rerunnable script; Gemini's values are checked on the same pairs (ADR-017). _Open: the Gemini check (430 texts) hit the daily embedding quota on 2026-10-18; rerun `pnpm bench:calibrate --embedder=gemini` when it resets._
+- [x] In local mode `engram_remember` defaults to `wait: false`, and recall reports pending work.
+- [x] `pnpm local:setup` and `pnpm local:doctor` work from a fresh checkout.
+- [ ] A dev-long report has the ablation rows (A vs B vs C, plus D if adopted) with accuracy, recall@8, store health, truncation, off-schema and capped counts, and timings. _A (100%) and C (88%) done, with counters; D not adopted (ADR-016). Open: row B (qwen + Gemini embeddings), blocked on the embedding quota._
+- [x] `docs/local.md` and SPEC §1/§14/§17 use the precise privacy wording; every deferred item is a ledger row targeting P11.
 
 ## Planned commits
 1. `docs(phases): plan local mode`
