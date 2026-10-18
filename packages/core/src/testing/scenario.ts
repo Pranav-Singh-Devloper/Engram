@@ -1,7 +1,8 @@
 // A small driver for bitemporal scenarios, shared by the §7.4 suite, the
 // history tests and `pnpm demo:offline`. Each turn is scripted on a
-// FakeProvider, ingested at its historical time and processed with a
-// simulated clock, so record time is exact.
+// FakeProvider (or, for `demo:offline --live`, sent to a real model),
+// ingested at its historical time and processed with a simulated clock, so
+// record time is exact.
 import { SimClock } from '../config/clock.js';
 import type { Sql } from '../db/client.js';
 import type { NamespaceWithSelf } from '../db/namespaces.js';
@@ -11,6 +12,7 @@ import type { ProcessSummary } from '../ingest/process.js';
 import { SELF_REF } from '../providers/contracts.js';
 import type { EntityRef, FactCandidate, TemporalHint } from '../providers/contracts.js';
 import { FakeProvider } from '../providers/fake.js';
+import type { Provider } from '../providers/provider.js';
 import { factsAsOf } from '../temporal/asOf.js';
 import type { EntityType } from '../types/index.js';
 import { uuidArray } from '../db/client.js';
@@ -96,20 +98,25 @@ export class Scenario {
     readonly db: Sql,
     readonly ns: NamespaceWithSelf,
     start = '2024-01-01T00:00:00Z',
+    /** A real model to extract with; the turns' scripted candidates are then ignored. */
+    readonly model?: Provider,
   ) {
     this.clock = new SimClock(start);
   }
 
   async tell(turn: Turn): Promise<TurnResult> {
-    this.fake.when('processEpisode', (input) => input.content === turn.content, {
-      importance: turn.importance ?? 0.5,
-      candidates: turn.candidates,
-    });
+    const provider = this.model ?? this.fake;
+    if (!this.model) {
+      this.fake.when('processEpisode', (input) => input.content === turn.content, {
+        importance: turn.importance ?? 0.5,
+        candidates: turn.candidates,
+      });
+    }
     const before = await this.revisionCount();
     this.clock.set(turn.learnedAt ?? turn.at);
     const episode = await ingest(
       this.db,
-      this.fake,
+      provider,
       {
         namespaceId: this.ns.namespace.id,
         sessionId: 's1',
@@ -119,7 +126,7 @@ export class Scenario {
       },
       { clock: this.clock },
     );
-    const summary = await processEpisode(this.db, this.fake, episode.id, { clock: this.clock });
+    const summary = await processEpisode(this.db, provider, episode.id, { clock: this.clock });
     return { summary, revisions: (await this.revisionCount()) - before };
   }
 

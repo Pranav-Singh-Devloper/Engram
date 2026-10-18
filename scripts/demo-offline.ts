@@ -5,13 +5,19 @@
 // so CI runs it as a smoke test.
 //
 //   pnpm db:up && pnpm demo:offline        (add --keep to leave the namespace for inspection)
+//   ENGRAM_PROVIDER=ollama pnpm demo:offline --live
+// --live sends the same turns to the configured model instead (local mode's
+// manual offline check, docs/local.md); a real model may answer differently.
 import { randomUUID } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import {
   DEFAULT_DATABASE_URL,
   UNKNOWN_START,
   createDb,
   ensureNamespace,
   history,
+  providerFromEnv,
 } from '@engram/core';
 import { PORTABLE, migrate } from '@engram/core/migrate';
 import { Scenario, aboutSelf, hint } from '@engram/core/testing';
@@ -134,9 +140,17 @@ async function main(): Promise<void> {
   await migrate(db, { sources: [PORTABLE] });
   const ns = await ensureNamespace(db, { slug: `demo-offline-${randomUUID()}`, kind: 'demo' });
   let failures = 0;
+  const live = process.argv.includes('--live');
+  // Only a live run reads .env (for model settings); the scripted demo needs nothing.
+  const envFile = path.resolve(import.meta.dirname, '../.env');
+  if (live && existsSync(envFile)) process.loadEnvFile(envFile);
   try {
-    const s = new Scenario(db, ns);
-    console.log('Engram offline demo: the real engine, a scripted model, no API keys.\n');
+    const s = new Scenario(db, ns, undefined, live ? providerFromEnv(process.env) : undefined);
+    console.log(
+      live
+        ? `Engram demo: the real engine and the ${process.env.ENGRAM_PROVIDER ?? 'gemini'} model.\n`
+        : 'Engram offline demo: the real engine, a scripted model, no API keys.\n',
+    );
     console.log('What the user said, in the order the system heard it:');
     for (const turn of turns) {
       await s.tell(turn);
