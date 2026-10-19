@@ -108,10 +108,14 @@ export async function runItems(
 /** Paths of a run's per-item result files. */
 export function resultFiles(dir: string): string[] {
   if (!existsSync(dir)) return [];
-  return readdirSync(dir, { recursive: true })
-    .map(String)
-    .filter((f) => f.endsWith('.json'))
-    .map((f) => path.join(dir, f));
+  return (
+    readdirSync(dir, { recursive: true })
+      .map(String)
+      // Item results live in <mode>/<item>.json; run-level files (provider-stats,
+      // labels-key) sit beside the mode folders and aren't results.
+      .filter((f) => f.endsWith('.json') && f.includes(path.sep))
+      .map((f) => path.join(dir, f))
+  );
 }
 
 export function loadResults(dir: string): ItemResult[] {
