@@ -138,7 +138,7 @@ DECISIONS.md                                    # ADR-015 packed extraction (wit
 ## Definition of done
 - [ ] `processSessions` (per-session and packed) with cited-turn provenance, used by the bench; per-turn MCP and chat paths unchanged.
 - [ ] Session mode passes the parity gate on dev and dev-long (or the gap is recorded).
-- [ ] One prompt pass (rows 22 and 27); fixtures and smoke cache re-recorded; CI replays session mode too. _Rows 22 and 27 done in 3d84aab. Open: CI's session-mode replay, recorded together with the ledger row 43 pass (one re-record; needs Gemini embedding quota)._
+- [x] One prompt pass (rows 22 and 27); fixtures and smoke cache re-recorded; CI replays session mode too. _Rows 22 and 27 in 3d84aab; row 43 and CI's session-mode replay in 9d46231._
 - [ ] `test.json` (200 items, the §13.1 category counts) is reviewed and frozen. From here on, a test-motivated change needs an ADR.
 - [ ] 40 test answers are hand-labelled by you, and judge agreement with κ is reported.
 - [ ] `bench/longmemeval/` adapter with a stratified ~100-item subset (every type, abstention in proportion).
