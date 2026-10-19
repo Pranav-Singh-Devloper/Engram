@@ -15,6 +15,7 @@ export {
   transaction,
 } from './db/client.js';
 export type { DbOptions, Queryable, Sql, TransactionSql } from './db/client.js';
+export { bumpNamespaceRate, bumpThrottle, pruneThrottles, windowStart } from './db/throttles.js';
 export { findEntitiesByAlias, findEntitiesByName, getEntity, insertEntity } from './db/entities.js';
 export type { NewEntity } from './db/entities.js';
 export { getEpisode, insertEpisode } from './db/episodes.js';

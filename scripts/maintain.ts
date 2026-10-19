@@ -1,10 +1,11 @@
 // `pnpm jobs:maintain`: the in-database maintenance (SPEC §6.4): the decay
-// sweep over every namespace, then demo cleanup. The nightly workflow runs it
+// sweep over every namespace, then demo cleanup and pruning of old rate-limit
+// windows (P09a). The nightly workflow runs it
 // against the hosted database. Neon scales to zero, so pg_cron there would
 // only fire while something else kept the compute awake (ADR-014).
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { cleanupDemoNamespaces, createDb, decaySweep } from '@engram/core';
+import { cleanupDemoNamespaces, createDb, decaySweep, pruneThrottles } from '@engram/core';
 import { parseMaintainArgs } from './jobs.js';
 
 const envFile = path.resolve(import.meta.dirname, '../.env');
@@ -17,8 +18,9 @@ async function main(): Promise<void> {
     const now = new Date();
     const { archived } = await decaySweep(db, { now });
     const deleted = await cleanupDemoNamespaces(db, now);
+    const pruned = await pruneThrottles(db, now);
     console.log(
-      `decay sweep archived ${archived} fact(s); demo cleanup deleted ${deleted} namespace(s)`,
+      `decay sweep archived ${archived} fact(s); demo cleanup deleted ${deleted} namespace(s); pruned ${pruned} old rate-limit window(s)`,
     );
   } finally {
     await db.end();
