@@ -16,7 +16,7 @@ The plan for building Engram, one file per phase. [`docs/SPEC.md`](../SPEC.md) i
 | P06b Consolidation + jobs | [P06b-consolidation-jobs.md](P06b-consolidation-jobs.md) | done | P06a | consolidation runs end-to-end on the local DB; the merge test passes |
 | P07 MCP | [P07-mcp.md](P07-mcp.md) | done | P06b | the SDK-client integration test passes; Claude Code can remember and recall |
 | P08 Bench full | [P08-bench-full.md](P08-bench-full.md) | planned | P07 | test and LongMemEval reports exist; the README table shows judge agreement |
-| P08b Local mode | [P08b-local-mode.md](P08b-local-mode.md) | in progress | P08 (runs in its quota waits) | Engram's processing works with no third-party call; dev-long ablation report |
+| P08b Local mode | [P08b-local-mode.md](P08b-local-mode.md) | done | P08 (runs in its quota waits) | Engram's processing works with no third-party call; dev-long ablation report |
 | P09a Web API | [P09a-web-api.md](P09a-web-api.md) | outline | P07 | route handlers, auth, demo sessions and rate limits are tested |
 | P09b Web UI | [P09b-web-ui.md](P09b-web-ui.md) | outline | P09a | `docs/demo.md` can be followed without improvising |
 | P10 Ship | [P10-ship.md](P10-ship.md) | outline | P08, P09b | three reviewer paths are verified from a fresh clone; the hosted demo is live |

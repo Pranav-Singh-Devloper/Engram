@@ -68,16 +68,16 @@ pnpm db:reembed --namespace=<slug>
 qwen3.5 is Apache-2.0. embeddinggemma is under Google's [Gemma terms](https://ai.google.dev/gemma/terms); `nomic-embed-text` (Apache-2.0, also 768-d) is the alternative.
 
 ## Bench (dev-long)
-40 items, about 37 turns of history each, session extraction (ADR-015), same judge (Groq `gpt-oss-120b`). Run 2026-10-18 on an M3 Pro, 18 GB. Reports: `bench/reports/2026-10-18-devlong-session.md` (A) and `2026-10-18-devlong-local-C-counted.md` (C).
+40 items, about 37 turns of history each, session extraction (ADR-015), same judge (Groq `gpt-oss-120b`). Run 2026-10-18 on an M3 Pro, 18 GB. Reports: `bench/reports/2026-10-18-devlong-session.md` (A), `2026-10-19-devlong-local-B.md` (B, 2026-10-19), `2026-10-18-devlong-local-C-counted.md` (C) and `2026-10-18-devlong-local-C-guard.md` (C′).
 
 | row | generation | embeddings | accuracy | recall@8 | knowledge update | abstention |
 |---|---|---|---|---|---|---|
 | A | Gemini 3.5 flash-lite | gemini-embedding-2 | **100%** | 97% | 8/8 | 4/4 |
-| B | qwen3.5:9b | gemini-embedding-2 | _pending: Gemini embedding quota_ | | | |
+| B | qwen3.5:9b | gemini-embedding-2 | **93%** | 97% | 6/8 | 4/4 |
 | C | qwen3.5:9b | embeddinggemma:300m | **88%** | 97% | 4/8 | 4/4 |
 | C′ | C, plus one extraction rule (below) | embeddinggemma:300m | **95%** | 97% | 7/8 | 4/4 |
 
-**Reading it.** Fully local retrieval is as good as Gemini's (recall@8 97% in both), and local recall never wrongly abstains with the calibrated floor (ADR-017). Four of row C's five misses are the same mistake. A later turn mentions an old city only as a time reference ("before I moved to Edinburgh, I was in Berlin from 2014 to 2016"), qwen re-extracts "lives in Edinburgh" as current, and that reopens the old city after the move. The engine handles the candidate it gets correctly; the gap is extraction. The fifth answered "April" without the year.
+**Reading it.** The 12-point gap splits between the two models: swapping Gemini's generation for qwen costs 7 points (A → B), and swapping its embeddings for embeddinggemma costs 5 more (B → C). Fully local retrieval is as good as Gemini's (recall@8 97% in both), and local recall never wrongly abstains with the calibrated floor (ADR-017). Four of row C's five misses are the same mistake. A later turn mentions an old city only as a time reference ("before I moved to Edinburgh, I was in Berlin from 2014 to 2016"), qwen re-extracts "lives in Edinburgh" as current, and that reopens the old city after the move. The engine handles the candidate it gets correctly; the gap is extraction. The fifth answered "April" without the year.
 
 **C′** adds one rule to the shared extraction prompt (a clause that only places another fact in time isn't a new statement), which fixes three of the four. It isn't merged yet: it changes Gemini's prompt too, so it lands only after the Gemini goldens are re-recorded and row A shows no regression (ledger row 43).
 

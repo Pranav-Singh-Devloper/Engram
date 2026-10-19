@@ -194,10 +194,10 @@ DECISIONS.md                                       # ADR-016 local transport and
 - [x] embeddinggemma runs locally with a ~7k-character cap, and the truncation rate is reported.
 - [x] Embedding spaces are recorded as name@digest, backfilled (no null meaning), enforced, and converted by `db:reembed`.
 - [x] Sampling for structured calls is chosen from measurements; every structured call is capped and capped replies are counted.
-- [ ] Threshold profiles are calibrated from the labelled dev pair set by a rerunnable script; Gemini's values are checked on the same pairs (ADR-017). _Open: the Gemini check (430 texts) hit the daily embedding quota on 2026-10-18; rerun `pnpm bench:calibrate --embedder=gemini` when it resets._
+- [x] Threshold profiles are calibrated from the labelled dev pair set by a rerunnable script; Gemini's values are checked on the same pairs (ADR-017). _Gemini checked 2026-10-19; its values stay._
 - [x] In local mode `engram_remember` defaults to `wait: false`, and recall reports pending work.
 - [x] `pnpm local:setup` and `pnpm local:doctor` work from a fresh checkout.
-- [ ] A dev-long report has the ablation rows (A vs B vs C, plus D if adopted) with accuracy, recall@8, store health, truncation, off-schema and capped counts, and timings. _A (100%) and C (88%) done, with counters; D not adopted (ADR-016). Open: row B (qwen + Gemini embeddings), blocked on the embedding quota._
+- [x] A dev-long report has the ablation rows (A vs B vs C, plus D if adopted) with accuracy, recall@8, store health, truncation, off-schema and capped counts, and timings. _A 100%, B 93%, C 88% (C′ 95% with ledger row 43); D not adopted (ADR-016). Comparison in `docs/local.md`._
 - [x] `docs/local.md` and SPEC §1/§14/§17 use the precise privacy wording; every deferred item is a ledger row targeting P11.
 
 ## Planned commits
