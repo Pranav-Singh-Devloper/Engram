@@ -9,6 +9,7 @@
 // OLLAMA_EMBEDDINGS=gemini keeps Gemini embeddings under local generation
 // (the bench ablation's row B).
 import { GeminiProvider, geminiKeysFromEnv } from './gemini.js';
+import type { KeyLane } from './gemini.js';
 import type { HttpDeps, RetryOptions } from './http.js';
 import {
   DEFAULT_LOCAL_MAX_TOKENS,
@@ -51,7 +52,7 @@ export interface FactoryOptions {
   /** Injected fetch (the bench's response cache) for every provider built. */
   http?: Partial<HttpDeps>;
   retry?: Partial<RetryOptions>;
-  onKeySwitch?: (toIndex: number, reason: string) => void;
+  onKeySwitch?: (toIndex: number, reason: string, lane: KeyLane) => void;
 }
 
 function gemini(env: Env, options: FactoryOptions): GeminiProvider {

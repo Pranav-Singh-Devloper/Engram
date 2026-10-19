@@ -20,6 +20,9 @@ export const DEFAULT_EMBED_MODEL = 'gemini-embedding-2';
 /** batchEmbedContents accepts at most 100 requests per call. */
 const EMBED_BATCH = 100;
 
+/** Quotas that run out independently: embedding texts and generate calls. */
+export type KeyLane = 'embed' | 'generate';
+
 export interface GeminiOptions {
   apiKey: string;
   /**
@@ -28,8 +31,8 @@ export interface GeminiOptions {
    * stays there.
    */
   fallbackApiKeys?: readonly string[];
-  /** Told when the provider moves to the next key (never given the key itself). */
-  onKeySwitch?: (toIndex: number, reason: string) => void;
+  /** Told when a lane moves to the next key (never given the key itself). */
+  onKeySwitch?: (toIndex: number, reason: string, lane: KeyLane) => void;
   embedModel?: string;
   /** Required by the structured methods; unused by `embed`. */
   chatModel?: string;
@@ -85,7 +88,12 @@ export class GeminiProvider extends PromptedProvider {
   private readonly retry: RetryOptions;
   private readonly deps: HttpDeps;
   private readonly keys: string[];
-  private keyIndex = 0;
+  /**
+   * The key in use per quota lane. Free quotas are per project *and* per
+   * model: a key out of generate calls can still embed (measured 2026-10-19),
+   * so each lane moves through the keys on its own.
+   */
+  private keyIndex: Record<KeyLane, number> = { embed: 0, generate: 0 };
 
   constructor(private readonly options: GeminiOptions) {
     super();
@@ -97,16 +105,17 @@ export class GeminiProvider extends PromptedProvider {
     this.keys = [options.apiKey, ...(options.fallbackApiKeys ?? []).filter(Boolean)];
   }
 
-  /** Which key is in use: 0 for the main key, 1+ for fallbacks. */
-  get activeKey(): number {
-    return this.keyIndex;
+  /** Which key each lane uses: 0 for the main key, 1+ for fallbacks. */
+  get activeKeys(): Record<KeyLane, number> {
+    return { ...this.keyIndex };
   }
 
   private async post(path: string, body: unknown): Promise<unknown> {
+    const lane: KeyLane = path.endsWith(':batchEmbedContents') ? 'embed' : 'generate';
     for (;;) {
       try {
         return await postJson(`${this.baseUrl}/${path}`, body, {
-          headers: { 'x-goog-api-key': this.keys[this.keyIndex] ?? '' },
+          headers: { 'x-goog-api-key': this.keys[this.keyIndex[lane]] ?? '' },
           retry: this.retry,
           deps: this.deps,
         });
@@ -115,9 +124,9 @@ export class GeminiProvider extends PromptedProvider {
         // exhausted, or its project has been denied access (403).
         const unusable =
           err instanceof ProviderHttpError && (err.quotaExhausted || err.status === 403);
-        if (!unusable || this.keyIndex >= this.keys.length - 1) throw err;
-        this.keyIndex++;
-        this.options.onKeySwitch?.(this.keyIndex, err.message.slice(0, 120));
+        if (!unusable || this.keyIndex[lane] >= this.keys.length - 1) throw err;
+        this.keyIndex[lane]++;
+        this.options.onKeySwitch?.(this.keyIndex[lane], err.message.slice(0, 120), lane);
       }
     }
   }

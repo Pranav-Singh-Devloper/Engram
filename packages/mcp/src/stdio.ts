@@ -27,8 +27,8 @@ async function main(): Promise<void> {
 
   // ENGRAM_PROVIDER=ollama runs Engram's own processing locally (P08b).
   const provider = providerFromEnv(env, {
-    onKeySwitch: (i) => {
-      log(`main key's quota is exhausted; switched to fallback key ${i}`);
+    onKeySwitch: (i, _reason, lane) => {
+      log(`gemini ${lane}: key ${i - 1} is out of quota; now on key ${i}`);
     },
   });
   log(`provider: ${provider.name}, embeddings: ${await provider.embeddingSpace()}`);

@@ -45,8 +45,8 @@ async function main(): Promise<void> {
 
     // ENGRAM_PROVIDER picks Gemini (needs GEMINI_API_KEY) or local Ollama (P08b).
     const provider = providerFromEnv(process.env, {
-      onKeySwitch: (i) => {
-        console.error(`gemini: main key's quota is exhausted; switched to fallback key ${i}`);
+      onKeySwitch: (i, _reason, lane) => {
+        console.error(`gemini ${lane}: key ${i - 1} is out of quota; now on key ${i}`);
       },
     });
     const started = Date.now();

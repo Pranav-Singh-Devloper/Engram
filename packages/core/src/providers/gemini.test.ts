@@ -442,6 +442,7 @@ describe('key fallback', () => {
     const provider = new GeminiProvider({
       apiKey: 'main',
       fallbackApiKeys: ['spare'],
+      chatModel: 'gemini-test',
       onKeySwitch: (i) => switches.push(i),
       http: {
         fetch: fetch as unknown as typeof globalThis.fetch,
@@ -458,7 +459,29 @@ describe('key fallback', () => {
     await k.provider.embed(['b'], { purpose: 'document' });
     expect(k.used).toEqual(['main', 'spare', 'spare']);
     expect(k.switches).toEqual([1]);
-    expect(k.provider.activeKey).toBe(1);
+    expect(k.provider.activeKeys).toEqual({ embed: 1, generate: 0 });
+  });
+
+  it('tracks generation and embedding quotas separately on each key', async () => {
+    // Measured 2026-10-19: a key out of generate quota still served embeddings,
+    // but one shared key index moved both lanes off it.
+    const composed = () =>
+      json({
+        candidates: [
+          {
+            content: {
+              parts: [
+                { text: JSON.stringify({ answer: 'x', supported: false, usedMemoryIds: [] }) },
+              ],
+            },
+          },
+        ],
+      });
+    const k = keyed({ main: [daily, () => embedReply({ requests: [1] })], spare: [composed] });
+    await k.provider.compose({ question: 'q', now: new Date(), memories: [] });
+    await k.provider.embed(['a'], { purpose: 'document' });
+    expect(k.used).toEqual(['main', 'spare', 'main']);
+    expect(k.provider.activeKeys).toEqual({ embed: 0, generate: 1 });
   });
 
   it('skips a key whose project is denied access', async () => {

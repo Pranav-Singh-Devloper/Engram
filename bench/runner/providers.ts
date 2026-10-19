@@ -82,10 +82,8 @@ export function makeProviders(options: ProviderOptions = {}): Providers {
   const gemini = new GeminiProvider({
     ...geminiKeysFromEnv(process.env),
     apiKey: key('GEMINI_API_KEY'),
-    onKeySwitch: (i, reason) => {
-      console.error(
-        `gemini: main key's quota is exhausted; switched to fallback key ${i} (${reason})`,
-      );
+    onKeySwitch: (i, reason, lane) => {
+      console.error(`gemini ${lane}: key ${i - 1} is out of quota; now on key ${i} (${reason})`);
     },
     embedModel: process.env.GEMINI_EMBED_MODEL || undefined,
     chatModel: process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash-lite',

@@ -78,8 +78,8 @@ async function main(): Promise<void> {
   const gemini = new GeminiProvider({
     ...geminiKeysFromEnv(process.env),
     chatModel: model,
-    onKeySwitch: (i) => {
-      console.error(`gemini: main key's quota is exhausted; switched to fallback key ${i}`);
+    onKeySwitch: (i, _reason, lane) => {
+      console.error(`gemini ${lane}: key ${i - 1} is out of quota; now on key ${i}`);
     },
   });
   const args = process.argv.slice(2);
