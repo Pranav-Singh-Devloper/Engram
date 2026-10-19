@@ -529,23 +529,30 @@ Use the **official TypeScript MCP SDK**: v2, `@modelcontextprotocol/server` (ver
 
 ## 11. HTTP API (for the web app)
 
-Thin Next.js route handlers over `packages/core`.
+Thin Next.js route handlers over `packages/core` (`apps/web`; logic in `src/server/`, built from injected dependencies so tests call handlers directly). Decisions and their alternatives: ADR-019.
 
-**Bearer-protected**
-- `POST /api/remember`
-- `POST /api/recall`
-- `GET /api/memories` — filter by tier, status, predicate, q; sort by retention score
-- `GET /api/entities/:id/timeline`
-- `GET /api/evals` — bench reports
-- `/api/mcp`
+**Auth.** One token model for REST and MCP: `ENGRAM_MCP_TOKENS` maps each bearer token to one namespace, compared in constant time. Anonymous visitors get a demo cookie. With no credentials, reads see the read-only showcase namespace (`ENGRAM_SHOWCASE_NAMESPACE`, seeded in P10). Another namespace's entity is a 404, never a 403.
+
+| endpoint | bearer token | demo cookie | none |
+|---|---|---|---|
+| `POST /api/remember` (default `wait: false`: 202, extracted after the response), `POST /api/recall` (tracks access for what it returns, like MCP) | its namespace | 401 | 401 |
+| `GET /api/memories` (filter by tier, status, predicate, `q`; sort by retention score; provenance), `GET /api/entities/:id/timeline` (`includeRevised`) | its namespace | its namespace | the showcase, read-only |
+| `POST /api/demo/session`, `POST /api/chat` | — | its namespace | session: creates one; chat: 401 |
+| `GET /api/evals` (bench summaries; no personal data) | public | public | public |
+| `/api/mcp` (stateless streamable HTTP; P07's handler unchanged) | its namespace | 401 | 401 |
+| `GET /api/health` (resolves unqualified names; reports the schema) | public | public | public |
 
 **Demo (anonymous, rate-limited)**
-- `POST /api/demo/session` — creates a `demo` namespace with a 24h expiry, set in an httpOnly cookie. Throttled per client IP (hashed, never stored raw), since otherwise a visitor could mint unlimited namespaces and sidestep the per-namespace limit.
-- `POST /api/chat` — streams; operates only on the cookie's namespace; 30 turns/hour per namespace via `rate_limits`.
-- A **global daily turn cap** across all demo namespaces protects the free Gemini quota. When it's reached, the chat returns a clear "demo quota exhausted, try again tomorrow" message and the read-only showcase stays available.
+- `POST /api/demo/session` creates a `demo` namespace with a 24h expiry. The httpOnly, `SameSite=Lax` (and, over HTTPS, `Secure`) cookie holds a random secret. The namespace slug is a hash of it, so the database never holds the secret. A visitor with a live session gets it back unthrottled. New sessions are throttled per client IP (5 an hour, 20 a day). The key is an HMAC of the UTC day and the IP under `ENGRAM_IP_HASH_SECRET`, so no IP is stored, raw or as a stable hash. Without it, a visitor could mint unlimited namespaces and sidestep the per-namespace limit.
+- `POST /api/chat` works only on the cookie's namespace. It allows 30 turns an hour per namespace via `rate_limits`. A refused turn gets a plain 429 (`limit: "namespace" | "global"`) before any model call. An accepted turn streams server-sent events:
+  - `memories`: what recall found, sent right away;
+  - `answer`: `{text, supported, used_memory_ids}`;
+  - `done`, or `error`.
 
-**Connection pooling.** Vercel functions connect to Neon's direct endpoint with a small pool (`max: 1` per function instance, a short idle timeout). A free 0.25 CU compute accepts about 100 connections, plenty for the demo. Neon's pooled endpoint (PgBouncer, transaction mode) would also need prepared statements off, and it resets each session's search path, so using it means setting the path inside every transaction. P09a decides whether traffic warrants that. Locks are transaction-scoped either way.
-- Read endpoints are scoped to the cookie namespace, or to the seeded read-only showcase namespace.
+  It recalls before storing the visitor's turn, so the question never comes back as its own memory. It composes from recalled memories only, records access only for the memories the composer used (§6.2 rule 7), and extracts facts from both turns after the response is sent. Events, not tokens: the composer's output is zod-validated JSON that includes the used ids.
+- A **global daily turn cap** (`ENGRAM_DEMO_DAILY_TURNS`, default 120; about 3 generate calls a turn) across all demo namespaces protects the free Gemini quota. When it's reached, chat returns "demo quota exhausted, try again tomorrow" and the read-only showcase stays available. Counters that aren't per namespace (per-IP and global) live in `throttles` (migration 0008). Each bump is one atomic upsert, and `jobs:maintain` prunes windows older than two days.
+
+**Connection pooling.** Vercel functions connect to Neon's direct endpoint with `max: 1`, a 20 s idle timeout and prepared statements off (pinned by a test). A free 0.25 CU compute accepts about 100 connections, plenty for the demo. Neon's pooled endpoint (PgBouncer, transaction mode) resets each session's search path, so using it would mean setting the path inside every transaction. The direct endpoint is used. Locks are transaction-scoped either way (a source scan forbids session-level advisory locks).
 
 ---
 

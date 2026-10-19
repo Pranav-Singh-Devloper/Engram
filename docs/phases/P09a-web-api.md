@@ -125,16 +125,16 @@ scripts/maintain.ts: delete throttle rows older than 2 days
 - **`locks.test.ts`:** a source scan finds no `pg_advisory_lock(` / `pg_try_advisory_lock(` (session level) anywhere.
 
 ## Definition of done
-- [ ] `apps/web` (Next.js App Router) has route handlers for `/api/remember`, `/api/recall`, `/api/memories`, `/api/entities/:id/timeline`, `/api/evals`, `/api/mcp` and `/api/health`, scoped as in decision 5, and `/api/mcp` is stateless streamable HTTP.
-- [ ] `POST /api/demo/session` creates a 24 h demo namespace behind an httpOnly cookie, throttled per IP through a daily-rotating HMAC (no IP stored).
-- [ ] `POST /api/chat` streams events, works only on the cookie namespace, allows 30 turns an hour per namespace via `rate_limits` (ledger row 5), and respects the global daily cap; the cap message leaves the showcase usable.
-- [ ] Chat runs `process()` after the response is sent, and tracks access only for `usedMemoryIds` (ledger row 21).
-- [ ] A test proves the production client config has `prepare: false` and `max: 1` (ledger row 6); no session-level advisory lock exists (source scan).
-- [ ] `/api/mcp` mounts P07's `createEngramHttpHandler` unchanged.
+- [x] `apps/web` (Next.js App Router) has route handlers for `/api/remember`, `/api/recall`, `/api/memories`, `/api/entities/:id/timeline`, `/api/evals`, `/api/mcp` and `/api/health`, scoped as in decision 5, and `/api/mcp` is stateless streamable HTTP.
+- [x] `POST /api/demo/session` creates a 24 h demo namespace behind an httpOnly cookie, throttled per IP through a daily-rotating HMAC (no IP stored).
+- [x] `POST /api/chat` streams events, works only on the cookie namespace, allows 30 turns an hour per namespace via `rate_limits` (ledger row 5), and respects the global daily cap; the cap message leaves the showcase usable.
+- [x] Chat runs `process()` after the response is sent, and tracks access only for `usedMemoryIds` (ledger row 21).
+- [x] A test proves the production client config has `prepare: false` and `max: 1` (ledger row 6); no session-level advisory lock exists (source scan).
+- [x] `/api/mcp` mounts P07's `createEngramHttpHandler` unchanged.
 - [ ] Vercel connects to Neon's direct endpoint, and a deployed preview's `/api/health` resolves unqualified names to `engram` (ledger row 35).
-- [ ] REST and MCP share `ENGRAM_MCP_TOKENS`; `ENGRAM_API_TOKEN` is gone from `.env.example` and SPEC §14 (ledger row 33).
-- [ ] The route tests above pass on the local DB with the FakeProvider; CI builds the app.
-- [ ] SPEC §11 (public evals, `throttles`, event streaming) and §14 are patched; ADR-019 records decisions 1–4.
+- [x] REST and MCP share `ENGRAM_MCP_TOKENS`; `ENGRAM_API_TOKEN` is gone from `.env.example` and SPEC §14 (ledger row 33).
+- [x] The route tests above pass on the local DB with the FakeProvider; CI builds the app.
+- [x] SPEC §11 (public evals, `throttles`, event streaming) and §14 are patched; ADR-019 records decisions 1–4 (and the build notes).
 
 ## Planned commits
 1. `docs(phases): plan the web api`

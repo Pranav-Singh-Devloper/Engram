@@ -83,8 +83,8 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 2 | Pick `GEMINI_CHAT_MODEL` | P01 | P02 | done (ADR-005) |
 | 3 | Judge as a separate (Groq) provider | P01 | P04 | done (P04) |
 | 4 | Restore archived facts when recall hits them | P01 | P05 | done (P05) |
-| 5 | Use the `rate_limits` table | P01 | P09a | open (P09a DoD) |
-| 6 | `prepare: false` for the transaction pooler, with a test | P01 | P09a | open (P09a risks/DoD) |
+| 5 | Use the `rate_limits` table | P01 | P09a | done (P09a: 30 chat turns an hour per namespace, `takeChatTurn`) |
+| 6 | `prepare: false` for the transaction pooler, with a test | P01 | P09a | done (P09a: `WEB_DB_OPTIONS` pinned by `db.test.ts`) |
 | 7 | Unknown `valid_from` for end-only facts | P02 | P03 | done (ADR-007) |
 | 8 | Assistant echoes merge, raising confidence only for new episodes | P02 | P03 | done (P03) |
 | 9 | Fixture 04 correction retracts Initech | P02 | P03 | done (P03) |
@@ -99,7 +99,7 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 18 | Longer histories vs one extraction call per turn (batching decision) | P04, P05 | P08 | done (P08, ADR-015: session extraction for the bench, packed for LongMemEval; per-turn stays for live writes) |
 | 19 | Budget 10% above the cache-based call count | P05 | P08 | done (P08: estimates carry the margin; dev-long parity cost 141 calls against 136 estimated) |
 | 20 | MCP recall tracks access to everything returned | P05 | P07 | done (P07, tested) |
-| 21 | Chat tracks access via `usedMemoryIds` | P05 | P09a | open (P09a DoD) |
+| 21 | Chat tracks access via `usedMemoryIds` | P05 | P09a | done (P09a: only facts the composer used; `chat.int.test.ts`) |
 | 22 | Prompt pass: fixture 08 maps the brother to `partner_of` | P05 | P08 | done (P08, 3d84aab: fixtures and smoke cache re-recorded) |
 | 23 | Regenerate purged summaries; re-embed redacted turns | P06a | P06b | done (P06b) |
 | 24 | pg_cron schedules for decay and demo cleanup | P06a | P06b | done (P06b), then replaced by `jobs:maintain` in `nightly.yml` (ADR-014) |
@@ -111,7 +111,7 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 30 | Smoke cache size (4.2 MB) | P04 | P08 | done (P08: 4.0 MB after the 9d46231 re-record with session mode added; the ~6 MB trigger for compact vectors wasn't reached) |
 | 31 | `/graph` page | P09b | P09b | stretch, only if P10 is on track |
 | 32 | Recall ranks "Ana lives in Porto" above "The user lives in Lisbon" for "where does the user live" (Inspector session) | P07 | P08 | done (P08, 2026-10-18): a self-subject prior was tested on dev-long retrieval-only runs at weights 0 / 0.15 / 0.3: MRR 0.760 / 0.749 / 0.760, top-1 21 / 22 / 23 of 36, i.e. noise. Kept off (`recall.selfWeight: 0`), available as an option |
-| 33 | Decide whether the REST endpoints' bearer reuses `ENGRAM_MCP_TOKENS` (one namespace per token) or keeps a single `ENGRAM_API_TOKEN` | P07 | P09a | open (P09a DoD) |
+| 33 | Decide whether the REST endpoints' bearer reuses `ENGRAM_MCP_TOKENS` (one namespace per token) or keeps a single `ENGRAM_API_TOKEN` | P07 | P09a | done (P09a, ADR-019: REST reuses `ENGRAM_MCP_TOKENS`; `ENGRAM_API_TOKEN` removed) |
 | 34 | Node: MCP Inspector 2.11 requires ≥ 22.19; the repo pins 22 via `.node-version`. Bump to the current 22 LTS and re-check the fresh clone | P07 | P10 | open (P10 DoD) |
 | 35 | Neon's pooled endpoint resets the search path (verified after a compute restart). Vercel uses the direct endpoint, unless traffic needs the pooler and every transaction then sets the path | Neon setup | P09a | open (P09a DoD) |
 | 36 | GitHub secrets for `nightly.yml` (`HOSTED_DATABASE_URL`, Gemini keys) | Neon setup | P08 | done (set 2026-10-17; a dispatched nightly run succeeded on Neon) |

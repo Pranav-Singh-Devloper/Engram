@@ -335,3 +335,36 @@ embeddinggemma:300m@85462619ee72, at Gemini's thresholds vs the chosen profile:
 - **The test split and LongMemEval use different embedders.** Their numbers aren't directly comparable, and the README says so.
 - **Quotas are per key _and_ per model, so keys rotate per lane** (2c762bf). The provider had one current-key index for both generation and embeddings, so a key out of generate calls also stopped embedding, though it still had embedding quota. On 2026-10-19 a five-key rotation reached its last key early this way; four of the five keys still accepted embeddings minutes later. Embeddings and generation now rotate independently.
 - **Planning embedding work means counting texts, not requests.** `pnpm bench --estimate` counts generate calls only; embedding cost is estimated from unique texts (as here) until the estimator counts them (ledger row 44).
+
+---
+
+## ADR-019 — The web API: one token model, event-streamed chat, quota-bounded demo
+
+**Date:** 2026-10-19 · **Status:** Accepted (P09a)
+
+**Context.** P09a gives Engram an HTTP surface on Vercel Hobby and Neon free tiers (SPEC §11). It has to authenticate agents, let anonymous visitors try a chat demo, and never let those visitors exhaust the free Gemini quota (~500 generate calls a day per key).
+
+**Decisions and alternatives.**
+
+1. **REST reuses `ENGRAM_MCP_TOKENS` (token → namespace) and drops `ENGRAM_API_TOKEN`** (ledger row 33). One auth model, compared in constant time by a shared `tokenResolver`, and REST is namespace-scoped like MCP. _Rejected:_ a single REST token, which would be all-namespaces or one-namespace with no way to give two agents separate memories.
+2. **Chat streams server-sent events, not tokens.** The events are `memories` first, then `answer` (`text`, `supported`, `used_memory_ids`), then `done` / `error`. The composer returns zod-validated JSON with the used ids (CLAUDE.md: all LLM I/O is validated), and token streaming would mean showing unvalidated partial JSON. _Rejected:_ the AI SDK (a dependency for something `ReadableStream` does in 30 lines), and a plain-text answer followed by a separate ids call (an extra model call per turn).
+3. **Demo identity: a random cookie secret; the namespace slug is its SHA-256.** Reading the database doesn't let anyone act as a visitor. _Rejected:_ storing the session id as the slug (a database leak becomes session hijack), and signed cookies (they need a key rotation story for no gain over a random secret).
+4. **Limits.**
+   - **Per IP:** 5 sessions an hour and 20 a day, keyed by `HMAC(secret, day ‖ ip)`, so no stored row identifies a visitor and keys rotate daily.
+   - **Per namespace:** 30 chat turns an hour in `rate_limits`.
+   - **Global:** a daily cap of 120 demo turns (~360 generate calls), in a new `throttles` table, because `rate_limits` is keyed by namespace.
+
+   Each check is one atomic upsert, and a refused turn returns 429 before any model call. The global cap is the real bound on spend: rotating IPs can mint sessions, but not exceed it. _Rejected:_ a rate-limit library or Redis (a paid or extra service for counters Postgres already handles atomically).
+
+5. **Route logic in `apps/web/src/server/`, built from injected dependencies** (`db`, `provider`, `config`, `clock`, `defer`). Tests call handlers with plain `Request`s, the FakeProvider and the local DB. They don't start Next and never touch the network. The `route.ts` files are wiring only.
+6. **Post-response work goes through `defer` (Next's `after()`).** Chat registers it while the request is being handled. The task then waits on a promise the stream resolves with the stored episode ids, because `after()` must be called inside the request, not from a stream callback after the headers are sent. Losing that work is safe: unprocessed episodes are swept by `processPending` and the nightly jobs.
+7. **Chat recalls before it stores the visitor's turn.** The plan stored first, but recall then found the question itself at similarity 1.0, which also defeated the abstention floor.
+8. **Webpack, not Turbopack.** The engine uses NodeNext imports (`./client.js` for `client.ts`) and ships TypeScript source. Turbopack can't map `.js` to `.ts`; webpack's `resolve.extensionAlias` can, so `dev` and `build` pass `--webpack`. _Rejected:_ rewriting the engine's imports (breaks tsx, vitest and the stdio server) and compiling every package to `dist/`.
+9. **`/api/evals` is public.** Bench summaries hold no personal data and are committed to the repo (SPEC §11 patch).
+10. **Database client:** Neon's direct endpoint, `max: 1`, 20 s idle timeout, prepared statements off, pinned by a test (ledger row 6). _Rejected:_ the pooled endpoint, which resets the search path, so every transaction would have to set it.
+
+**Consequences.**
+
+- Unprocessed demo turns can lag if a function dies mid-`after()`; they're picked up later, never lost.
+- The cap message is plain JSON with a 429, which the UI (P09b) must show without breaking the showcase.
+- Turbopack's faster dev server isn't used until it supports extension aliasing.
