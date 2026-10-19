@@ -55,10 +55,12 @@ export interface DbOptions {
   /** Pool size. */
   max?: number;
   /**
-   * Prepared statements. Must be false behind Supabase's transaction-mode
-   * pooler, which doesn't support them (SPEC §11).
+   * Prepared statements. Must be false behind a transaction-mode pooler such
+   * as Neon's pooled endpoint (PgBouncer), which doesn't support them (SPEC §11).
    */
   prepare?: boolean;
+  /** Seconds before an idle connection closes; serverless instances keep this short. */
+  idleTimeout?: number;
 }
 
 /**
@@ -69,6 +71,7 @@ export function createDb(url: string, options: DbOptions = {}): Sql {
   return postgres(url, {
     max: options.max ?? 10,
     prepare: options.prepare ?? true,
+    ...(options.idleTimeout !== undefined && { idle_timeout: options.idleTimeout }),
     ssl: isLocalUrl(url) ? false : 'require',
     onnotice: () => undefined,
     connection: { search_path: SEARCH_PATH },
