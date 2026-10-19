@@ -6,8 +6,14 @@ import { BenchSummary, namespaceStats } from '@engram/core';
 import type { NamespaceStats, Queryable } from '@engram/core';
 import { iso } from './format.js';
 
-/** Where bench reports live in a checkout; absent in a deployed app. */
-export const DEFAULT_REPORTS_DIR = path.resolve(import.meta.dirname, '../../../bench/reports');
+/**
+ * The repo's bench/reports, found from this file's location. Under a bundler
+ * (the Next.js app, P09a) there is no source directory at runtime, so it's
+ * null there and the app passes its own directory.
+ */
+export const DEFAULT_REPORTS_DIR: string | null = import.meta.dirname
+  ? path.resolve(import.meta.dirname, '../../../bench/reports')
+  : null;
 
 /** The newest summary of a run that composed answers, or null if there is none. */
 export function latestBenchSummary(dir: string | null): BenchSummary | null {
