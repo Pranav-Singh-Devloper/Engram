@@ -1,6 +1,6 @@
 # P09a — Web API
 
-**Status:** in progress (expanded and approved 2026-10-19, decisions and dependencies as written)
+**Status:** done (2026-10-19)
 
 ## Goal
 Give the Next.js app its HTTP surface: thin route handlers over `packages/core`, P07's MCP server over streamable HTTP, and an anonymous demo flow (cookie namespaces, rate limits, a global daily cap) that can't exhaust the free Gemini quota. No pages: those are P09b.
@@ -63,6 +63,18 @@ Give the Next.js app its HTTP surface: thin route handlers over `packages/core`,
 
 - **Chat order changed (task 8).** Decision 7 stored the user's turn before recalling. Done that way, recall finds the question's own episode at similarity 1.0, which also defeats the abstention floor. Chat now recalls first, then stores the turn (before composing, so the message survives a failed reply), composes, and stores the reply.
 - **Limits answer 429, not a stream event (task 8).** A refused turn returns 429 JSON (`limit: "namespace" | "global"`) before any model call or stream starts; only accepted turns stream. A plain status is simpler for clients and correct HTTP. The `error` event remains for failures mid-turn.
+
+- **The preview deploy (task 10), as it happened.**
+  - **Project:** a new Vercel project `engram` with Root Directory `apps/web`, build `pnpm build` (webpack), install `pnpm install --frozen-lockfile` and Node 22.x.
+  - **Migrations:** `db:migrate:hosted` applied **0007 and 0008** to Neon. 0007 (P08b's embedding space) had never been applied there, which the P10 deploy checklist must cover.
+  - **Environment:** eight Preview-only variables, the secrets marked sensitive and piped from `.env` so they were never printed. One Gemini key (the newest fallback), so demo traffic doesn't compete with the bench's main key. `ENGRAM_MCP_TOKENS` maps a generated token to a `personal` namespace; `ENGRAM_IP_HASH_SECRET` was generated too.
+  - **Uploads:** `.vercelignore` keeps `.env*`, `bench/cache`, `bench/runs` and the 277 MB LongMemEval data out.
+  - **Results:** `/api/health` returned `{"ok":true,"schema":"engram"}`. `/api/evals` listed the reports, so tracing works. With no credentials, `/api/memories` and `/api/mcp` answered 401.
+  - **What went wrong:**
+    1. The first `vercel deploy` of a new project went to **Production** (`engram-lime.vercel.app`), not a preview. It has no variables, so it fails closed (500 on `/api/health`) and can reach nothing; it should be removed or replaced in P10 (ledger row 45).
+    2. A CLI deploy uploads the working tree, not git: the preview included an uncommitted, in-progress LongMemEval report. P10's production deploy goes through Vercel's Git integration.
+    3. A live chat turn wasn't exercised: Gemini's embedding quota was exhausted on every key that day. Chat is covered by `chat.int.test.ts`, and the first live turn belongs to P10's smoke test.
+  - Preview URLs sit behind Vercel's deployment protection, reached with `vercel curl`. POST requests couldn't be sent that way (extra curl flags drop the bypass), so demo sessions were checked by tests only.
 
 ## Scope
 **In:** `apps/web` with route handlers only; migration 0008 (`throttles`); demo sessions, chat, reads, evals, MCP, health; the auth, limit and scoping tests; one preview deploy plus the health check; SPEC §11/§14 patches; `.env.example`.
@@ -131,7 +143,7 @@ scripts/maintain.ts: delete throttle rows older than 2 days
 - [x] Chat runs `process()` after the response is sent, and tracks access only for `usedMemoryIds` (ledger row 21).
 - [x] A test proves the production client config has `prepare: false` and `max: 1` (ledger row 6); no session-level advisory lock exists (source scan).
 - [x] `/api/mcp` mounts P07's `createEngramHttpHandler` unchanged.
-- [ ] Vercel connects to Neon's direct endpoint, and a deployed preview's `/api/health` resolves unqualified names to `engram` (ledger row 35).
+- [x] Vercel connects to Neon's direct endpoint, and a deployed preview's `/api/health` resolves unqualified names to `engram` (ledger row 35). _2026-10-19: `{"ok":true,"schema":"engram"}` from the preview, about 3 s cold._
 - [x] REST and MCP share `ENGRAM_MCP_TOKENS`; `ENGRAM_API_TOKEN` is gone from `.env.example` and SPEC §14 (ledger row 33).
 - [x] The route tests above pass on the local DB with the FakeProvider; CI builds the app.
 - [x] SPEC §11 (public evals, `throttles`, event streaming) and §14 are patched; ADR-019 records decisions 1–4 (and the build notes).

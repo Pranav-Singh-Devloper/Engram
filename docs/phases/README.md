@@ -17,7 +17,7 @@ The plan for building Engram, one file per phase. [`docs/SPEC.md`](../SPEC.md) i
 | P07 MCP | [P07-mcp.md](P07-mcp.md) | done | P06b | the SDK-client integration test passes; Claude Code can remember and recall |
 | P08 Bench full | [P08-bench-full.md](P08-bench-full.md) | planned | P07 | test and LongMemEval reports exist; the README table shows judge agreement |
 | P08b Local mode | [P08b-local-mode.md](P08b-local-mode.md) | done | P08 (runs in its quota waits) | Engram's processing works with no third-party call; dev-long ablation report |
-| P09a Web API | [P09a-web-api.md](P09a-web-api.md) | in progress | P07 | route handlers, auth, demo sessions and rate limits are tested |
+| P09a Web API | [P09a-web-api.md](P09a-web-api.md) | done | P07 | route handlers, auth, demo sessions and rate limits are tested |
 | P09b Web UI | [P09b-web-ui.md](P09b-web-ui.md) | outline | P09a | `docs/demo.md` can be followed without improvising |
 | P10 Ship | [P10-ship.md](P10-ship.md) | outline | P08, P09b | three reviewer paths are verified from a fresh clone; the hosted demo is live |
 | P11 Local mode, extended | (outline in P08b) | outline | P10 | compact format, chunked embeddings, local goldens, test/LME local runs, light profile |
@@ -113,7 +113,7 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 32 | Recall ranks "Ana lives in Porto" above "The user lives in Lisbon" for "where does the user live" (Inspector session) | P07 | P08 | done (P08, 2026-10-18): a self-subject prior was tested on dev-long retrieval-only runs at weights 0 / 0.15 / 0.3: MRR 0.760 / 0.749 / 0.760, top-1 21 / 22 / 23 of 36, i.e. noise. Kept off (`recall.selfWeight: 0`), available as an option |
 | 33 | Decide whether the REST endpoints' bearer reuses `ENGRAM_MCP_TOKENS` (one namespace per token) or keeps a single `ENGRAM_API_TOKEN` | P07 | P09a | done (P09a, ADR-019: REST reuses `ENGRAM_MCP_TOKENS`; `ENGRAM_API_TOKEN` removed) |
 | 34 | Node: MCP Inspector 2.11 requires ≥ 22.19; the repo pins 22 via `.node-version`. Bump to the current 22 LTS and re-check the fresh clone | P07 | P10 | open (P10 DoD) |
-| 35 | Neon's pooled endpoint resets the search path (verified after a compute restart). Vercel uses the direct endpoint, unless traffic needs the pooler and every transaction then sets the path | Neon setup | P09a | open (P09a DoD) |
+| 35 | Neon's pooled endpoint resets the search path (verified after a compute restart). Vercel uses the direct endpoint, unless traffic needs the pooler and every transaction then sets the path | Neon setup | P09a | done (P09a: a deployed preview's `/api/health` resolved unqualified names to `engram` on the direct endpoint) |
 | 36 | GitHub secrets for `nightly.yml` (`HOSTED_DATABASE_URL`, Gemini keys) | Neon setup | P08 | done (set 2026-10-17; a dispatched nightly run succeeded on Neon) |
 | 37 | Compact output format for local models; format ablation; whether Gemini adopts it (ADR-016 question) | P08b | P11 | open |
 | 38 | Chunked embeddings for turns over the embedder's input limit (evidence: P08b truncation rate) | P08b | P11 | open |
@@ -123,4 +123,5 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 42 | OpenAICompatibleProvider for other runtimes (unless the P08b llama.cpp spike adopts it) | P08b | P11 → P08b | done (P08b): built for the spike; `ENGRAM_PROVIDER=openai-compatible` (llama.cpp, LM Studio, vLLM) |
 | 43 | Prompt pass: a clause that only places another fact in time isn't a new statement. Add to the candidate rules: "A clause that only places another fact in time isn't a new statement. In \"Before I moved to Lyon, I lived in Rome from 2015 to 2018\", extract lives_in Rome with its dates, not lives_in Lyon: Lyon is a reference point, already known." Evidence: dev-long local 88% → 95% (knowledge update 4/8 → 7/8; reports `2026-10-18-devlong-local-C*`). Lands as a second prompt pass (rows 22 and 27 went in 3d84aab): re-record the Gemini goldens and smoke cache, rerun dev-long row A for no regression, all before the P08 test run | P08b | P08 | done (P08, 9d46231: goldens and smoke re-recorded, CI replays session mode; dev-long row A rerun 100%, recall@8 97%) |
 | 44 | `bench --estimate` counts embedded texts too, not just generate calls (Gemini's free quota counts texts; ADR-018) | P08 | P10 | open (P10: a reviewer running the bench needs a true estimate) |
+| 45 | Production deploy through Vercel's Git integration (a CLI deploy uploads the working tree); remove or replace the unconfigured Production deployment the P09a preview step created by accident; apply every pending migration to Neon (0007 had been missed until P09a); first live chat turn as a smoke test | P09a | P10 | open (P10 deploy checklist) |
 
