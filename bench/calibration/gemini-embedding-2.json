@@ -1,0 +1,178 @@
+{
+  "space": "gemini-embedding-2",
+  "generatedAt": "2026-10-19T03:43:02.811Z",
+  "maxFalse": 0.01,
+  "pairs": 537,
+  "families": {
+    "entityMatch": {
+      "positives": 19,
+      "negatives": 87,
+      "current": {
+        "threshold": 0.85,
+        "falsePositive": 0.023,
+        "falseNegative": 0.421
+      },
+      "suggested": {
+        "threshold": 0.856,
+        "falsePositive": 0,
+        "positivesKept": 0.421
+      },
+      "positiveRange": [
+        0.83,
+        0.924
+      ],
+      "negativeRange": [
+        0.777,
+        0.855
+      ],
+      "percentiles": {
+        "positive": [
+          0.83,
+          0.833,
+          0.852
+        ],
+        "negative": [
+          0.815,
+          0.838,
+          0.844
+        ]
+      }
+    },
+    "descriptionConflict": {
+      "positives": 16,
+      "negatives": 16,
+      "current": {
+        "threshold": 0.95,
+        "falsePositive": 0,
+        "falseNegative": 1
+      },
+      "suggested": {
+        "threshold": 0.902,
+        "falsePositive": 0,
+        "positivesKept": 0.938
+      },
+      "positiveRange": [
+        0.896,
+        0.926
+      ],
+      "negativeRange": [
+        0.839,
+        0.901
+      ],
+      "percentiles": {
+        "positive": [
+          0.896,
+          0.902,
+          0.914
+        ],
+        "negative": [
+          0.87,
+          0.901,
+          0.901
+        ]
+      }
+    },
+    "merge": {
+      "positives": 32,
+      "negatives": 87,
+      "current": {
+        "threshold": 0.9,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "suggested": {
+        "threshold": 0.898,
+        "falsePositive": 0,
+        "positivesKept": 1
+      },
+      "positiveRange": [
+        0.971,
+        0.996
+      ],
+      "negativeRange": [
+        0.798,
+        0.898
+      ],
+      "percentiles": {
+        "positive": [
+          0.971,
+          0.971,
+          0.988
+        ],
+        "negative": [
+          0.825,
+          0.85,
+          0.872
+        ]
+      }
+    },
+    "entitySearch": {
+      "positives": 16,
+      "negatives": 23,
+      "current": {
+        "threshold": 0.7,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "suggested": {
+        "threshold": 0.664,
+        "falsePositive": 0,
+        "positivesKept": 1
+      },
+      "positiveRange": [
+        0.778,
+        0.832
+      ],
+      "negativeRange": [
+        0.561,
+        0.664
+      ],
+      "percentiles": {
+        "positive": [
+          0.778,
+          0.784,
+          0.805
+        ],
+        "negative": [
+          0.617,
+          0.663,
+          0.663
+        ]
+      }
+    },
+    "drift": {
+      "positives": 193,
+      "negatives": 48,
+      "current": {
+        "threshold": 0.5,
+        "falsePositive": 1,
+        "falseNegative": 0
+      },
+      "suggested": {
+        "threshold": 0.68,
+        "falsePositive": 0,
+        "positivesKept": 0.689
+      },
+      "positiveRange": [
+        0.587,
+        1
+      ],
+      "negativeRange": [
+        0.524,
+        0.679
+      ],
+      "percentiles": {
+        "positive": [
+          0.641,
+          0.65,
+          0.703
+        ],
+        "negative": [
+          0.582,
+          0.649,
+          0.659
+        ]
+      }
+    }
+  }
+}

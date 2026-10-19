@@ -291,5 +291,9 @@ embeddinggemma:300m@85462619ee72, at Gemini's thresholds vs the chosen profile:
 
 - Switching embedders is an explicit conversion (`db:reembed`), never a silent mix.
 - Adding an embedding model means running the calibration and adding a profile; the error says so.
-- Gemini's own values are checked on the same pairs once its daily embedding quota allows (a P08b close-out item).
+- **Gemini's values, checked on the same pairs (2026-10-19, `bench/calibration/gemini-embedding-2.json`), stay as they are.** They are what dev-long validated end to end (100%, 0% duplicate entities), and no family shows an error that the engine doesn't already absorb:
+  - entity match 0.85: misses 42% of same-entity label pairs and admits 2 of 87 different-entity pairs (highest 0.855). The embedding rung sits after exact-name and alias matching, and 0.856 would remove the two at no recall cost on these pairs, but with no end-to-end evidence either way it stays.
+  - description conflict 0.95: sends every same-person pair to LLM disambiguation (positives 0.896–0.926). That is safe by design, at the cost of a call.
+  - merge 0.90 and entity search 0.70 separate cleanly.
+  - drift 0.50: consecutive turns score ≥ 0.587, so it never splits a session; cross-session pairs (≤ 0.679) also stay together. Splits come from session bounds, not drift.
 - Drift has no clean threshold for embeddinggemma. Consolidation splits rarely, and summaries cover more turns.
