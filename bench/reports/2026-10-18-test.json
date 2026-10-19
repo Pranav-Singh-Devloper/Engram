@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "runId": "2026-10-18-test",
+  "split": "test",
+  "date": "2026-10-18",
+  "finishedAt": "2026-10-19T16:42:33.073Z",
+  "model": "gemini-3.5-flash-lite + gemini-embedding-2 embeddings",
+  "judge": "openai/gpt-oss-120b",
+  "items": 200,
+  "retrievalOnly": false,
+  "modes": {
+    "buffer": {
+      "accuracy": 0.595,
+      "n": 200,
+      "recallAt8": null
+    },
+    "rag": {
+      "accuracy": 1,
+      "n": 200,
+      "recallAt8": 0.961
+    },
+    "full_context": {
+      "accuracy": 0.995,
+      "n": 200,
+      "recallAt8": null
+    },
+    "engram": {
+      "accuracy": 0.995,
+      "n": 200,
+      "recallAt8": 0.956
+    },
+    "engram_consolidated": {
+      "accuracy": 0.995,
+      "n": 200,
+      "recallAt8": 0.994
+    }
+  }
+}
