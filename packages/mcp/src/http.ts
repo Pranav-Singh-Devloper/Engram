@@ -1,10 +1,10 @@
 // The stateless, bearer-authenticated HTTP transport (SPEC §10, §11). P09a
 // mounts `fetch` at /api/mcp unchanged. Each token maps to one namespace; a
 // request without a known token gets 401 before any server is built.
-import { createHash, timingSafeEqual } from 'node:crypto';
 import { ensureNamespace } from '@engram/core';
 import { createMcpHandler } from '@modelcontextprotocol/server';
 import type { McpHttpHandler } from '@modelcontextprotocol/server';
+import { tokenResolver } from './env.js';
 import { createEngramServer } from './server.js';
 import type { EngramServerOptions } from './server.js';
 
@@ -18,8 +18,6 @@ export interface EngramHttpHandler {
   close: () => Promise<void>;
 }
 
-const digest = (s: string) => createHash('sha256').update(s).digest();
-
 function unauthorized(): Response {
   return new Response(JSON.stringify({ error: 'A valid bearer token is required.' }), {
     status: 401,
@@ -29,14 +27,7 @@ function unauthorized(): Response {
 
 export function createEngramHttpHandler(options: EngramHttpOptions): EngramHttpHandler {
   const { tokens, ...serverOptions } = options;
-  const known = [...tokens].map(([token, slug]) => ({ digest: digest(token), slug }));
-  /** Compares against every token in constant time, so timing reveals nothing. */
-  const slugFor = (token: string): string | undefined => {
-    const d = digest(token);
-    let found: string | undefined;
-    for (const k of known) if (timingSafeEqual(d, k.digest)) found = k.slug;
-    return found;
-  };
+  const slugFor = tokenResolver(tokens);
 
   const handlers = new Map<string, Promise<McpHttpHandler>>();
   const handlerFor = (slug: string) => {

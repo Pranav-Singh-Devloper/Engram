@@ -1,4 +1,5 @@
 // Configuration from the environment for the two transports (SPEC §10).
+import { createHash, timingSafeEqual } from 'node:crypto';
 
 /** Shortest accepted bearer token: long enough that guessing is hopeless. */
 export const MIN_TOKEN_LENGTH = 24;
@@ -27,6 +28,23 @@ export function parseTokens(spec: string | undefined): Map<string, string> {
     tokens.set(token, slug);
   }
   return tokens;
+}
+
+const digest = (token: string) => createHash('sha256').update(token).digest();
+
+/**
+ * Token → namespace slug, comparing against every known token in constant
+ * time so timing reveals nothing. Shared by /api/mcp and the REST endpoints
+ * (P09a decision 1).
+ */
+export function tokenResolver(tokens: ReadonlyMap<string, string>) {
+  const known = [...tokens].map(([token, slug]) => ({ digest: digest(token), slug }));
+  return (token: string): string | undefined => {
+    const d = digest(token);
+    let found: string | undefined;
+    for (const k of known) if (timingSafeEqual(d, k.digest)) found = k.slug;
+    return found;
+  };
 }
 
 /** The stdio server's namespace slug; one per local user or project. */

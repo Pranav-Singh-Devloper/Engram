@@ -18,7 +18,7 @@ Give the Next.js app its HTTP surface: thin route handlers over `packages/core`,
 - **Neon** (ADR-014): the direct endpoint keeps the database's default `search_path` (set by `sql/hosted/0002`); the proxy drops the startup parameter, and the pooled endpoint resets the path. A free 0.25 CU compute takes about 100 connections.
 
 ## Decisions (for approval)
-1. **One bearer model: `ENGRAM_MCP_TOKENS` for MCP and REST** (ledger row 33). Each token maps to one namespace slug, as MCP already does, and is compared in constant time. `ENGRAM_API_TOKEN` and `ENGRAM_NAMESPACE` are removed from `.env.example` and SPEC §14. One auth model, and REST is namespace-scoped the same way MCP is.
+1. **One bearer model: `ENGRAM_MCP_TOKENS` for MCP and REST** (ledger row 33). Each token maps to one namespace slug, as MCP already does, and is compared in constant time. `ENGRAM_API_TOKEN` is removed from `.env.example` and SPEC §14. (`ENGRAM_NAMESPACE` stays: the stdio MCP server uses it. The first draft of this plan wrongly listed it for removal; corrected in task 3.) One auth model, and REST is namespace-scoped the same way MCP is.
 2. **Chat streams events, not tokens.** `POST /api/chat` returns `text/event-stream`:
    - `memories`: what recall found, sent as soon as recall returns (under a second);
    - `answer`: `{text, supported, usedMemoryIds}`;
