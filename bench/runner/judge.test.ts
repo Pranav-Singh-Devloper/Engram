@@ -58,6 +58,23 @@ describe('judgeAnswer', () => {
     expect((await judgeAnswer(absent, said('Your brother is Tom.'))).correct).toBe(false);
   });
 
+  it('judges by category too: LongMemEval keeps an explanation as the expected answer', async () => {
+    // Measured 2026-10-19: LongMemEval's "_abs" items say why the question is
+    // unanswerable, so matching on the sentinel alone scored a correct
+    // "I don't know" as wrong.
+    const lme = item({
+      category: 'abstention',
+      expected:
+        'You did not mention this information. You mentioned your cat Luna but not your hamster.',
+      judge: 'llm',
+    });
+    expect(await judgeAnswer(lme, said("I don't know.", false))).toMatchObject({
+      correct: true,
+      judge: 'abstention',
+    });
+    expect((await judgeAnswer(lme, said('Your hamster is called Nibbles.'))).correct).toBe(false);
+  });
+
   it('abstaining on an answerable question is wrong', async () => {
     expect(await judgeAnswer(item({}), said("I don't know.", false))).toMatchObject({
       correct: false,

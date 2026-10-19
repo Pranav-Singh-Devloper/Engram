@@ -35,7 +35,9 @@ export async function judgeAnswer(
   llm?: Pick<Provider, 'judge'>,
 ): Promise<Verdict> {
   const abstained = isAbstention(answer);
-  if (item.expected === ABSTAIN) {
+  // Our splits mark unanswerable items with the ABSTAIN sentinel; LongMemEval's
+  // keep an explanation as `expected`, so the category decides too.
+  if (item.expected === ABSTAIN || item.category === 'abstention') {
     return {
       correct: abstained,
       judge: 'abstention',
