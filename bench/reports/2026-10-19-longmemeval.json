@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "runId": "2026-10-19-longmemeval",
+  "split": "longmemeval",
+  "date": "2026-10-19",
+  "finishedAt": "2026-10-19T15:36:49.337Z",
+  "model": "gemini-3.5-flash-lite + embeddinggemma:300m embeddings",
+  "judge": "openai/gpt-oss-120b",
+  "items": 98,
+  "retrievalOnly": false,
+  "modes": {
+    "buffer": {
+      "accuracy": 0.082,
+      "n": 98,
+      "recallAt8": null
+    },
+    "rag": {
+      "accuracy": 0.52,
+      "n": 98,
+      "recallAt8": 0.505
+    },
+    "full_context": {
+      "accuracy": 0.541,
+      "n": 98,
+      "recallAt8": null
+    },
+    "engram": {
+      "accuracy": 0.449,
+      "n": 98,
+      "recallAt8": 0.452
+    }
+  }
+}
