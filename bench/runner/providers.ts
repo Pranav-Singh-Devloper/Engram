@@ -10,6 +10,7 @@ import {
   GroqProvider,
   OllamaEmbedder,
   OllamaProvider,
+  withEmbedder,
   geminiKeysFromEnv,
 } from '@engram/core';
 import type { Provider } from '@engram/core';
@@ -33,6 +34,8 @@ export interface Providers {
   system: Provider;
   /** The system's embedder, for its truncation counter. */
   systemEmbedder: object;
+  /** The system's generating provider, for its structured-output counters. */
+  generator: object;
   judge: GroqProvider;
   verbalizer: (model: string) => GroqProvider;
   meter: UsageMeter;
@@ -46,8 +49,9 @@ export interface ProviderOptions {
   /** 'ollama' runs generation on a local model, free (OLLAMA_MODEL, default qwen3.5:9b). */
   system?: 'gemini' | 'ollama';
   /**
-   * With system 'ollama': 'local' embeds with OLLAMA_EMBED_MODEL (fully local,
-   * the default); 'gemini' keeps Gemini embeddings (the P08b ablation's row B).
+   * 'local' embeds with OLLAMA_EMBED_MODEL, 'gemini' with Gemini. The default
+   * follows the system: local for 'ollama' (fully local; 'gemini' is the P08b
+   * ablation's row B), Gemini for 'gemini' ('local' is LongMemEval's setup, ADR-018).
    */
   embeddings?: 'local' | 'gemini';
 }
@@ -87,7 +91,8 @@ export function makeProviders(options: ProviderOptions = {}): Providers {
     chatModel: process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash-lite',
     http,
   });
-  const local = options.system === 'ollama' && options.embeddings !== 'gemini';
+  const local =
+    (options.embeddings ?? (options.system === 'ollama' ? 'local' : 'gemini')) === 'local';
   const systemEmbedder = local
     ? new OllamaEmbedder({
         model: process.env.OLLAMA_EMBED_MODEL || DEFAULT_OLLAMA_EMBED_MODEL,
@@ -101,11 +106,14 @@ export function makeProviders(options: ProviderOptions = {}): Providers {
           embedder: systemEmbedder,
           http,
         })
-      : gemini;
+      : local
+        ? withEmbedder(gemini, systemEmbedder)
+        : gemini;
   return {
     gemini,
     system,
     systemEmbedder,
+    generator: options.system === 'ollama' ? system : gemini,
     judge: groq(process.env.JUDGE_MODEL || DEFAULT_JUDGE_MODEL),
     verbalizer: groq,
     meter,

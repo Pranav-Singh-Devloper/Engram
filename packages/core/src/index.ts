@@ -46,6 +46,8 @@ export { ProviderError, ProviderHttpError, ProviderOutputError } from './provide
 export type { Provider } from './providers/provider.js';
 export { FakeProvider, FakeProviderError, fakeEmbedding } from './providers/fake.js';
 export type { FakeCall } from './providers/fake.js';
+export { withEmbedder } from './providers/withEmbedder.js';
+export type { Embedder } from './providers/withEmbedder.js';
 export {
   DEFAULT_EMBED_MODEL,
   GEMINI_BASE_URL,

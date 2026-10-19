@@ -66,6 +66,10 @@ async function main(): Promise<void> {
   const runId =
     arg('run') ?? `${new Date().toISOString().slice(0, 10)}-${split}${smoke ? '-smoke' : ''}`;
   const runDir = path.join(BENCH_DIR, 'runs', runId);
+  const embeddings = arg('embeddings') ?? (arg('system') === 'ollama' ? 'local' : 'gemini');
+  if (embeddings !== 'local' && embeddings !== 'gemini') {
+    throw new Error(`Unknown embeddings ${embeddings}`);
+  }
   const statsFile = path.join(runDir, 'provider-stats.json');
   const llmJudge = !flag('no-llm-judge') && !offline && !smoke;
   const cacheDir = smoke ? SMOKE_CACHE_DIR : (arg('cache-dir') ?? DEFAULT_CACHE_DIR);
@@ -80,10 +84,6 @@ async function main(): Promise<void> {
     if (flag('estimate')) return;
     const system = arg('system') ?? 'gemini';
     if (system !== 'gemini' && system !== 'ollama') throw new Error(`Unknown system ${system}`);
-    const embeddings = arg('embeddings') ?? 'local';
-    if (embeddings !== 'local' && embeddings !== 'gemini') {
-      throw new Error(`Unknown embeddings ${embeddings}`);
-    }
     const providers = makeProviders({
       system,
       embeddings,
@@ -122,7 +122,7 @@ async function main(): Promise<void> {
       mkdirSync(runDir, { recursive: true });
       writeFileSync(
         statsFile,
-        `${JSON.stringify(providerCounters(providers.system, providers.systemEmbedder), null, 2)}\n`,
+        `${JSON.stringify(providerCounters(providers.generator, providers.systemEmbedder), null, 2)}\n`,
       );
     }
   }
@@ -132,10 +132,16 @@ async function main(): Promise<void> {
   const meta = {
     runId,
     split,
-    model:
+    // Generation and embeddings both, since LongMemEval and the P08b rows mix them.
+    model: `${
       arg('system') === 'ollama'
         ? `ollama ${process.env.OLLAMA_MODEL || 'qwen3.5:9b'}`
-        : process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash-lite',
+        : process.env.GEMINI_CHAT_MODEL || 'gemini-3.5-flash-lite'
+    } + ${
+      embeddings === 'local'
+        ? process.env.OLLAMA_EMBED_MODEL || 'embeddinggemma:300m'
+        : process.env.GEMINI_EMBED_MODEL || 'gemini-embedding-2'
+    } embeddings`,
     judge: llmJudge ? process.env.JUDGE_MODEL || 'openai/gpt-oss-120b' : 'exact/contains only',
     // The run's own date when its id carries one, so --report-only keeps it.
     date: /^\d{4}-\d{2}-\d{2}/.exec(runId)?.[0] ?? new Date().toISOString().slice(0, 10),
