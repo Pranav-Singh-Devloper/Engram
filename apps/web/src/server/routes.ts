@@ -2,7 +2,8 @@
 // handlers with plain Requests, a FakeProvider and the local database. The
 // app/api/**/route.ts files only wire the real dependencies (P09a decision 6).
 import type { Clock, Provider, Sql } from '@engram/core';
-import { readAccess, tokenAccess } from './auth';
+import { demoAccess, readAccess, tokenAccess } from './auth';
+import { chat } from './chat';
 import type { WebConfig } from './config';
 import { createDemoSession } from './demo';
 import { health } from './health';
@@ -39,6 +40,12 @@ export function createRoutes(deps: Deps) {
     remember: async (req: Request) => {
       const access = await tokenAccess(db, config, req);
       return access instanceof Response ? access : remember(deps, access, req);
+    },
+    chat: async (req: Request) => {
+      const access = await demoAccess(db, req, clock.now());
+      return access instanceof Response
+        ? access
+        : chat({ ...deps, dailyTurnCap: config.dailyTurnCap }, access, req);
     },
     recall: async (req: Request) => {
       const access = await tokenAccess(db, config, req);

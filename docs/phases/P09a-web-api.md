@@ -61,6 +61,9 @@ Give the Next.js app its HTTP surface: thin route handlers over `packages/core`,
 ## Build notes (recorded as they happen)
 - **Webpack, not Turbopack (task 1).** The engine packages use NodeNext imports (`./db/client.js` for `client.ts`) and ship TypeScript source. Turbopack, Next 16's default bundler, can't map `.js` to `.ts` ("Module not found: Can't resolve './config/clock.js'"). Webpack can, with `resolve.extensionAlias`, so `dev` and `build` pass `--webpack`. Rejected: rewriting the engine's imports (it would break NodeNext for tsx, vitest and the MCP stdio server), and compiling the packages to `dist/` (a build step for every package, only for the web app). Turbopack can be revisited if it gains extension aliasing.
 
+- **Chat order changed (task 8).** Decision 7 stored the user's turn before recalling. Done that way, recall finds the question's own episode at similarity 1.0, which also defeats the abstention floor. Chat now recalls first, then stores the turn (before composing, so the message survives a failed reply), composes, and stores the reply.
+- **Limits answer 429, not a stream event (task 8).** A refused turn returns 429 JSON (`limit: "namespace" | "global"`) before any model call or stream starts; only accepted turns stream. A plain status is simpler for clients and correct HTTP. The `error` event remains for failures mid-turn.
+
 ## Scope
 **In:** `apps/web` with route handlers only; migration 0008 (`throttles`); demo sessions, chat, reads, evals, MCP, health; the auth, limit and scoping tests; one preview deploy plus the health check; SPEC §11/§14 patches; `.env.example`.
 
