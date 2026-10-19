@@ -22,9 +22,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "f761398a5e6f",
+    "promptVersion": "9dd3a8ec9ed2",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-17T18:36:53.608Z",
+    "recordedAt": "2026-10-19T03:43:56.809Z",
     "calls": [
       {
         "method": "processEpisode",

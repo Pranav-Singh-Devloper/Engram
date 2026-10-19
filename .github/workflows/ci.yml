@@ -60,3 +60,5 @@ jobs:
       - run: pnpm bench --subset=smoke --offline
       # The same items with nightly consolidation, replaying recorded summaries.
       - run: pnpm bench --subset=smoke --offline --memory=engram_consolidated
+      # Bulk session extraction (ADR-015), as the bench and imports use it.
+      - run: pnpm bench --subset=smoke --offline --memory=engram --extraction=session

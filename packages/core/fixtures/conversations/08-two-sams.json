@@ -22,9 +22,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "f761398a5e6f",
+    "promptVersion": "9dd3a8ec9ed2",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-17T18:41:07.455Z",
+    "recordedAt": "2026-10-19T03:44:09.613Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -66,7 +66,7 @@
                   "description": "the user"
                 }
               },
-              "statement": "Sam is the sibling of the user.",
+              "statement": "Sam is the user's sibling.",
               "validFrom": {
                 "kind": "none"
               },
@@ -87,7 +87,7 @@
                 "kind": "literal",
                 "value": "chef"
               },
-              "statement": "Sam's occupation is chef.",
+              "statement": "Sam has the occupation chef.",
               "validFrom": {
                 "kind": "none"
               },
@@ -165,7 +165,7 @@
                   "description": "the user"
                 }
               },
-              "statement": "Sam is the manager of the user.",
+              "statement": "Sam is the user's manager.",
               "validFrom": {
                 "kind": "none"
               },
@@ -198,7 +198,7 @@
         },
         "output": {
           "choice": null,
-          "reason": "The mention refers to the user's manager at work, whereas the candidate is the user's brother."
+          "reason": "The mention refers to the user's manager at work, whereas the candidate is the user's brother who is a chef."
         }
       },
       {
@@ -225,65 +225,7 @@
         },
         "output": {
           "importance": 0.5,
-          "candidates": [
-            {
-              "subject": {
-                "name": "Sam",
-                "type": "person",
-                "description": "someone who cooked dinner for the user's birthday"
-              },
-              "predicate": "birthday_of",
-              "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "SELF",
-                  "type": "person",
-                  "description": "the user"
-                }
-              },
-              "statement": "Sam cooked dinner for the user's birthday.",
-              "validFrom": {
-                "kind": "relative",
-                "amount": 1,
-                "unit": "day",
-                "direction": "ago"
-              },
-              "validTo": {
-                "kind": "none"
-              },
-              "isCorrection": false,
-              "confidence": 0.9
-            }
-          ]
-        }
-      },
-      {
-        "method": "disambiguate",
-        "input": {
-          "mention": {
-            "name": "Sam",
-            "type": "person",
-            "description": "someone who cooked dinner for the user's birthday"
-          },
-          "context": "Sam cooked an amazing dinner for my birthday last night.",
-          "candidates": [
-            {
-              "name": "Sam",
-              "type": "person",
-              "description": "the user's brother, a chef",
-              "aliases": []
-            },
-            {
-              "name": "Sam",
-              "type": "person",
-              "description": "the user's manager at work",
-              "aliases": []
-            }
-          ]
-        },
-        "output": {
-          "choice": 0,
-          "reason": "Sam is a chef and cooked dinner for the user's birthday, matching candidate c1."
+          "candidates": []
         }
       }
     ]

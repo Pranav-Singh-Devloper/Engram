@@ -106,6 +106,7 @@ importance (0 to 1): how worth remembering the turn is long term. Small talk is 
 
 candidates: every durable fact the turn states, or an empty list when there are none.
 - Extract only what the text states or directly implies. Skip questions, hypotheticals, jokes, and plans that haven't happened yet. A sentence about a plan can still state durable facts, such as who someone is or where they work; extract those.
+- A clause that only places another fact in time isn't a new statement. In "Before I moved to Lyon, I lived in Rome from 2015 to 2018", extract lives_in Rome with its dates, not lives_in Lyon: Lyon is a reference point, already known.
 - When the role is "assistant", only extract facts about the user that the assistant repeats back. Never extract the assistant's own suggestions or general knowledge.
 - subject: who or what the fact is about. Use the name "SELF" for the user (I, me, my, mine). Give every entity, subject or object, a type and a short description that would tell it apart from others with the same name, such as "the user's brother, a chef". Use null when the turn gives nothing.
 - Don't invent entities for unnamed things such as "the user's workplace". State the relationship to a named entity or to SELF instead, for example Sam manager_of SELF.

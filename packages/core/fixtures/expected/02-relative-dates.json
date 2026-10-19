@@ -4,7 +4,7 @@
   "summaries": [
     {
       "status": "processed",
-      "importance": 0.8,
+      "importance": 0.6,
       "extracted": 2,
       "createdEntities": 2,
       "dropped": 0,
@@ -50,14 +50,14 @@
       "name": "Berlin",
       "type": "place",
       "aliases": [],
-      "description": "a city",
+      "description": "the city of Berlin",
       "isSelf": false
     },
     {
       "name": "cello",
       "type": "thing",
       "aliases": [],
-      "description": "a musical instrument",
+      "description": "the musical instrument",
       "isSelf": false
     },
     {
@@ -94,7 +94,7 @@
       "status": "active",
       "adHoc": false,
       "statement": "The user visited Kyoto.",
-      "validFrom": "2024-06-01 (explicit)",
+      "validFrom": "2022-06-10 (explicit)",
       "validTo": null,
       "confidence": 1,
       "sources": 1

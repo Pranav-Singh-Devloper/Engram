@@ -10,9 +10,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "f761398a5e6f",
+    "promptVersion": "9dd3a8ec9ed2",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-17T18:40:31.722Z",
+    "recordedAt": "2026-10-19T03:44:00.290Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -37,7 +37,7 @@
           ]
         },
         "output": {
-          "importance": 0.8,
+          "importance": 0.5,
           "candidates": [
             {
               "subject": {
@@ -79,12 +79,12 @@
                   "description": "a city in Japan"
                 }
               },
-              "statement": "The user visited Kyoto in April 2023.",
+              "statement": "The user visited Kyoto.",
               "validFrom": {
                 "kind": "named_period",
                 "year": 2023,
                 "month": 4,
-                "season": null
+                "season": "spring"
               },
               "validTo": {
                 "kind": "none"
@@ -107,68 +107,12 @@
                   "description": "a city in Japan"
                 }
               },
-              "statement": "The user visited Osaka in April 2023.",
+              "statement": "The user visited Osaka.",
               "validFrom": {
                 "kind": "named_period",
                 "year": 2023,
                 "month": 4,
-                "season": null
-              },
-              "validTo": {
-                "kind": "none"
-              },
-              "isCorrection": false,
-              "confidence": 1
-            },
-            {
-              "subject": {
-                "name": "Jordan",
-                "type": "person",
-                "description": "the user's partner"
-              },
-              "predicate": "visited",
-              "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "Kyoto",
-                  "type": "place",
-                  "description": "a city in Japan"
-                }
-              },
-              "statement": "Jordan visited Kyoto in April 2023.",
-              "validFrom": {
-                "kind": "named_period",
-                "year": 2023,
-                "month": 4,
-                "season": null
-              },
-              "validTo": {
-                "kind": "none"
-              },
-              "isCorrection": false,
-              "confidence": 1
-            },
-            {
-              "subject": {
-                "name": "Jordan",
-                "type": "person",
-                "description": "the user's partner"
-              },
-              "predicate": "visited",
-              "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "Osaka",
-                  "type": "place",
-                  "description": "a city in Japan"
-                }
-              },
-              "statement": "Jordan visited Osaka in April 2023.",
-              "validFrom": {
-                "kind": "named_period",
-                "year": 2023,
-                "month": 4,
-                "season": null
+                "season": "spring"
               },
               "validTo": {
                 "kind": "none"
@@ -184,12 +128,8 @@
               },
               "predicate": "likes",
               "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "ramen",
-                  "type": "thing",
-                  "description": "a Japanese noodle dish"
-                }
+                "kind": "literal",
+                "value": "ramen"
               },
               "statement": "Jordan likes ramen.",
               "validFrom": {
@@ -209,12 +149,8 @@
               },
               "predicate": "likes",
               "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "sushi",
-                  "type": "thing",
-                  "description": "a Japanese dish of prepared vinegared rice"
-                }
+                "kind": "literal",
+                "value": "sushi"
               },
               "statement": "The user likes sushi.",
               "validFrom": {

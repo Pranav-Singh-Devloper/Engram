@@ -59,7 +59,7 @@
       "name": "Initech",
       "type": "org",
       "aliases": [],
-      "description": "the organization the user works for",
+      "description": "the company the user works for",
       "isSelf": false
     }
   ],

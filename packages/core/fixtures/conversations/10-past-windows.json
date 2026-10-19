@@ -16,9 +16,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "f761398a5e6f",
+    "promptVersion": "9dd3a8ec9ed2",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-17T18:41:12.251Z",
+    "recordedAt": "2026-10-19T03:45:06.677Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -43,7 +43,7 @@
           ]
         },
         "output": {
-          "importance": 0.8,
+          "importance": 0.5,
           "candidates": [
             {
               "subject": {
@@ -57,7 +57,7 @@
                 "entity": {
                   "name": "Paris",
                   "type": "place",
-                  "description": "a city in France"
+                  "description": "the capital of France"
                 }
               },
               "statement": "The user lives in Paris.",
@@ -99,7 +99,7 @@
           ]
         },
         "output": {
-          "importance": 0.6,
+          "importance": 0.5,
           "candidates": [
             {
               "subject": {
@@ -116,7 +116,7 @@
                   "description": "a city in France"
                 }
               },
-              "statement": "The user lived in Lyon.",
+              "statement": "The user lived in Lyon from 2015 to 2018.",
               "validFrom": {
                 "kind": "named_period",
                 "year": 2015,
@@ -138,31 +138,6 @@
                 "type": "person",
                 "description": "the user"
               },
-              "predicate": "visited",
-              "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "Paris",
-                  "type": "place",
-                  "description": "a city"
-                }
-              },
-              "statement": "The user has been to Paris.",
-              "validFrom": {
-                "kind": "none"
-              },
-              "validTo": {
-                "kind": "none"
-              },
-              "isCorrection": false,
-              "confidence": 1
-            },
-            {
-              "subject": {
-                "name": "SELF",
-                "type": "person",
-                "description": "the user"
-              },
               "predicate": "lives_in",
               "object": {
                 "kind": "entity",
@@ -172,7 +147,7 @@
                   "description": "a city in France"
                 }
               },
-              "statement": "The user lived in Marseille before Lyon.",
+              "statement": "The user lived in Marseille before 2015.",
               "validFrom": {
                 "kind": "none"
               },
@@ -183,7 +158,7 @@
                 "season": null
               },
               "isCorrection": false,
-              "confidence": 1
+              "confidence": 0.9
             }
           ]
         }

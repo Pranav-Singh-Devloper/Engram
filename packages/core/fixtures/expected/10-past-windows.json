@@ -4,7 +4,7 @@
   "summaries": [
     {
       "status": "processed",
-      "importance": 0.8,
+      "importance": 0.5,
       "extracted": 1,
       "createdEntities": 1,
       "dropped": 0,
@@ -21,13 +21,13 @@
     },
     {
       "status": "processed",
-      "importance": 0.6,
-      "extracted": 3,
+      "importance": 0.5,
+      "extracted": 2,
       "createdEntities": 2,
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
-        "inserted": 1,
+        "inserted": 0,
         "merged": 0,
         "updated": 0,
         "backfilled": 2,
@@ -67,7 +67,7 @@
       "name": "Paris",
       "type": "place",
       "aliases": [],
-      "description": "a city in France",
+      "description": "the capital of France",
       "isSelf": false
     }
   ],
@@ -76,7 +76,7 @@
       "fact": "User lives_in Lyon",
       "status": "superseded",
       "adHoc": false,
-      "statement": "The user lived in Lyon.",
+      "statement": "The user lived in Lyon from 2015 to 2018.",
       "validFrom": "2015-01-01 (explicit)",
       "validTo": "2018-01-01",
       "confidence": 1,
@@ -86,10 +86,10 @@
       "fact": "User lives_in Marseille",
       "status": "superseded",
       "adHoc": false,
-      "statement": "The user lived in Marseille before Lyon.",
+      "statement": "The user lived in Marseille before 2015.",
       "validFrom": "unknown (unknown)",
       "validTo": "2015-01-01",
-      "confidence": 1,
+      "confidence": 0.9,
       "sources": 1
     },
     {
@@ -98,16 +98,6 @@
       "adHoc": false,
       "statement": "The user lives in Paris.",
       "validFrom": "2018-01-01 (explicit)",
-      "validTo": null,
-      "confidence": 1,
-      "sources": 1
-    },
-    {
-      "fact": "User visited Paris",
-      "status": "active",
-      "adHoc": false,
-      "statement": "The user has been to Paris.",
-      "validFrom": "2024-09-01 (episode)",
       "validTo": null,
       "confidence": 1,
       "sources": 1

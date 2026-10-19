@@ -39,12 +39,12 @@
     {
       "status": "processed",
       "importance": 0.5,
-      "extracted": 1,
+      "extracted": 0,
       "createdEntities": 0,
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
-        "inserted": 1,
+        "inserted": 0,
         "merged": 0,
         "updated": 0,
         "backfilled": 0,
@@ -87,16 +87,6 @@
   ],
   "facts": [
     {
-      "fact": "Sam [the user's brother, a chef] birthday_of User",
-      "status": "active",
-      "adHoc": true,
-      "statement": "Sam cooked dinner for the user's birthday.",
-      "validFrom": "2024-07-02 (explicit)",
-      "validTo": null,
-      "confidence": 0.9,
-      "sources": 1
-    },
-    {
       "fact": "Sam [the user's brother, a chef] lives_in Lyon",
       "status": "active",
       "adHoc": false,
@@ -110,7 +100,7 @@
       "fact": "Sam [the user's brother, a chef] occupation \"chef\"",
       "status": "active",
       "adHoc": false,
-      "statement": "Sam's occupation is chef.",
+      "statement": "Sam has the occupation chef.",
       "validFrom": "2024-07-01 (episode)",
       "validTo": null,
       "confidence": 1,
@@ -120,7 +110,7 @@
       "fact": "Sam [the user's manager at work] manager_of User",
       "status": "active",
       "adHoc": true,
-      "statement": "Sam is the manager of the user.",
+      "statement": "Sam is the user's manager.",
       "validFrom": "2024-07-02 (episode)",
       "validTo": null,
       "confidence": 1,
@@ -130,7 +120,7 @@
       "fact": "User sibling_of Sam [the user's brother, a chef]",
       "status": "active",
       "adHoc": false,
-      "statement": "Sam is the sibling of the user.",
+      "statement": "Sam is the user's sibling.",
       "validFrom": "2024-07-01 (episode)",
       "validTo": null,
       "confidence": 1,

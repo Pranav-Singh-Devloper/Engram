@@ -16,9 +16,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "f761398a5e6f",
+    "promptVersion": "9dd3a8ec9ed2",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-17T18:40:35.448Z",
+    "recordedAt": "2026-10-19T03:44:03.556Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -43,7 +43,7 @@
           ]
         },
         "output": {
-          "importance": 0.6,
+          "importance": 0.5,
           "candidates": [
             {
               "subject": {
@@ -60,7 +60,7 @@
                   "description": "the user"
                 }
               },
-              "statement": "Robert is the brother of The user.",
+              "statement": "Robert is the user's brother.",
               "validFrom": {
                 "kind": "none"
               },
@@ -104,16 +104,12 @@
                 "type": "person",
                 "description": "the user's acquaintance"
               },
-              "predicate": "loves",
+              "predicate": "has_job",
               "object": {
-                "kind": "entity",
-                "entity": {
-                  "name": "new job",
-                  "type": "concept",
-                  "description": "Rob's new job"
-                }
+                "kind": "literal",
+                "value": "new job"
               },
-              "statement": "Rob is loving the new job.",
+              "statement": "Rob has a new job.",
               "validFrom": {
                 "kind": "none"
               },

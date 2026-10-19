@@ -22,9 +22,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "f761398a5e6f",
+    "promptVersion": "9dd3a8ec9ed2",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-17T18:38:01.676Z",
+    "recordedAt": "2026-10-19T03:45:03.069Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -63,7 +63,7 @@
                 "entity": {
                   "name": "Toronto",
                   "type": "place",
-                  "description": "a city where the user is based"
+                  "description": "a city in Canada"
                 }
               },
               "statement": "The user lives in Toronto.",
@@ -74,7 +74,7 @@
                 "kind": "none"
               },
               "isCorrection": false,
-              "confidence": 0.9
+              "confidence": 1
             }
           ]
         }

@@ -16,9 +16,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "f761398a5e6f",
+    "promptVersion": "9dd3a8ec9ed2",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-17T18:36:51.028Z",
+    "recordedAt": "2026-10-19T03:43:54.708Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -57,7 +57,7 @@
                 "entity": {
                   "name": "Initech",
                   "type": "org",
-                  "description": "the organization the user works for"
+                  "description": "the company the user works for"
                 }
               },
               "statement": "The user works at Initech.",

@@ -10,9 +10,9 @@
     }
   ],
   "recording": {
-    "promptVersion": "f761398a5e6f",
+    "promptVersion": "9dd3a8ec9ed2",
     "model": "gemini-3.5-flash-lite",
-    "recordedAt": "2026-10-17T18:36:47.085Z",
+    "recordedAt": "2026-10-19T03:43:50.766Z",
     "calls": [
       {
         "method": "processEpisode",
@@ -54,7 +54,7 @@
                   "description": "the user"
                 }
               },
-              "statement": "Ana is the sibling of the user.",
+              "statement": "Ana is the sister of the user.",
               "validFrom": {
                 "kind": "none"
               },

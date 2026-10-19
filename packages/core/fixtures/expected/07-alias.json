@@ -4,7 +4,7 @@
   "summaries": [
     {
       "status": "processed",
-      "importance": 0.6,
+      "importance": 0.5,
       "extracted": 1,
       "createdEntities": 1,
       "dropped": 0,
@@ -23,7 +23,7 @@
       "status": "processed",
       "importance": 0.5,
       "extracted": 1,
-      "createdEntities": 2,
+      "createdEntities": 1,
       "dropped": 0,
       "droppedBounds": 0,
       "outcomes": {
@@ -47,13 +47,6 @@
       "isSelf": true
     },
     {
-      "name": "new job",
-      "type": "concept",
-      "aliases": [],
-      "description": "Rob's new job",
-      "isSelf": false
-    },
-    {
       "name": "Rob",
       "type": "person",
       "aliases": [],
@@ -70,10 +63,10 @@
   ],
   "facts": [
     {
-      "fact": "Rob loves new job",
+      "fact": "Rob occupation \"new job\"",
       "status": "active",
-      "adHoc": true,
-      "statement": "Rob is loving the new job.",
+      "adHoc": false,
+      "statement": "Rob has a new job.",
       "validFrom": "2024-02-20 (episode)",
       "validTo": null,
       "confidence": 0.9,
@@ -83,7 +76,7 @@
       "fact": "User sibling_of Robert",
       "status": "active",
       "adHoc": false,
-      "statement": "Robert is the brother of The user.",
+      "statement": "Robert is the user's brother.",
       "validFrom": "2024-01-15 (episode)",
       "validTo": null,
       "confidence": 1,
