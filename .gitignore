@@ -28,3 +28,4 @@ bench/longmemeval/data/
 # Next.js
 .next/
 apps/web/next-env.d.ts
+.vercel

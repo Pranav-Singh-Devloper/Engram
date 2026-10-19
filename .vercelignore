@@ -1,0 +1,13 @@
+# Never upload secrets or local-only data with a CLI deploy (P09a task 10).
+.env
+.env.*
+!.env.example
+**/node_modules
+**/.next
+.git
+# Bench data that is local, large or regenerable; reports stay (for /api/evals).
+bench/cache
+bench/runs
+bench/longmemeval/data
+bench/fixtures/smoke-cache
+bench/spikes/*.gguf
