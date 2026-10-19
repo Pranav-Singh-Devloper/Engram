@@ -1,5 +1,6 @@
 // The web app's settings, read once from the environment (.env.example).
 import path from 'node:path';
+import { providerKind } from '@engram/core';
 import { DEFAULT_REPORTS_DIR, parseTokens, tokenResolver } from '@engram/mcp';
 import type { AuthConfig } from './auth';
 
@@ -12,6 +13,10 @@ export interface WebConfig extends AuthConfig {
   secureCookies: boolean;
   /** bench/reports, which /api/evals lists (traced into the deployment by next.config). */
   reportsDir: string | null;
+  /** ENGRAM_MCP_TOKENS parsed: token → namespace slug, for /api/mcp. */
+  mcpTokens: ReadonlyMap<string, string>;
+  /** engram_remember's `wait` default: Gemini is fast enough to wait; local models aren't. */
+  rememberWaitDefault: boolean;
 }
 
 type Env = Record<string, string | undefined>;
@@ -23,8 +28,11 @@ export function configFromEnv(env: Env): WebConfig {
     throw new Error('ENGRAM_IP_HASH_SECRET must be set (16+ characters) in production.');
   }
   const cap = Number(env.ENGRAM_DEMO_DAILY_TURNS ?? 120);
+  const mcpTokens = parseTokens(env.ENGRAM_MCP_TOKENS);
   return {
-    resolveToken: tokenResolver(parseTokens(env.ENGRAM_MCP_TOKENS)),
+    resolveToken: tokenResolver(mcpTokens),
+    mcpTokens,
+    rememberWaitDefault: providerKind(env) === 'gemini',
     showcaseSlug: env.ENGRAM_SHOWCASE_NAMESPACE?.trim() || undefined,
     ipHashSecret: ipHashSecret || 'local-development-only',
     dailyTurnCap: Number.isFinite(cap) && cap >= 0 ? cap : 120,

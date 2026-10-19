@@ -18,6 +18,8 @@ export function testRoutes(
   const tokenSlug = `test-web-${randomUUID()}`;
   const config: WebConfig = {
     resolveToken: tokenResolver(new Map([[TEST_TOKEN, tokenSlug]])),
+    mcpTokens: new Map([[TEST_TOKEN, tokenSlug]]),
+    rememberWaitDefault: true,
     showcaseSlug: undefined,
     ipHashSecret: randomUUID(), // a fresh secret per test isolates throttle keys
     dailyTurnCap: 1e9,

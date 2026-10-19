@@ -2,6 +2,7 @@
 // handlers with plain Requests, a FakeProvider and the local database. The
 // app/api/**/route.ts files only wire the real dependencies (P09a decision 6).
 import type { Clock, Provider, Sql } from '@engram/core';
+import { createEngramHttpHandler } from '@engram/mcp';
 import { demoAccess, readAccess, tokenAccess } from './auth';
 import { chat } from './chat';
 import type { WebConfig } from './config';
@@ -21,7 +22,25 @@ export interface Deps {
 
 export function createRoutes(deps: Deps) {
   const { db, config, clock } = deps;
+  // P07's handler, mounted unchanged (P09a decision 9). Its background work
+  // (engram_remember with wait: false) is handed to `defer`, so a serverless
+  // function isn't frozen before it finishes.
+  const mcp = createEngramHttpHandler({
+    db,
+    provider: deps.provider,
+    tokens: config.mcpTokens,
+    clock,
+    rememberWaitDefault: config.rememberWaitDefault,
+    reportsDir: config.reportsDir,
+    background: (task) => {
+      deps.defer(() => task);
+    },
+    log: (line) => {
+      console.error(line);
+    },
+  });
   return {
+    mcp: (req: Request) => mcp.fetch(req),
     health: () => health(db),
     demoSession: (req: Request) => createDemoSession(db, config, clock, req),
     memories: async (req: Request) => {
