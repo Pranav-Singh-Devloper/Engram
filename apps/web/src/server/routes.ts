@@ -2,9 +2,11 @@
 // handlers with plain Requests, a FakeProvider and the local database. The
 // app/api/**/route.ts files only wire the real dependencies (P09a decision 6).
 import type { Clock, Provider, Sql } from '@engram/core';
+import { readAccess } from './auth';
 import type { WebConfig } from './config';
 import { createDemoSession } from './demo';
 import { health } from './health';
+import { entityTimeline, listEvals, listMemories } from './reads';
 
 export interface Deps {
   db: Sql;
@@ -20,6 +22,19 @@ export function createRoutes(deps: Deps) {
   return {
     health: () => health(db),
     demoSession: (req: Request) => createDemoSession(db, config, clock, req),
+    memories: async (req: Request) => {
+      const access = await readAccess(db, config, req, clock.now());
+      return access instanceof Response
+        ? access
+        : listMemories(db, access, new URL(req.url), clock.now());
+    },
+    timeline: async (req: Request, entityId: string) => {
+      const access = await readAccess(db, config, req, clock.now());
+      return access instanceof Response
+        ? access
+        : entityTimeline(db, access, entityId, new URL(req.url));
+    },
+    evals: () => listEvals(config.reportsDir),
   };
 }
 

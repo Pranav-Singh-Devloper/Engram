@@ -1,5 +1,6 @@
 // The web app's settings, read once from the environment (.env.example).
-import { parseTokens, tokenResolver } from '@engram/mcp';
+import path from 'node:path';
+import { DEFAULT_REPORTS_DIR, parseTokens, tokenResolver } from '@engram/mcp';
 import type { AuthConfig } from './auth';
 
 export interface WebConfig extends AuthConfig {
@@ -9,6 +10,8 @@ export interface WebConfig extends AuthConfig {
   dailyTurnCap: number;
   /** Secure cookies need HTTPS; local `next dev` is plain http. */
   secureCookies: boolean;
+  /** bench/reports, which /api/evals lists (traced into the deployment by next.config). */
+  reportsDir: string | null;
 }
 
 type Env = Record<string, string | undefined>;
@@ -26,5 +29,11 @@ export function configFromEnv(env: Env): WebConfig {
     ipHashSecret: ipHashSecret || 'local-development-only',
     dailyTurnCap: Number.isFinite(cap) && cap >= 0 ? cap : 120,
     secureCookies: production,
+    // Under Next there's no source directory, so the default comes from the
+    // app's working directory (apps/web, locally and on Vercel; verified in task 10).
+    reportsDir:
+      env.ENGRAM_REPORTS_DIR?.trim() ||
+      DEFAULT_REPORTS_DIR ||
+      path.resolve(process.cwd(), '../../bench/reports'),
   };
 }

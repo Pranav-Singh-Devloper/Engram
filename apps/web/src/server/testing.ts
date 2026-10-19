@@ -22,6 +22,7 @@ export function testRoutes(
     ipHashSecret: randomUUID(), // a fresh secret per test isolates throttle keys
     dailyTurnCap: 1e9,
     secureCookies: true,
+    reportsDir: null,
     ...overrides,
   };
   const clock = new SimClock('2026-10-19T12:00:00Z');
