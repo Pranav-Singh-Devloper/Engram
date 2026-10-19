@@ -171,6 +171,8 @@ DECISIONS.md                                    # ADR-015 packed extraction (wit
 
 **To verify on day 1:** gemini-embedding-2's free limits. LongMemEval needs ~46k turn embeddings (~11M tokens), batched 100 per request. A short, timed burst checks the rate before the full run.
 
+**Verified 2026-10-19, and the plan changed (ADR-018):** the free quota counts each embedded *text*, not each request, so batching saves nothing. LongMemEval's ~45k unique turns would take ~11 days on four keys. LongMemEval therefore runs on Gemini generation with local embeddings (embeddinggemma), and the test split stays fully on Gemini over two days of quota. The bench now caches vectors per text, so repeated turns aren't paid for twice.
+
 Every run prints its estimate first, uses the response cache, is resumable, and stops on quota (exhausted keys fail fast; the fallback takes over). If a day's quota runs out mid-run, the next day resumes from the cache. Neon is never touched by the bench.
 
 ## Risks and verify-at-build-time

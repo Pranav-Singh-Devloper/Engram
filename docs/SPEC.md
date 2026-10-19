@@ -654,7 +654,7 @@ Reports go to `bench/reports/<date>.md`; the summary table is copied into the RE
 
 `bench/longmemeval/` adapts a subset of LongMemEval-S (target ~100 items, stratified by its question types) to the runner. Check the dataset's repo, license, and format at build time. Report the engram and full_context numbers on it next to the internal ones.
 
-LongMemEval-S histories are long (on the order of 115k tokens per item), so `full_context` is the expensive mode. If the pre-run estimate exceeds what the free tier allows in a reasonable number of days, shrink to a smaller stratified subset (at least 50 items) and record the size and reason in an ADR. Never drop question types to fit.
+LongMemEval-S histories are long (on the order of 115k tokens per item), so `full_context` is the expensive mode. If the pre-run estimate exceeds what the free tier allows in a reasonable number of days, shrink to a smaller stratified subset (at least 50 items) and record the size and reason in an ADR. Never drop question types to fit. Embedding cost counts **texts**, not requests (Gemini's free quota counts every embedded text): the 98-item subset holds ~45k unique turns, ~11 days of free Gemini embeddings. So LongMemEval runs with Gemini generation and local embeddings (embeddinggemma), the same embedder for every mode that embeds, and the reports name both models (ADR-018).
 
 ### 13.7 CI
 

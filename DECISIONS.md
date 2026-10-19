@@ -297,3 +297,40 @@ embeddinggemma:300m@85462619ee72, at Gemini's thresholds vs the chosen profile:
   - merge 0.90 and entity search 0.70 separate cleanly.
   - drift 0.50: consecutive turns score ≥ 0.587, so it never splits a session; cross-session pairs (≤ 0.679) also stay together. Splits come from session bounds, not drift.
 - Drift has no clean threshold for embeddinggemma. Consolidation splits rarely, and summaries cover more turns.
+
+---
+
+## ADR-018 — Gemini's embedding quota counts texts; LongMemEval runs on local embeddings
+
+**Date:** 2026-10-19 · **Status:** Accepted (P08)
+
+**Context.** P08's budget assumed Gemini's free embedding quota (1,000 a day per project) counted requests, and that a `batchEmbedContents` call of up to 100 texts was one request. On 2026-10-19 the test run exhausted a fresh key after 277 requests carrying 1,019 texts. **The quota counts texts.** Batching saves nothing. That changes two things:
+
+- **Test split:** Engram embeds about 17 texts an item (turns, facts, entity labels, the query). rag embeds every turn of every history, about 9,400 texts for test, because the bench cached whole requests: the same turn in a differently composed batch was paid for again.
+- **LongMemEval-S (98 items):** 48,216 turns, **45,404 of them unique** (94%), about 11.3M tokens. With 4 keys (about 4,000 texts a day) that is about 11 days for one pass, before facts and queries.
+
+**Decision.**
+
+1. **The bench caches vectors per text** (`bench/runner/cache.ts`), as well as per request, and sends only texts it has never embedded. rag on test drops to at most the 1,343 unique turns. The engine is unchanged; this is a bench cost fix.
+2. **The test split stays fully on Gemini** (generation and embeddings). It is the headline comparison, so it runs over two days of quota rather than change setup.
+3. **LongMemEval runs with Gemini generation and local embeddings** (embeddinggemma:300m via Ollama, through `withEmbedder`). Every mode that embeds (engram, `engram_consolidated`, rag) uses the same embedder, so the comparison between modes stays like-for-like. buffer and full_context don't embed. Similarity thresholds follow the namespace's embedding space, so the calibrated embeddinggemma profile (ADR-017) applies automatically. Measured: 40 texts a second, so about 19 minutes for every unique turn; 0.1% of turns (38) exceed the 7,000-character cap and are truncated (ledger row 38).
+
+**Alternatives considered** (researched 2026-10-19; free tiers only):
+
+| option                                           | why not                                                                                                                                         |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Gemini embeddings, shrink the subset to fit      | ~8 items a day; a 50-item run takes a week, and §13.6's ≥50-item floor leaves no margin                                                         |
+| OpenRouter `nvidia/nemotron-3-embed-1b:free`     | limits unverified (an aggregator lists ~200 requests a day); requests are logged and may train NVIDIA models; a new provider plus a calibration |
+| OpenRouter `liquid/lfm-2.5-embedding-350m:free`  | 1,024-d and a 512-token input; may train Liquid models                                                                                          |
+| Jina v3/v4 (dimension parameter allows 768)      | a one-time 10M-token grant (sources disagree; maybe 1M a month), below the 11.3M needed                                                         |
+| Voyage-4 (~200M free tokens a month, unverified) | no 768-d output (256/512/1024/2048): a schema migration and a new validation                                                                    |
+| Mistral `mistral-embed` (~1B tokens a month)     | 1,024-d only; the free plan may require opting in to training                                                                                   |
+| Cloudflare Workers AI `bge-base` (768-d)         | 10k Neurons a day ≈ 1.65M tokens a day: about a week                                                                                            |
+| Hugging Face Inference Providers                 | $0.10 a month in free credits                                                                                                                   |
+| Nomic API (768-d)                                | about 1M tokens a month (unverified)                                                                                                            |
+
+**Consequences.**
+
+- **The LongMemEval number is "Gemini 3.5 flash-lite + embeddinggemma".** Every report header names both models, and the README must too. On dev-long, swapping Gemini embeddings for embeddinggemma under the same generator cost about 5 points (P08b rows B → C, 93% → 88%, with qwen generating). The LongMemEval Engram number is therefore probably a slight underestimate of an all-Gemini Engram.
+- **The test split and LongMemEval use different embedders.** Their numbers aren't directly comparable, and the README says so.
+- **Planning embedding work means counting texts, not requests.** `pnpm bench --estimate` counts generate calls only; embedding cost is estimated from unique texts (as here) until the estimator counts them (ledger row 44).
