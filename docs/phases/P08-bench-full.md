@@ -173,6 +173,10 @@ DECISIONS.md                                    # ADR-015 packed extraction (wit
 
 **Verified 2026-10-19, and the plan changed (ADR-018):** the free quota counts each embedded *text*, not each request, so batching saves nothing. LongMemEval's ~45k unique turns would take ~11 days on four keys. LongMemEval therefore runs on Gemini generation with local embeddings (embeddinggemma), and the test split stays fully on Gemini over two days of quota. The bench now caches vectors per text, so repeated turns aren't paid for twice.
 
+**LongMemEval run notes (2026-10-19).**
+- **Judge fix (41a2cc0).** The judge recognized an unanswerable item only by our `ABSTAIN` sentinel. LongMemEval's 5 abstention items keep an explanation as `expected`, so a correct "I don't know" was scored wrong. It now judges by category too. The results judged by the old code were deleted and re-judged from the cached answers. Dev, dev-long and test use the sentinel on every abstention item (checked), so their numbers are unchanged.
+- **The Mac slept mid-run** (12:21–18:10 IST, per `pmset -g log`), which killed the rag run ("fetch failed") and stalled the rest. Long runs now go under `caffeinate -i`, which blocks idle sleep for as long as the run lasts.
+
 Every run prints its estimate first, uses the response cache, is resumable, and stops on quota (exhausted keys fail fast; the fallback takes over). If a day's quota runs out mid-run, the next day resumes from the cache. Neon is never touched by the bench.
 
 ## Risks and verify-at-build-time
