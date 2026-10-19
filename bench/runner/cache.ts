@@ -91,6 +91,42 @@ export interface CachingFetchOptions {
   missFile?: string;
 }
 
+interface EmbedRequest {
+  requests: unknown[];
+}
+interface EmbedReply {
+  embeddings: { values: number[] }[];
+}
+
+/** A batchEmbedContents body, or null for any other request. */
+function embedRequest(url: string, body: string): EmbedRequest | null {
+  if (!url.endsWith(':batchEmbedContents') || body === '') return null;
+  const parsed = JSON.parse(body) as Partial<EmbedRequest>;
+  return Array.isArray(parsed.requests) ? { requests: parsed.requests } : null;
+}
+
+/**
+ * Gemini's free tier counts every embedded text against the daily quota,
+ * however they're batched (measured 2026-10-19: 277 requests carrying 1,019
+ * texts used up a 1,000 quota). So vectors are also cached per text (model,
+ * content and dimensions, which carry the purpose) under <dir>/embeddings/,
+ * and a request sends only the texts never embedded before.
+ */
+function textFile(dir: string, request: unknown): string {
+  const k = createHash('sha256').update(JSON.stringify(request)).digest('hex');
+  return path.join(dir, 'embeddings', k.slice(0, 2), `${k}.json`);
+}
+
+function readVector(file: string): number[] | undefined {
+  return existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as number[]) : undefined;
+}
+
+function writeVector(file: string, values: number[]): void {
+  if (existsSync(file)) return;
+  mkdirSync(path.dirname(file), { recursive: true });
+  writeFileSync(file, JSON.stringify(values.map((v) => Math.round(v * 1e6) / 1e6)));
+}
+
 export function cachingFetch(options: CachingFetchOptions): typeof fetch {
   const real = options.fetch ?? fetch;
   return async (input, init) => {
@@ -98,12 +134,52 @@ export function cachingFetch(options: CachingFetchOptions): typeof fetch {
     const body = typeof init?.body === 'string' ? init.body : '';
     const key = cacheKey(url, body);
     const file = path.join(options.dir, key.slice(0, 2), `${key}.json`);
+    const embed = options.mode === 'off' ? null : embedRequest(url, body);
 
     if (options.mode !== 'off' && existsSync(file)) {
       options.meter?.record({ cached: 1 });
       const entry = JSON.parse(readFileSync(file, 'utf8')) as { body?: unknown; text?: string };
+      if (embed && options.mode === 'readwrite') {
+        const reply = entry.body as EmbedReply;
+        embed.requests.forEach((r, i) => {
+          const v = reply.embeddings[i]?.values;
+          if (v) writeVector(textFile(options.dir, r), v);
+        });
+      }
       // Streamed (NDJSON) replies are stored as text and replayed verbatim.
       return new Response(entry.text ?? JSON.stringify(entry.body), { status: 200 });
+    }
+
+    if (embed) {
+      const files = embed.requests.map((r) => textFile(options.dir, r));
+      const known = files.map(readVector);
+      const missing = embed.requests.filter((_, i) => known[i] === undefined);
+      if (missing.length === 0) {
+        options.meter?.record({ cached: 1 });
+        const reply: EmbedReply = { embeddings: known.map((v) => ({ values: v ?? [] })) };
+        return new Response(JSON.stringify(reply), { status: 200 });
+      }
+      if (options.mode === 'readwrite') {
+        await options.pacer?.wait(url);
+        const res = await real(input, { ...init, body: JSON.stringify({ requests: missing }) });
+        if (!res.ok) return res;
+        const fresh = (await res.json()) as EmbedReply;
+        options.meter?.record({ calls: 1 });
+        // A short reply is passed through, so the provider's own length check fails loudly.
+        if (fresh.embeddings.length !== missing.length) {
+          return new Response(JSON.stringify(fresh), { status: 200 });
+        }
+        let j = 0;
+        const reply: EmbedReply = {
+          embeddings: known.map((v, i) => {
+            if (v) return { values: v };
+            const values = fresh.embeddings[j++]?.values ?? [];
+            writeVector(files[i] ?? '', values);
+            return { values };
+          }),
+        };
+        return new Response(JSON.stringify(reply), { status: 200 });
+      }
     }
     if (options.mode === 'readonly') {
       // Kept for debugging: which request had no recording, and why.

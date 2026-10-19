@@ -137,4 +137,63 @@ describe('cachingFetch with streamed replies', () => {
     expect(await again.text()).toBe(ndjson);
     expect(calls()).toBe(1);
   });
+
+  describe('per-text embedding cache', () => {
+    const URL = 'https://g/v1beta/models/gemini-embedding-2:batchEmbedContents';
+    const req = (texts: string[]) => ({
+      method: 'POST',
+      body: JSON.stringify({
+        requests: texts.map((t) => ({
+          model: 'models/gemini-embedding-2',
+          content: { parts: [{ text: t }] },
+          outputDimensionality: 768,
+        })),
+      }),
+    });
+    // The fake embedder: each text's vector is [length], so order is checkable.
+    function embedSetup(mode: 'readwrite' | 'readonly' = 'readwrite') {
+      const dir = mkdtempSync(path.join(tmpdir(), 'engram-cache-'));
+      dirs.push(dir);
+      const sent: string[][] = [];
+      const fetch = (d = dir, m = mode) =>
+        cachingFetch({
+          dir: d,
+          mode: m,
+          fetch: (_input, init) => {
+            const body = JSON.parse(init?.body as string) as {
+              requests: { content: { parts: { text: string }[] } }[];
+            };
+            const texts = body.requests.map((r) => r.content.parts[0]?.text ?? '');
+            sent.push(texts);
+            return Promise.resolve(
+              new Response(
+                JSON.stringify({ embeddings: texts.map((t) => ({ values: [t.length] })) }),
+              ),
+            );
+          },
+        });
+      return { dir, sent, fetch };
+    }
+    const values = async (res: Response) =>
+      ((await res.json()) as { embeddings: { values: number[] }[] }).embeddings.map(
+        (e) => e.values[0],
+      );
+
+    it('sends only texts it has never embedded, and answers in request order', async () => {
+      const { sent, fetch } = embedSetup();
+      const f = fetch();
+      expect(await values(await f(URL, req(['a', 'bb'])))).toEqual([1, 2]);
+      expect(await values(await f(URL, req(['bb', 'ccc'])))).toEqual([2, 3]);
+      expect(await values(await f(URL, req(['ccc', 'a'])))).toEqual([3, 1]);
+      expect(sent).toEqual([['a', 'bb'], ['ccc']]);
+    });
+
+    it('replays offline from per-text entries, and misses only on unseen text', async () => {
+      const { dir, fetch } = embedSetup();
+      await fetch()(URL, req(['a', 'bb']));
+      const offline = fetch(dir, 'readonly');
+      expect(await values(await offline(URL, req(['bb', 'a'])))).toEqual([2, 1]);
+      expect((await offline(URL, req(['a', 'zz']))).status).toBe(404);
+    });
+  });
 });
