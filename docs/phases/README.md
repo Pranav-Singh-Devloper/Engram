@@ -96,8 +96,8 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 15 | Nickname duplicates ("Rob" next to "Robert") | P02 | P04 → P10 | tracked: duplicate-entity rate is 0% on dev and dev-long; no fix. Listed as a limitation in P10 |
 | 16 | Retrieval recall@8 with relevance labels | P04 | P05 | done (P05) |
 | 17 | Hand-labelled judge agreement | P04 | P08 | open (P08 DoD) |
-| 18 | Longer histories vs one extraction call per turn (batching decision) | P04, P05 | P08 | open (P08 carry-in) |
-| 19 | Budget 10% above the cache-based call count | P05 | P08 | open (P08 carry-in) |
+| 18 | Longer histories vs one extraction call per turn (batching decision) | P04, P05 | P08 | done (P08, ADR-015: session extraction for the bench, packed for LongMemEval; per-turn stays for live writes) |
+| 19 | Budget 10% above the cache-based call count | P05 | P08 | done (P08: estimates carry the margin; dev-long parity cost 141 calls against 136 estimated) |
 | 20 | MCP recall tracks access to everything returned | P05 | P07 | done (P07, tested) |
 | 21 | Chat tracks access via `usedMemoryIds` | P05 | P09a | open (P09a DoD) |
 | 22 | Prompt pass: fixture 08 maps the brother to `partner_of` | P05 | P08 | done (P08, 3d84aab: fixtures and smoke cache re-recorded) |
@@ -108,7 +108,7 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 27 | Prompt pass: summaries say "the user", never he/she | P06b | P08 | done (P08, 3d84aab) |
 | 28 | Watch weak inferred facts (`visited`) on test | P06b | P08 | open (P08 carry-in) |
 | 29 | README: re-enable paused scheduled workflows, and Neon's monthly compute/egress limits | P06b | P10 | open (P10 DoD; Supabase pausing no longer applies) |
-| 30 | Smoke cache size (4.2 MB) | P04 | P08 | watch (P08 carry-in) |
+| 30 | Smoke cache size (4.2 MB) | P04 | P08 | done (P08: 4.0 MB after the 9d46231 re-record with session mode added; the ~6 MB trigger for compact vectors wasn't reached) |
 | 31 | `/graph` page | P09b | P09b | stretch, only if P10 is on track |
 | 32 | Recall ranks "Ana lives in Porto" above "The user lives in Lisbon" for "where does the user live" (Inspector session) | P07 | P08 | done (P08, 2026-10-18): a self-subject prior was tested on dev-long retrieval-only runs at weights 0 / 0.15 / 0.3: MRR 0.760 / 0.749 / 0.760, top-1 21 / 22 / 23 of 36, i.e. noise. Kept off (`recall.selfWeight: 0`), available as an option |
 | 33 | Decide whether the REST endpoints' bearer reuses `ENGRAM_MCP_TOKENS` (one namespace per token) or keeps a single `ENGRAM_API_TOKEN` | P07 | P09a | open (P09a DoD) |
