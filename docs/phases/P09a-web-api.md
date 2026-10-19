@@ -58,6 +58,9 @@ Give the Next.js app its HTTP surface: thin route handlers over `packages/core`,
 9. **MCP on Vercel:** `/api/mcp` mounts `createEngramHttpHandler` unchanged, with `background: (p) => after(p)`. In local mode, `engram_remember` processes in the background (`wait: false`); on serverless the function would otherwise freeze before that work finishes.
 10. **A preview deploy in this phase** (Vercel Hobby, free), to check the one thing tests can't: a deployed function on Neon's direct endpoint resolves unqualified names. `GET /api/health` runs an unqualified query and reports the schema it resolved; the check is that it returns `engram`. P10 owns the production deploy and the showcase.
 
+## Build notes (recorded as they happen)
+- **Webpack, not Turbopack (task 1).** The engine packages use NodeNext imports (`./db/client.js` for `client.ts`) and ship TypeScript source. Turbopack, Next 16's default bundler, can't map `.js` to `.ts` ("Module not found: Can't resolve './config/clock.js'"). Webpack can, with `resolve.extensionAlias`, so `dev` and `build` pass `--webpack`. Rejected: rewriting the engine's imports (it would break NodeNext for tsx, vitest and the MCP stdio server), and compiling the packages to `dist/` (a build step for every package, only for the web app). Turbopack can be revisited if it gains extension aliasing.
+
 ## Scope
 **In:** `apps/web` with route handlers only; migration 0008 (`throttles`); demo sessions, chat, reads, evals, MCP, health; the auth, limit and scoping tests; one preview deploy plus the health check; SPEC §11/§14 patches; `.env.example`.
 

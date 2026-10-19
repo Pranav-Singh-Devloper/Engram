@@ -53,6 +53,10 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm test
+      # The web app builds (route handlers, workspace packages transpiled).
+      - run: pnpm --filter @engram/web build
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'
       # The no-API-key reviewer path doubles as an end-to-end smoke test.
       - run: pnpm demo:offline
       # 20 dev items through all four memory modes, replayed from committed
