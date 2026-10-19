@@ -2,6 +2,7 @@
 // sample of llm-judged answers, without seeing the judge's verdict, and we
 // report how often the judge agrees, with Cohen's κ.
 import { rng } from '../dataset/personas.js';
+import { isAbstention } from './judge.js';
 import type { ItemResult } from './run.js';
 
 export interface LabelRow {
@@ -22,7 +23,9 @@ export function sampleForLabels(
   size: number,
   seed: number,
 ): LabelRow[] {
-  const pool = results.filter((r) => r.verdict.judge === 'llm');
+  // Only verdicts the llm judge gave: an abstention on an answerable item is
+  // marked 'llm' too but was scored wrong by a rule, never sent to the judge.
+  const pool = results.filter((r) => r.verdict.judge === 'llm' && !isAbstention(r.answer));
   const groups = new Map<string, ItemResult[]>();
   for (const r of [...pool].sort(
     (a, b) => a.itemId.localeCompare(b.itemId) || a.mode.localeCompare(b.mode),

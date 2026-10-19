@@ -30,6 +30,16 @@ describe('label sheets', () => {
     result('t-7', 'engram', 'single_session_recall', true, 'contains'),
   ];
 
+  it('skips abstentions: a rule scored them, not the llm judge', () => {
+    const abstained = {
+      ...result('t-8', 'rag', 'multi_hop', false),
+      answer: { answer: "I don't know.", supported: false, usedMemoryIds: [], memories: 0 },
+    } as unknown as ItemResult;
+    expect(sampleForLabels([...results, abstained], 99, 1).map((r) => r.itemId)).not.toContain(
+      't-8',
+    );
+  });
+
   it('samples llm-judged results across groups, seeded, and hides verdicts', () => {
     const rows = sampleForLabels(results, 4, 1);
     expect(sampleForLabels(results, 4, 1)).toEqual(rows);
