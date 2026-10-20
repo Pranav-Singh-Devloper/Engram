@@ -4,13 +4,13 @@ For each row, decide whether **answer** is correct given the question and the **
 
 | # | category | question | expected | answer | label (c/i) |
 |---|---|---|---|---|---|
-| 1 | temporal_reasoning | When did I move to Montreal? | April 2024 | You moved to Montreal in April 2024. |  |
-| 2 | temporal_reasoning | When did I move to Montreal? | April 2024 | You moved to Montreal in April 2024. |  |
-| 3 | temporal_reasoning | When did I move to Berlin? | April 2024 | You moved to Berlin in April 2024. |  |
-| 4 | temporal_reasoning | When did I move to Montreal? | April 2024 | You moved to Montreal in April 2024. |  |
-| 5 | temporal_reasoning | When did I move to Lyon? | April 2024 | You moved to Lyon in April 2024. |  |
-| 6 | temporal_reasoning | When did I move to Berlin? | April 2024 | You moved to Berlin in April 2024. |  |
-| 7 | temporal_reasoning | When did I move to Valencia? | April 2024 | You moved to Valencia in April 2024. |  |
-| 8 | temporal_reasoning | When did I move to Montreal? | April 2024 | You moved to Montreal in April 2024. |  |
-| 9 | temporal_reasoning | When did I move to Melbourne? | May 2024 | You arrived in Melbourne in May 2024. |  |
-| 10 | temporal_reasoning | When did I move to Montreal? | April 2024 | You moved to Montreal in April 2024. |  |
+| 1 | temporal_reasoning | When did I move to Montreal? | April 2024 | You moved to Montreal in April 2024. | c |
+| 2 | temporal_reasoning | When did I move to Montreal? | April 2024 | You moved to Montreal in April 2024. | c |
+| 3 | temporal_reasoning | When did I move to Berlin? | April 2024 | You moved to Berlin in April 2024. | c |
+| 4 | temporal_reasoning | When did I move to Montreal? | April 2024 | You moved to Montreal in April 2024. | c |
+| 5 | temporal_reasoning | When did I move to Lyon? | April 2024 | You moved to Lyon in April 2024. | c |
+| 6 | temporal_reasoning | When did I move to Berlin? | April 2024 | You moved to Berlin in April 2024. | c |
+| 7 | temporal_reasoning | When did I move to Valencia? | April 2024 | You moved to Valencia in April 2024. | c |
+| 8 | temporal_reasoning | When did I move to Montreal? | April 2024 | You moved to Montreal in April 2024. | c |
+| 9 | temporal_reasoning | When did I move to Melbourne? | May 2024 | You arrived in Melbourne in May 2024. |c  |
+| 10 | temporal_reasoning | When did I move to Montreal? | April 2024 | You moved to Montreal in April 2024. | c |
