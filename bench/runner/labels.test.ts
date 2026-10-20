@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { agreement, parseLabels, renderLabelSheet, sampleForLabels } from './labels.js';
+import {
+  agreement,
+  agreementOf,
+  parseLabels,
+  renderLabelSheet,
+  sampleForLabels,
+} from './labels.js';
 import type { LabelRow } from './labels.js';
 import type { ItemResult } from './run.js';
 
@@ -83,5 +89,20 @@ describe('label sheets', () => {
     // pe = 0.5·0.25 + 0.5·0.75 = 0.5 → κ = (0.75 − 0.5) / 0.5 = 0.5
     expect(a.kappa).toBeCloseTo(0.5, 10);
     expect(agreement(rows, new Map()).n).toBe(0);
+    // One class on both sides (every answer correct): κ is undefined, not 1.
+    const allRight = agreement(rows, new Map([[1, true]]));
+    expect(allRight).toMatchObject({
+      agreement: 1,
+      kappa: null,
+      humanCorrect: 1,
+      humanIncorrect: 0,
+    });
+    // Pooling sheets is just more pairs.
+    expect(
+      agreementOf([
+        { judge: true, human: true },
+        { judge: false, human: false },
+      ]).kappa,
+    ).toBe(1);
   });
 });

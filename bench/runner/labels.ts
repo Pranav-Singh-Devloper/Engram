@@ -92,10 +92,30 @@ export function parseLabels(sheet: string): Map<number, boolean> {
 export interface Agreement {
   n: number;
   agreement: number;
-  kappa: number;
+  /** null when judge and human each used one class only: κ is undefined there. */
+  kappa: number | null;
+  /** Labelled-correct and labelled-incorrect counts, for reading κ in context. */
+  humanCorrect: number;
+  humanIncorrect: number;
   /** Judge said correct, human said incorrect; and the reverse. */
   judgeTooLenient: number;
   judgeTooStrict: number;
+}
+
+export interface LabelPair {
+  judge: boolean;
+  human: boolean;
+}
+
+/** The (judge, human) pairs for the rows a human labelled. */
+export function labelPairs(
+  rows: readonly LabelRow[],
+  labels: ReadonlyMap<number, boolean>,
+): LabelPair[] {
+  return rows.flatMap((r) => {
+    const human = labels.get(r.n);
+    return human === undefined ? [] : [{ judge: r.judgeCorrect, human }];
+  });
 }
 
 /** Agreement and Cohen's κ between judge and human on the labelled rows. */
@@ -103,12 +123,24 @@ export function agreement(
   rows: readonly LabelRow[],
   labels: ReadonlyMap<number, boolean>,
 ): Agreement {
-  const pairs = rows.flatMap((r) => {
-    const human = labels.get(r.n);
-    return human === undefined ? [] : [{ judge: r.judgeCorrect, human }];
-  });
+  return agreementOf(labelPairs(rows, labels));
+}
+
+/** The same over any pairs, e.g. several runs' sheets pooled. */
+export function agreementOf(pairs: readonly LabelPair[]): Agreement {
   const n = pairs.length;
-  if (n === 0) return { n: 0, agreement: 0, kappa: 0, judgeTooLenient: 0, judgeTooStrict: 0 };
+  const humanCorrect = pairs.filter((p) => p.human).length;
+  if (n === 0) {
+    return {
+      n: 0,
+      agreement: 0,
+      kappa: null,
+      humanCorrect: 0,
+      humanIncorrect: 0,
+      judgeTooLenient: 0,
+      judgeTooStrict: 0,
+    };
+  }
   const agree = pairs.filter((p) => p.judge === p.human).length;
   const po = agree / n;
   const pJudge = pairs.filter((p) => p.judge).length / n;
@@ -117,7 +149,10 @@ export function agreement(
   return {
     n,
     agreement: po,
-    kappa: pe === 1 ? 1 : (po - pe) / (1 - pe),
+    // With one class on both sides, chance agreement is 1 and κ is 0/0.
+    kappa: pe === 1 ? null : (po - pe) / (1 - pe),
+    humanCorrect,
+    humanIncorrect: n - humanCorrect,
     judgeTooLenient: pairs.filter((p) => p.judge && !p.human).length,
     judgeTooStrict: pairs.filter((p) => !p.judge && p.human).length,
   };
