@@ -15,7 +15,7 @@ The plan for building Engram, one file per phase. [`docs/SPEC.md`](../SPEC.md) i
 | P06a Decay + purge | [P06a-decay-purge.md](P06a-decay-purge.md) | done | P05 | the time-travel and purge tests pass |
 | P06b Consolidation + jobs | [P06b-consolidation-jobs.md](P06b-consolidation-jobs.md) | done | P06a | consolidation runs end-to-end on the local DB; the merge test passes |
 | P07 MCP | [P07-mcp.md](P07-mcp.md) | done | P06b | the SDK-client integration test passes; Claude Code can remember and recall |
-| P08 Bench full | [P08-bench-full.md](P08-bench-full.md) | planned | P07 | test and LongMemEval reports exist; the README table shows judge agreement |
+| P08 Bench full | [P08-bench-full.md](P08-bench-full.md) | done | P07 | test and LongMemEval reports exist; the README table shows judge agreement |
 | P08b Local mode | [P08b-local-mode.md](P08b-local-mode.md) | done | P08 (runs in its quota waits) | Engram's processing works with no third-party call; dev-long ablation report |
 | P09a Web API | [P09a-web-api.md](P09a-web-api.md) | done | P07 | route handlers, auth, demo sessions and rate limits are tested |
 | P09b Web UI | [P09b-web-ui.md](P09b-web-ui.md) | outline | P09a | `docs/demo.md` can be followed without improvising |
@@ -90,12 +90,12 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 9 | Fixture 04 correction retracts Initech | P02 | P03 | done (P03) |
 | 10 | `engram_remember` returns the processing summary | P02 | P07 | done (P07) |
 | 11 | Tune the merge threshold (0.9) | P03 | P05 → P08 | done (P08, 2026-10-18): on dev-long, no paraphrase splits; the closest *distinct* values (Initech vs Globex) score 0.893, so lowering 0.9 would merge different employers. Kept at 0.9 |
-| 12 | Report the adjudication rate | P03 | P04 → P08 | re-shifted: not in reports yet; add to the report before the test run |
+| 12 | Report the adjudication rate | P03 | P04 → P08 | done (P08, ae1e68d): in every report's store health; test 0%, LongMemEval 2% |
 | 13 | Document that multi-instance deploys need synced clocks | P03 | P10 | open (README limitations) |
 | 14 | Registry gaps (`occupation`, `sibling_of`) | P04 | P05 | done (ad-hoc 34% → 0%) |
 | 15 | Nickname duplicates ("Rob" next to "Robert") | P02 | P04 → P10 | tracked: duplicate-entity rate is 0% on dev and dev-long; no fix. Listed as a limitation in P10 |
 | 16 | Retrieval recall@8 with relevance labels | P04 | P05 | done (P05) |
-| 17 | Hand-labelled judge agreement | P04 | P08 | open (P08 DoD) |
+| 17 | Hand-labelled judge agreement | P04 | P08 | done (P08): 40 blind labels (10 test, 30 LongMemEval; 33 correct, 7 incorrect), 100% agreement, pooled κ 1.00 |
 | 18 | Longer histories vs one extraction call per turn (batching decision) | P04, P05 | P08 | done (P08, ADR-015: session extraction for the bench, packed for LongMemEval; per-turn stays for live writes) |
 | 19 | Budget 10% above the cache-based call count | P05 | P08 | done (P08: estimates carry the margin; dev-long parity cost 141 calls against 136 estimated) |
 | 20 | MCP recall tracks access to everything returned | P05 | P07 | done (P07, tested) |
@@ -106,7 +106,7 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 25 | Verify pg_cron on Supabase (`select * from cron.job`) | P06b | P10 | re-shifted: no pg_cron on Neon (ADR-014). P10 instead checks that a `nightly.yml` run sweeps and consolidates on Neon |
 | 26 | `engram_forget` modes and stats' "last sweep" | P06a | P07 | done (P07) |
 | 27 | Prompt pass: summaries say "the user", never he/she | P06b | P08 | done (P08, 3d84aab) |
-| 28 | Watch weak inferred facts (`visited`) on test | P06b | P08 | open (P08 carry-in) |
+| 28 | Watch weak inferred facts (`visited`) on test | P06b | P08 | done (P08): consolidation inserted 43 facts vs 3,077 merges on test, 10 distinct; 3 weak (two `visited`, "Olive likes Porto"), none in a wrong answer. A README limitation, not a fix |
 | 29 | README: re-enable paused scheduled workflows, and Neon's monthly compute/egress limits | P06b | P10 | open (P10 DoD; Supabase pausing no longer applies) |
 | 30 | Smoke cache size (4.2 MB) | P04 | P08 | done (P08: 4.0 MB after the 9d46231 re-record with session mode added; the ~6 MB trigger for compact vectors wasn't reached) |
 | 31 | `/graph` page | P09b | P09b | stretch, only if P10 is on track |

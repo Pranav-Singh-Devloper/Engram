@@ -1,6 +1,6 @@
 # P08 — Bench full
 
-**Status:** planned (expanded 2026-10-17)
+**Status:** done (2026-10-21)
 
 ## Goal
 Produce the honest, external numbers:
@@ -140,12 +140,12 @@ DECISIONS.md                                    # ADR-015 packed extraction (wit
 - [x] Session mode passes the parity gate on dev and dev-long (or the gap is recorded). _dev-long: 100% / recall@8 97%, the same as per-turn (47c2134). dev-long holds every dev story session plus filler, so it subsumes dev, which saturates at 100% in every mode (ADR-010); dev wasn't rerun. Packed: 95% / 94% (2026-10-19-devlong-packed), used only for LongMemEval._
 - [x] One prompt pass (rows 22 and 27); fixtures and smoke cache re-recorded; CI replays session mode too. _Rows 22 and 27 in 3d84aab; row 43 and CI's session-mode replay in 9d46231._
 - [x] `test.json` (200 items, the §13.1 category counts) is reviewed and frozen (cab417b). From here on, a test-motivated change needs an ADR.
-- [ ] 40 test answers are hand-labelled by you, and judge agreement with κ is reported. _Changed 2026-10-19: 10 test + 30 LongMemEval answers. Only 35 test answers in all five modes went to the llm judge, all "When did I move to X?", so they barely test it. LongMemEval is judged by the llm on every item and is varied. Abstentions are excluded from both sheets: a rule scores them, not the judge (c67df86)._
+- [x] 40 test answers are hand-labelled by you, and judge agreement with κ is reported. _Changed 2026-10-19: 10 test + 30 LongMemEval answers. Only 35 test answers in all five modes went to the llm judge, all "When did I move to X?", so they barely test it. LongMemEval is judged by the llm on every item and is varied. Abstentions are excluded from both sheets: a rule scores them, not the judge (c67df86)._
 - [x] `bench/longmemeval/` adapter with a stratified ~100-item subset (every type, abstention in proportion). _98 items (ecc7636)._
-- [ ] Test and LongMemEval reports exist for every mode, with every §13.5 metric, including cost per item.
-- [ ] README table draft: all modes, the LongMemEval number and judge agreement.
+- [x] Test and LongMemEval reports exist for every mode, with every §13.5 metric, including cost per item. _LongMemEval `engram_consolidated` deferred (ledger row 46)._
+- [x] README table draft: all modes, the LongMemEval number and judge agreement (`docs/benchmarks.md`).
 - [x] `bench.yml`: manually triggered, keys from secrets, resumable via the cache artifact (ba6e4b9).
-- [ ] Ledger rows 11, 12, 17, 18, 19, 22, 27, 28, 30, 32 and 36 are closed or explicitly re-shifted.
+- [x] Ledger rows 11, 12, 17, 18, 19, 22, 27, 28, 30, 32 and 36 are closed or explicitly re-shifted. _All closed; P08 opened rows 43–46 (43 done; 44–46 target P10)._
 
 ## Planned commits
 1. `feat(core): extract facts from packed sessions in one call`
