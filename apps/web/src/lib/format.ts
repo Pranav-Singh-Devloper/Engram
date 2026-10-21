@@ -2,6 +2,9 @@
 // @engram/core (it would bundle Postgres), so the one engine constant needed
 // here is mirrored, and format.test.ts asserts it still equals core's.
 
+/** Core's config.decay.archiveThreshold: decay archives a fact whose retention falls below it. */
+export const ARCHIVE_THRESHOLD = 0.15;
+
 /** Core's UNKNOWN_START: a fact whose start the conversation never gave. */
 export const UNKNOWN_START_MS = -8.64e15;
 

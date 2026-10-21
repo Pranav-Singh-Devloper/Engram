@@ -1,10 +1,11 @@
-import { UNKNOWN_START } from '@engram/core';
+import { UNKNOWN_START, config } from '@engram/core';
 import { describe, expect, it } from 'vitest';
-import { UNKNOWN_START_MS, formatWindow } from './format';
+import { ARCHIVE_THRESHOLD, UNKNOWN_START_MS, formatWindow } from './format';
 
 describe('format', () => {
-  it("mirrors core's UNKNOWN_START exactly", () => {
+  it("mirrors core's constants exactly", () => {
     expect(UNKNOWN_START_MS).toBe(UNKNOWN_START.getTime());
+    expect(ARCHIVE_THRESHOLD).toBe(config.decay.archiveThreshold);
   });
 
   it('formats open, closed and unknown-start windows', () => {
