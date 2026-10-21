@@ -11,4 +11,6 @@ export {
 } from './fixtures.js';
 export type { FixtureConversation, FixtureEpisode, RecordedCall, Recording } from './fixtures.js';
 export { Scenario, aboutSelf, hint } from './scenario.js';
+export { STORY_NOW, STORY_QUESTIONS, STORY_TURNS } from './story.js';
+export type { StoryQuestion } from './story.js';
 export type { Turn, TurnResult } from './scenario.js';

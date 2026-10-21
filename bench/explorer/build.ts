@@ -7,6 +7,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import path from 'node:path';
 import { loadEnv, makeProviders } from '../runner/providers.js';
 import { parseAdrs } from './adrs.js';
+import { bitemporal, cases, writePath } from './engine-data.js';
 import { FACT_RUN, galaxyTexts, project } from './galaxy.js';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
@@ -39,6 +40,11 @@ async function main(): Promise<void> {
         return { ...summary, scores };
       }),
   );
+
+  write('writepath.json', writePath());
+  write('cases.json', cases());
+  // Replays the story through the engine on the local database (pnpm db:up).
+  write('bitemporal.json', await bitemporal());
 
   if (process.argv.includes('--skip-galaxy')) return;
   loadEnv();
