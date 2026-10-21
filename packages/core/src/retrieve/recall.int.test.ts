@@ -149,6 +149,47 @@ describe('recall', () => {
     });
   });
 
+  it('explains itself when traced: the ranked lists, and the scores that ordered them', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const s = new Scenario(db, ns);
+      await moved(s);
+      const plain = await ask(s, 'Where does the user live?');
+      expect(plain.trace).toBeUndefined();
+      const r = await ask(s, 'Where does the user live?', { trace: true });
+      const t = r.trace;
+      if (!t) throw new Error('No trace.');
+      expect(r.memories.map((m) => m.id)).toEqual(plain.memories.map((m) => m.id));
+      expect(t).toMatchObject({ ranker: 'rrf', rrfK: 60, floor: 0 });
+      const byKey = new Map(t.candidates.map((c) => [c.key, c]));
+      // Every listed key is a traced candidate, and the RRF sum is over its ranks.
+      for (const c of t.candidates) {
+        let sum = 0;
+        for (const keys of Object.values(t.lists)) {
+          const i = keys.indexOf(c.key);
+          if (i >= 0) sum += 1 / (60 + i + 1);
+        }
+        expect(c.fused).toBeCloseTo(sum, 12);
+        expect(c.score).toBeGreaterThanOrEqual(c.fused ?? 0);
+      }
+      for (const keys of Object.values(t.lists))
+        for (const k of keys) expect(byKey.has(k)).toBe(true);
+      // The returned memories are the top of the traced scores.
+      const top = [...t.candidates].sort((a, b) => b.score - a.score).slice(0, r.memories.length);
+      expect(new Set(top.map((c) => c.id))).toEqual(new Set(r.memories.map((m) => m.id)));
+    });
+  });
+
+  it('traces an abstention too, with similarity but no scores', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const s = new Scenario(db, ns);
+      await moved(s);
+      const r = await ask(s, 'Where does the user live?', { trace: true, floor: 1.01 });
+      expect(r.abstained).toBe(true);
+      expect(r.trace?.candidates.length).toBeGreaterThan(0);
+      expect(r.trace?.candidates.every((c) => c.fused === null && c.score === 0)).toBe(true);
+    });
+  });
+
   it('excludes the archive unless asked, and restores an archived hit when tracking', async () => {
     await withTestNamespace(db, async (ns) => {
       const s = new Scenario(db, ns);

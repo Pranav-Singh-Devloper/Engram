@@ -94,7 +94,14 @@ export { DEFAULT_JUDGE_MODEL, GROQ_BASE_URL, GroqProvider } from './providers/gr
 export type { GroqOptions, GroqRequest } from './providers/groq.js';
 export { DONT_KNOW } from './compose/prompt.js';
 export { recall } from './retrieve/recall.js';
-export type { ListName, RecallOptions, RecallResult, RecalledMemory } from './retrieve/recall.js';
+export type {
+  ListName,
+  RecallOptions,
+  RecallResult,
+  RecallTrace,
+  RecalledMemory,
+  TraceCandidate,
+} from './retrieve/recall.js';
 export { trackUse } from './retrieve/access.js';
 export { crossingDays, decayedAccess, retentionScore, tauDays } from './decay/score.js';
 export type { RetentionInput } from './decay/score.js';

@@ -37,6 +37,8 @@ export interface RecallOptions {
   floor?: number;
   /** Overrides config.recall.selfWeight (tuning on dev). */
   selfWeight?: number;
+  /** Return how the ranking was made (RecallResult.trace). Off by default. */
+  trace?: boolean;
 }
 
 export interface RecalledMemory {
@@ -68,6 +70,34 @@ export interface RecallResult {
   /** The abstention floor fired: nothing was similar enough. */
   abstained: boolean;
   bestSimilarity: number;
+  /** Present when asked for with `trace: true`. */
+  trace?: RecallTrace;
+}
+
+/** One candidate as the ranker saw it. */
+export interface TraceCandidate {
+  key: string;
+  id: string;
+  kind: 'fact' | 'episode';
+  text: string;
+  similarity: number;
+  /** The RRF sum before priors; null for the linear ranker or an abstention. */
+  fused: number | null;
+  recency: number;
+  importance: number;
+  self: number;
+  /** The final score; 0 when recall abstained. */
+  score: number;
+}
+
+/** How a recall was ranked: every list in rank order, and every candidate's scores. */
+export interface RecallTrace {
+  ranker: 'rrf' | 'linear';
+  rrfK: number;
+  floor: number;
+  weights: { recency: number; importance: number; self: number };
+  lists: Record<ListName, string[]>;
+  candidates: TraceCandidate[];
 }
 
 /** A deterministic tie-break that doesn't depend on ids. */
@@ -139,11 +169,47 @@ export async function recall(
   const candidates = [...byKey.values()];
   const similarity = new Map(candidates.map((c) => [c.key, cosine(query, c.embedding)]));
   const bestSimilarity = Math.max(0, ...similarity.values());
-  if (candidates.length === 0 || bestSimilarity < (options.floor ?? profile.recallFloor)) {
-    return { memories: [], abstained: true, bestSimilarity };
+  const floor = options.floor ?? profile.recallFloor;
+  const ranker = options.ranker ?? cfg.ranker;
+  const selfWeight = options.selfWeight ?? cfg.selfWeight;
+  const traceOf = (
+    fused: Map<string, number> | null,
+    scores: Map<string, number>,
+    prior: (c: Candidate) => { recency: number; importance: number; self: number },
+  ): RecallTrace => ({
+    ranker,
+    rrfK: cfg.rrfK,
+    floor,
+    weights: { recency: cfg.recencyWeight, importance: cfg.importanceWeight, self: selfWeight },
+    lists: Object.fromEntries(
+      Object.entries(lists).map(([name, list]) => [name, list.map((c) => c.key)]),
+    ) as Record<ListName, string[]>,
+    candidates: candidates.map((c) => ({
+      key: c.key,
+      id: c.id,
+      kind: c.kind,
+      text: c.text,
+      similarity: similarity.get(c.key) ?? 0,
+      fused: fused ? (fused.get(c.key) ?? 0) : null,
+      ...prior(c),
+      score: scores.get(c.key) ?? 0,
+    })),
+  });
+  if (candidates.length === 0 || bestSimilarity < floor) {
+    return {
+      memories: [],
+      abstained: true,
+      bestSimilarity,
+      ...(options.trace && {
+        trace: traceOf(null, new Map(), (c) => ({
+          recency: recency(c.validFrom, asOf.validAt, cfg.recencyScaleDays),
+          importance: c.importance,
+          self: 0,
+        })),
+      }),
+    };
   }
 
-  const selfWeight = options.selfWeight ?? cfg.selfWeight;
   const selfId =
     selfWeight > 0 && aboutUser(options.query)
       ? (await getSelfEntity(db, options.namespaceId)).id
@@ -154,8 +220,9 @@ export async function recall(
     self: selfId !== null && c.subjectId === selfId ? 1 : 0,
   });
   const scores = new Map<string, number>();
-  if ((options.ranker ?? cfg.ranker) === 'rrf') {
-    const fused = rrf(
+  let fused: Map<string, number> | null = null;
+  if (ranker === 'rrf') {
+    fused = rrf(
       Object.values(lists).map((l) => l.map((c) => c.key)),
       cfg.rrfK,
     );
@@ -215,5 +282,10 @@ export async function recall(
       clock,
     );
   }
-  return { memories, abstained: false, bestSimilarity };
+  return {
+    memories,
+    abstained: false,
+    bestSimilarity,
+    ...(options.trace && { trace: traceOf(fused, scores, prior) }),
+  };
 }
