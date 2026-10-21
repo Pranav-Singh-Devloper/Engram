@@ -9,6 +9,7 @@ import { loadEnv, makeProviders } from '../runner/providers.js';
 import { parseAdrs } from './adrs.js';
 import { CONSOLIDATION_ITEM, consolidationStory, floorRuns } from './chapters.js';
 import { bitemporal, cases, recallTraces, writePath } from './engine-data.js';
+import { schemaData } from './schema.js';
 import { FACT_RUN, galaxyTexts, project } from './galaxy.js';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
@@ -46,6 +47,7 @@ async function main(): Promise<void> {
   write('cases.json', cases());
   // Replays the story through the engine on the local database (pnpm db:up).
   write('bitemporal.json', await bitemporal());
+  write('schema.json', await schemaData());
 
   loadEnv();
   const { gemini } = makeProviders();
