@@ -50,6 +50,29 @@ export function floorRuns() {
 }
 
 export const CONSOLIDATION_ITEM = 'dev-001';
+export const CONSOLIDATION_TEST_RUN = '2026-10-18-test';
+
+/** engram_consolidated across the test split: per-item averages, outcome totals, inserted facts. */
+export function testSplitConsolidation() {
+  const results = loadResults(path.join(BENCH, 'runs', CONSOLIDATION_TEST_RUN)).filter(
+    (r) => r.mode === 'engram_consolidated' && r.answer.consolidation,
+  );
+  const per = results.flatMap((r) => (r.answer.consolidation ? [r.answer.consolidation] : []));
+  const mean = (f: (c: (typeof per)[number]) => number) =>
+    Math.round((per.reduce((s, c) => s + f(c), 0) / Math.max(1, per.length)) * 10) / 10;
+  const outcomes: Record<string, number> = {};
+  for (const c of per)
+    for (const [k, n] of Object.entries(c.outcomes)) outcomes[k] = (outcomes[k] ?? 0) + n;
+  return {
+    run: CONSOLIDATION_TEST_RUN,
+    items: per.length,
+    summarizedPerItem: mean((c) => c.summarized),
+    skippedPerItem: mean((c) => c.skipped),
+    longTermPerItem: mean((c) => c.longTermFacts),
+    outcomes,
+    inserted: [...new Set(per.flatMap((c) => c.inserted ?? []))].sort(),
+  };
+}
 
 /**
  * One dev-long history through engram_consolidated, exactly as the bench runs
@@ -99,6 +122,7 @@ export async function consolidationStory(provider: Provider) {
       };
     });
     return {
+      testSplit: testSplitConsolidation(),
       item: CONSOLIDATION_ITEM,
       question: item.question,
       expected: item.expected,

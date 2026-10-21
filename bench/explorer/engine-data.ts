@@ -234,7 +234,24 @@ export async function recallTraces(embedder: Embedder) {
         s.clock,
       );
       if (!r.trace) throw new Error('recall returned no trace');
+      // The linear ranker on the same candidates, so the explorer can compare the two.
+      const linear = await recall(
+        db,
+        withEmbedder(fake, embedder),
+        {
+          namespaceId: ns.namespace.id,
+          query,
+          trackAccess: false,
+          trace: true,
+          ranker: 'linear',
+          floor: 0,
+        },
+        s.clock,
+      );
       traces.push({
+        linearScores: Object.fromEntries(
+          (linear.trace?.candidates ?? []).map((c) => [c.key, c.score]),
+        ),
         query,
         abstained: r.abstained,
         bestSimilarity: r.bestSimilarity,
