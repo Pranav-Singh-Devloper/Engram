@@ -115,6 +115,12 @@ Each citation states what Engram *took* from the work ("inspired by", "implement
 
   Recall also now returns each fact's subject and object ids (e11ff3c), so a used memory links to its entity timeline.
 
+- **Task 4: the entity timeline.**
+  - **Parity:** its "believed at" and "true at" rules are tested equal to the engine's `factsAsOf` on the Paris → Berlin → correction → backfill story, over 20 (valid-at × known-at) pairs.
+  - **In the browser:** at valid 30 Apr 2024 and known 1 May 2024 it answered "The user lives in Paris." That's correct: the March move was learned on 10 June.
+  - **Design fixes from screenshots:** room on the axis for unknown starts (Marseille was a sliver); All / 5-year / 1-year zoom (Paris, Jan–Mar 2024, was a few pixels on a 12-year axis); a legend for the five encodings; a responsive label column; the "valid at" label flipping side near the edge.
+  - **Screenshot method:** the 390 px iframe trick catches charts before their ResizeObserver re-measures. Mobile checks now use DevTools device emulation (`Emulation.setDeviceMetricsOverride`) through the same driver.
+
 ## P09b — scope
 **In:**
 - `/` landing: what Engram is, live showcase stats, links.
