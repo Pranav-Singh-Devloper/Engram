@@ -1,6 +1,6 @@
 # P09b — Web UI (and P09c — Architecture explorer)
 
-**Status:** P09b in progress; P09c planned. Approved 2026-10-21 as written: two phases, a 3D galaxy (three.js), the dependencies listed.
+**Status:** P09b done (2026-10-21). P09c planned, starting next. Approved 2026-10-21 as written: two phases, a 3D galaxy (three.js), the dependencies listed.
 
 This file plans two phases. **P09b** is the dashboard SPEC §12 requires. **P09c** is the architecture explorer the user asked for on 2026-10-21: an interactive, animated, deeply referenced tour of how Engram works and why. P09c depends on P09b's design system and data plumbing. They're split so each phase stays one reviewable unit (decision 1).
 
@@ -281,13 +281,13 @@ All are MIT, ISC or Apache-2.0 and free, with nothing paid and no external servi
 
 ## Definition of done
 **P09b**
-- [ ] `/chat`: demo namespace, session switcher (create and rename), streaming events, used-memories panel with provenance links, persistent data notice, limit and cap messages.
-- [ ] `/entities/[id]`: validity bars per predicate, superseded/retracted/revised styling, revision chain, record-time toggle, known-at scrubber.
-- [ ] `/memories`: search, tier/status/predicate filters, retention sort, expandable provenance, no access tracking.
-- [ ] `/evals`: per-category accuracy for every mode, test and LongMemEval, recall@8, cost per item, judge agreement, run history.
-- [ ] `/`: landing with live showcase stats.
-- [ ] `docs/demo.md` can be followed without improvising (remember in A, recall in B, contradict, watch the timeline).
-- [ ] Dark and light, usable at 390 px, no lorem ipsum. Chrome screenshots are recorded.
+- [x] `/chat`: demo namespace, session switcher (create and rename), streaming events, used-memories panel with provenance links, persistent data notice, limit and cap messages.
+- [x] `/entities/[id]`: validity bars per predicate, superseded/retracted/revised styling, revision chain, record-time toggle, known-at scrubber.
+- [x] `/memories`: search, tier/status/predicate filters, retention sort, expandable provenance, no access tracking.
+- [x] `/evals`: per-category accuracy for every mode, test and LongMemEval, recall@8, cost per item, judge agreement, run history.
+- [x] `/`: landing with live showcase stats.
+- [x] `docs/demo.md` can be followed without improvising (remember in A, recall in B, contradict, watch the timeline).
+- [x] Dark and light, usable at 390 px, no lorem ipsum. Chrome screenshots are recorded (`docs/screenshots/`; checks via DevTools device emulation, build notes).
 
 **P09c**
 - [ ] `/architecture` has all 16 chapters, each with a diagram, an interactive model, real repo numbers, and linked references.

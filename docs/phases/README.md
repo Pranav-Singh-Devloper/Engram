@@ -18,7 +18,7 @@ The plan for building Engram, one file per phase. [`docs/SPEC.md`](../SPEC.md) i
 | P08 Bench full | [P08-bench-full.md](P08-bench-full.md) | done | P07 | test and LongMemEval reports exist; the README table shows judge agreement |
 | P08b Local mode | [P08b-local-mode.md](P08b-local-mode.md) | done | P08 (runs in its quota waits) | Engram's processing works with no third-party call; dev-long ablation report |
 | P09a Web API | [P09a-web-api.md](P09a-web-api.md) | done | P07 | route handlers, auth, demo sessions and rate limits are tested |
-| P09b Web UI | [P09b-web-ui.md](P09b-web-ui.md) | in progress | P09a | the §12 pages work against the real API; `docs/demo.md` can be followed without improvising |
+| P09b Web UI | [P09b-web-ui.md](P09b-web-ui.md) | done | P09a | the §12 pages work against the real API; `docs/demo.md` can be followed without improvising |
 | P09c Architecture explorer | [P09b-web-ui.md](P09b-web-ui.md#p09c--scope-architecture) | planned | P09b | `/architecture`: 16 interactive chapters on real repo data, every reference verified, 60 fps |
 | P10 Ship | [P10-ship.md](P10-ship.md) | outline | P08, P09b | three reviewer paths are verified from a fresh clone; the hosted demo is live |
 | P11 Local mode, extended | (outline in P08b) | outline | P10 | compact format, chunked embeddings, local goldens, test/LME local runs, light profile |
