@@ -1,6 +1,7 @@
 // The chat's sessions live in the browser (ADR-019: names are UI state); the
 // server only sees the id, which must match /^[\w-]{1,64}$/.
-import type { ChatMemory } from '@/lib/sse-client';
+import { z } from 'zod';
+import { ChatMemory } from '@/lib/sse-client';
 
 export interface Store {
   get(key: string): string | null;
@@ -102,10 +103,40 @@ export function renameSession(
 
 const messagesKey = (id: string) => `engram-chat:${id}`;
 
+// Transcripts round-trip through JSON, which turns Dates into strings. They're
+// revived through the same schema the live stream uses; anything malformed
+// (an older format, a hand edit) is dropped rather than crashing the page.
+const StoredMessage = z.union([
+  z.object({ role: z.literal('user'), text: z.string() }),
+  z.object({
+    role: z.literal('assistant'),
+    text: z.string(),
+    supported: z.boolean().optional(),
+    memories: z
+      .array(z.unknown())
+      .transform((xs) =>
+        xs.flatMap((x) => {
+          const m = ChatMemory.safeParse(x);
+          return m.success ? [m.data] : [];
+        }),
+      )
+      .default([]),
+    used: z.array(z.string()).default([]),
+    abstained: z.boolean().optional(),
+  }),
+  z.object({ role: z.literal('notice'), text: z.string(), tone: z.enum(['limit', 'error']) }),
+]);
+
 export function loadMessages(store: Store, id: string): ChatMessage[] {
   try {
     const raw = store.get(messagesKey(id));
-    return raw ? (JSON.parse(raw) as ChatMessage[]) : [];
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((m) => {
+      const r = StoredMessage.safeParse(m);
+      return r.success ? [r.data] : [];
+    });
   } catch {
     return [];
   }

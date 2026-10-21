@@ -127,6 +127,8 @@ Each citation states what Engram *took* from the work ("inspired by", "implement
   3. **A layout rule that was wrong for demos.** "Pad a short history to a year" squeezed a 20-minute demo against the axis's right edge. The axis now fits the data (10-minute floor) with hour, day or month ticks to match, and zoom shows only for histories over a year.
   4. **Memory pressure (18 GB).** qwen (10 GB) and embeddinggemma loaded for both the demo app and the LongMemEval run, alongside Docker, Chrome and Next, crashed Ollama's embedding runner and Chrome. Heavy local jobs run one at a time. At the user's request the demo was then walked on Gemini (five keys) instead of Ollama.
 
+- **Task 8: the visual pass found a crash on reload.** `/chat` stores its transcripts as JSON, which turns memory dates into strings. Reloading the page after any conversation threw `e.getTime is not a function` inside a memory card. Next's error boundary showed "This page couldn't load", and an earlier test missed it because every run started from a fresh browser profile. Stored transcripts are now revived through the live stream's own zod schema, and anything malformed is dropped. A test covers the round trip. The first rebuild still looked broken: that was a stale `.next` directory. A clean build (`rm -rf .next`) fixed it, so surprising results get re-checked against a clean build.
+
 ## P09b — scope
 **In:**
 - `/` landing: what Engram is, live showcase stats, links.
