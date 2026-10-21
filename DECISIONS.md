@@ -18,7 +18,7 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 
 ## ADR-002 — Docker pgvector for dev and CI, Supabase for hosting
 
-**Date:** 2026-10-16 · **Status:** Accepted
+**Date:** 2026-10-16 · **Status:** Accepted. Its hosted half (Supabase) is superseded by ADR-014 (Neon).
 
 **Context.** Everything must run on free tiers. The local Supabase stack needs several GB of images on a disk with little free space, and tests should run offline. pg_cron, the only Supabase-specific feature, is needed only for scheduling on the hosted database.
 

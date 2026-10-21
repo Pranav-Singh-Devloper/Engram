@@ -9,6 +9,7 @@ const LINKS = [
   { href: '/chat', label: 'Chat' },
   { href: '/memories', label: 'Memories' },
   { href: '/evals', label: 'Evals' },
+  { href: '/architecture', label: 'Architecture' },
 ] as const;
 
 export function Nav() {
@@ -26,19 +27,22 @@ export function Nav() {
           />
           Engram
         </Link>
-        {LINKS.map((l) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            className={cn(
-              'rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:px-3',
-              path.startsWith(l.href) && 'bg-muted text-foreground',
-            )}
-          >
-            {l.label}
-          </Link>
-        ))}
-        <div className="ml-auto">
+        {/* The links scroll sideways on narrow screens; the theme toggle stays put. */}
+        <div className="flex min-w-0 flex-1 gap-0.5 overflow-x-auto scrollbar-none sm:gap-1">
+          {LINKS.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className={cn(
+                'shrink-0 rounded-lg px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground sm:px-3',
+                path.startsWith(l.href) && 'bg-muted text-foreground',
+              )}
+            >
+              {l.label}
+            </Link>
+          ))}
+        </div>
+        <div className="ml-2 shrink-0">
           <ThemeToggle />
         </div>
       </nav>
