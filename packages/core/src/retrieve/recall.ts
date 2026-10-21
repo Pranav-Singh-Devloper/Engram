@@ -56,6 +56,9 @@ export interface RecalledMemory {
   sourceEpisodeIds: string[];
   /** Episodes: who said it. Facts: null. */
   role: EpisodeRole | null;
+  /** Facts: the subject and (entity) object, for linking to their timelines. Episodes: null. */
+  subjectId: string | null;
+  objectId: string | null;
   /** Which candidate lists found it. */
   lists: ListName[];
 }
@@ -198,6 +201,8 @@ export async function recall(
       status: c.status,
       sourceEpisodeIds: c.sourceEpisodeIds,
       role: c.role,
+      subjectId: c.subjectId,
+      objectId: c.objectId,
       lists: foundIn.get(c.key) ?? [],
     }))
     .sort((a, b) => b.score - a.score || b.similarity - a.similarity || byContent(a, b))

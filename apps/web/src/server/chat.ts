@@ -95,6 +95,8 @@ export async function chat(deps: ChatDeps, access: Access, req: Request): Promis
           valid_from: m.validFrom,
           valid_to: m.validTo,
           source_episode_ids: m.sourceEpisodeIds,
+          subject_id: m.subjectId,
+          object_id: m.objectId,
         })),
       });
       // Stored before composing, so the visitor's message survives a failed reply.
