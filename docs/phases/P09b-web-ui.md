@@ -1,6 +1,6 @@
 # P09b — Web UI (and P09c — Architecture explorer)
 
-**Status:** P09b done (2026-10-21). P09c in progress: chapters 1–10, 15 and 16 built. Approved 2026-10-21 as written: two phases, a 3D galaxy (three.js), the dependencies listed.
+**Status:** P09b done (2026-10-21). P09c in progress: chapters 1–13, 15 and 16 built. Approved 2026-10-21 as written: two phases, a 3D galaxy (three.js), the dependencies listed.
 
 This file plans two phases. **P09b** is the dashboard SPEC §12 requires. **P09c** is the architecture explorer the user asked for on 2026-10-21: an interactive, animated, deeply referenced tour of how Engram works and why. P09c depends on P09b's design system and data plumbing. They're split so each phase stays one reviewable unit (decision 1).
 
@@ -164,6 +164,18 @@ Each citation states what Engram *took* from the work ("inspired by", "implement
   - **Storage** is read from Postgres's catalog after every migration (`bench/explorer/schema.ts`): tables, columns, constraints, indexes and functions. Tests fail if a new table has no description or diagram position, or if the data predates a migration.
     - **Writing the lock paragraph turned up a better story than the plan's.** No model call runs under `pg_advisory_xact_lock`. Rule decisions apply at once. A case that needs the adjudicator ends its transaction, asks the model, then applies the answer under a new lock only if a fingerprint of the current beliefs hasn't changed, retrying otherwise (`conflict/resolver.ts`).
     - **Phones:** the diagram's `minZoom` was lowered so it fits a 358 px column, and it stays shorter than half a phone screen, so a pan gesture never traps the page's scroll.
+- **Task 6: chapters 11 (providers), 12 (interfaces) and 13 (benchmarks).**
+  - **Sources.**
+    - The MCP tool list comes from the real stdio server: the explorer build speaks raw JSON-RPC to it (initialize, `tools/list`, `resources/list`), as any client would. No new dependency.
+    - The REST route table is tested against the route files in `app/api` (paths and exported methods), and the demo limits against the server's `LIMITS` and config.
+    - The ablation comes from the four dev-long reports, and the transport chart from ADR-016's own table, as parsed from DECISIONS.md.
+    - κ is recomputed from the agreement counts and must equal the bench's value, including "undefined" for the one-class test sheet.
+  - **Quota simulator.** A parity test drives the real `GeminiProvider`, over fake keys with small quotas, through the same workloads. It serves every call from the same key the simulator predicts, in both orders.
+    - **What the simulator showed.** The shared key index wasted quota only when the lanes drifted apart. With generation and embedding interleaved in proportion, both schemes need the same number of keys. With generation running first (extraction, then embedding, as in the real incident), the shared index walked the embeddings onto later keys and failed 500 texts that per-lane rotation served. The chapter says so instead of implying the bug always bit.
+  - **Errors found and corrected while writing:**
+    1. **ADR-016's slowdown.** It said the grammar transport ran "53% slower"; its own table and the spike JSON give 46% on wall time (per-turn calls 62%). The ADR is corrected, with a dated note, and the decision is unchanged.
+    2. **My draft of the chat sequence.** The visitor's turn is stored *before* composing, so the message survives a failed reply. The draft had it after. The diagram follows `server/chat.ts`.
+    3. **My draft's provider count.** There are five implementations, Groq (the judge) included, not four.
 
 ## P09b — scope
 **In:**
