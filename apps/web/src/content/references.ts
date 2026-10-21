@@ -191,6 +191,14 @@ export const REFERENCES: readonly Reference[] = [
     url: 'https://arxiv.org/abs/2205.13147',
     took: 'The technique behind truncated embeddings. Engram requests 768 dimensions from Gemini Embedding instead of its full width (ADR-004), and EmbeddingGemma is natively 768-d, so both spaces fit one vector(768) column.',
   },
+  {
+    key: 'mcinnes2018',
+    authors: 'McInnes, L., Healy, J. and Melville, J.',
+    title: 'UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction',
+    venue: 'arXiv 2018',
+    url: 'https://arxiv.org/abs/1802.03426',
+    took: 'The projection behind the embedding galaxy (verified 2026-10-22). Used only to draw the space: the engine searches the full 768-d vectors, and UMAP keeps neighbourhoods, not global distances.',
+  },
 ];
 
 export const referenceNumber = (key: string) => REFERENCES.findIndex((r) => r.key === key) + 1;

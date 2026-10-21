@@ -4,11 +4,13 @@ import type { ReactNode } from 'react';
 import { Bitemporal } from './chapters/bitemporal';
 import { Consolidation } from './chapters/consolidation';
 import { Decay } from './chapters/decay';
+import { Galaxy } from './chapters/galaxy';
 import { DecisionLog } from './chapters/decision-log';
 import { Overview } from './chapters/overview';
 import { Recall } from './chapters/recall';
 import { References } from './chapters/references';
 import { Resolution } from './chapters/resolution';
+import { Storage } from './chapters/storage';
 import { Versions } from './chapters/versions';
 import { WritePath } from './chapters/write-path';
 
@@ -30,6 +32,8 @@ const PUBLISHED = new Set([
   'recall',
   'decay',
   'consolidation',
+  'galaxy',
+  'storage',
   'decisions',
   'references',
 ]);
@@ -90,6 +94,20 @@ export const CHAPTERS: ChapterDef[] = [
     title: 'Sleeping on it',
     kicker: 'Consolidation',
     body: () => <Consolidation />,
+  },
+  {
+    id: 'galaxy',
+    n: 9,
+    title: 'Where meaning lives',
+    kicker: 'The embedding galaxy',
+    body: () => <Galaxy />,
+  },
+  {
+    id: 'storage',
+    n: 10,
+    title: 'One database, two clocks',
+    kicker: 'Storage',
+    body: () => <Storage />,
   },
   {
     id: 'decisions',
