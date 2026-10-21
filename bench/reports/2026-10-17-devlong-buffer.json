@@ -4,7 +4,7 @@
   "split": "dev-long",
   "date": "2026-10-17",
   "finishedAt": "2026-10-17T11:56:15.514Z",
-  "model": "gemini-3.5-flash-lite",
+  "model": "gemini-3.5-flash-lite + gemini-embedding-2 embeddings",
   "judge": "openai/gpt-oss-120b",
   "items": 40,
   "retrievalOnly": false,
@@ -12,7 +12,47 @@
     "buffer": {
       "accuracy": 0.7,
       "n": 40,
-      "recallAt8": null
+      "recallAt8": null,
+      "requestsPerItem": 1,
+      "promptTokensPerItem": 841
+    }
+  },
+  "categories": {
+    "abstention": {
+      "buffer": {
+        "accuracy": 1,
+        "n": 4
+      }
+    },
+    "cross_session_recall": {
+      "buffer": {
+        "accuracy": 0.5,
+        "n": 12
+      }
+    },
+    "knowledge_update": {
+      "buffer": {
+        "accuracy": 1,
+        "n": 8
+      }
+    },
+    "multi_hop": {
+      "buffer": {
+        "accuracy": 0,
+        "n": 4
+      }
+    },
+    "single_session_recall": {
+      "buffer": {
+        "accuracy": 1,
+        "n": 6
+      }
+    },
+    "temporal_reasoning": {
+      "buffer": {
+        "accuracy": 0.667,
+        "n": 6
+      }
     }
   }
 }

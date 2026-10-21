@@ -3,7 +3,7 @@
   "runId": "2026-10-18-test",
   "split": "test",
   "date": "2026-10-18",
-  "finishedAt": "2026-10-19T16:42:33.073Z",
+  "finishedAt": "2026-10-19T16:42:33.070Z",
   "model": "gemini-3.5-flash-lite + gemini-embedding-2 embeddings",
   "judge": "openai/gpt-oss-120b",
   "items": 200,
@@ -12,27 +12,171 @@
     "buffer": {
       "accuracy": 0.595,
       "n": 200,
-      "recallAt8": null
+      "recallAt8": null,
+      "requestsPerItem": 1,
+      "promptTokensPerItem": 837
     },
     "rag": {
       "accuracy": 1,
       "n": 200,
-      "recallAt8": 0.961
+      "recallAt8": 0.961,
+      "requestsPerItem": 3,
+      "promptTokensPerItem": 483
     },
     "full_context": {
       "accuracy": 0.995,
       "n": 200,
-      "recallAt8": null
+      "recallAt8": null,
+      "requestsPerItem": 1,
+      "promptTokensPerItem": 1528
     },
     "engram": {
       "accuracy": 0.995,
       "n": 200,
-      "recallAt8": 0.956
+      "recallAt8": 0.956,
+      "requestsPerItem": 33.8,
+      "promptTokensPerItem": 4557
     },
     "engram_consolidated": {
       "accuracy": 0.995,
       "n": 200,
-      "recallAt8": 0.994
+      "recallAt8": 0.994,
+      "requestsPerItem": 45,
+      "promptTokensPerItem": 1487
+    }
+  },
+  "categories": {
+    "abstention": {
+      "buffer": {
+        "accuracy": 1,
+        "n": 20
+      },
+      "rag": {
+        "accuracy": 1,
+        "n": 20
+      },
+      "full_context": {
+        "accuracy": 1,
+        "n": 20
+      },
+      "engram": {
+        "accuracy": 1,
+        "n": 20
+      },
+      "engram_consolidated": {
+        "accuracy": 1,
+        "n": 20
+      }
+    },
+    "cross_session_recall": {
+      "buffer": {
+        "accuracy": 0.133,
+        "n": 60
+      },
+      "rag": {
+        "accuracy": 1,
+        "n": 60
+      },
+      "full_context": {
+        "accuracy": 1,
+        "n": 60
+      },
+      "engram": {
+        "accuracy": 1,
+        "n": 60
+      },
+      "engram_consolidated": {
+        "accuracy": 1,
+        "n": 60
+      }
+    },
+    "knowledge_update": {
+      "buffer": {
+        "accuracy": 0.925,
+        "n": 40
+      },
+      "rag": {
+        "accuracy": 1,
+        "n": 40
+      },
+      "full_context": {
+        "accuracy": 1,
+        "n": 40
+      },
+      "engram": {
+        "accuracy": 0.975,
+        "n": 40
+      },
+      "engram_consolidated": {
+        "accuracy": 1,
+        "n": 40
+      }
+    },
+    "multi_hop": {
+      "buffer": {
+        "accuracy": 0,
+        "n": 20
+      },
+      "rag": {
+        "accuracy": 1,
+        "n": 20
+      },
+      "full_context": {
+        "accuracy": 1,
+        "n": 20
+      },
+      "engram": {
+        "accuracy": 1,
+        "n": 20
+      },
+      "engram_consolidated": {
+        "accuracy": 1,
+        "n": 20
+      }
+    },
+    "single_session_recall": {
+      "buffer": {
+        "accuracy": 1,
+        "n": 30
+      },
+      "rag": {
+        "accuracy": 1,
+        "n": 30
+      },
+      "full_context": {
+        "accuracy": 1,
+        "n": 30
+      },
+      "engram": {
+        "accuracy": 1,
+        "n": 30
+      },
+      "engram_consolidated": {
+        "accuracy": 1,
+        "n": 30
+      }
+    },
+    "temporal_reasoning": {
+      "buffer": {
+        "accuracy": 0.8,
+        "n": 30
+      },
+      "rag": {
+        "accuracy": 1,
+        "n": 30
+      },
+      "full_context": {
+        "accuracy": 0.967,
+        "n": 30
+      },
+      "engram": {
+        "accuracy": 1,
+        "n": 30
+      },
+      "engram_consolidated": {
+        "accuracy": 0.967,
+        "n": 30
+      }
     }
   }
 }

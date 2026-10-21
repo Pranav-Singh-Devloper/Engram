@@ -43,6 +43,7 @@ function main(): void {
 
   if (process.argv.includes('agreement')) {
     const sections: string[] = [];
+    const perRun: Record<string, Agreement> = {};
     const all: LabelPair[] = [];
     let sampled = 0;
     for (const runId of runIds) {
@@ -53,6 +54,7 @@ function main(): void {
       const pairs = labelPairs(rows, parseLabels(readFileSync(f.sheet, 'utf8')));
       all.push(...pairs);
       sampled += rows.length;
+      perRun[runId] = agreementOf(pairs);
       sections.push(`## ${runId}`, '', ...describe(agreementOf(pairs), rows.length), '');
     }
     const name = runIds.join('+');
@@ -63,6 +65,11 @@ function main(): void {
       ...sections,
     ].join('\n');
     writeFileSync(path.join(BENCH_DIR, 'reports', `agreement-${name}.md`), text);
+    // The eval dashboard reads this (P09b).
+    writeFileSync(
+      path.join(BENCH_DIR, 'reports', `agreement-${name}.json`),
+      `${JSON.stringify({ runs: runIds, pooled: agreementOf(all), perRun }, null, 2)}\n`,
+    );
     console.log(text);
     return;
   }

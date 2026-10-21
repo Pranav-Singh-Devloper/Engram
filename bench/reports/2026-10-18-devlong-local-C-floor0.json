@@ -4,7 +4,7 @@
   "split": "dev-long",
   "date": "2026-10-18",
   "finishedAt": "2026-10-18T02:10:37.201Z",
-  "model": "ollama qwen3.5:9b",
+  "model": "ollama qwen3.5:9b + embeddinggemma:300m embeddings",
   "judge": "openai/gpt-oss-120b",
   "items": 40,
   "retrievalOnly": true,
@@ -12,7 +12,47 @@
     "engram": {
       "accuracy": 0.1,
       "n": 40,
-      "recallAt8": 0.972
+      "recallAt8": 0.972,
+      "requestsPerItem": 29.9,
+      "promptTokensPerItem": 6095
+    }
+  },
+  "categories": {
+    "abstention": {
+      "engram": {
+        "accuracy": 1,
+        "n": 4
+      }
+    },
+    "cross_session_recall": {
+      "engram": {
+        "accuracy": 0,
+        "n": 12
+      }
+    },
+    "knowledge_update": {
+      "engram": {
+        "accuracy": 0,
+        "n": 8
+      }
+    },
+    "multi_hop": {
+      "engram": {
+        "accuracy": 0,
+        "n": 4
+      }
+    },
+    "single_session_recall": {
+      "engram": {
+        "accuracy": 0,
+        "n": 6
+      }
+    },
+    "temporal_reasoning": {
+      "engram": {
+        "accuracy": 0,
+        "n": 6
+      }
     }
   }
 }

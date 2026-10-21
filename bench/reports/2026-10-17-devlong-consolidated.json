@@ -4,7 +4,7 @@
   "split": "dev-long",
   "date": "2026-10-17",
   "finishedAt": "2026-10-17T12:43:33.596Z",
-  "model": "gemini-3.5-flash-lite",
+  "model": "gemini-3.5-flash-lite + gemini-embedding-2 embeddings",
   "judge": "openai/gpt-oss-120b",
   "items": 40,
   "retrievalOnly": false,
@@ -12,7 +12,47 @@
     "engram_consolidated": {
       "accuracy": 1,
       "n": 40,
-      "recallAt8": 1
+      "recallAt8": 1,
+      "requestsPerItem": 88.5,
+      "promptTokensPerItem": 1535
+    }
+  },
+  "categories": {
+    "abstention": {
+      "engram_consolidated": {
+        "accuracy": 1,
+        "n": 4
+      }
+    },
+    "cross_session_recall": {
+      "engram_consolidated": {
+        "accuracy": 1,
+        "n": 12
+      }
+    },
+    "knowledge_update": {
+      "engram_consolidated": {
+        "accuracy": 1,
+        "n": 8
+      }
+    },
+    "multi_hop": {
+      "engram_consolidated": {
+        "accuracy": 1,
+        "n": 4
+      }
+    },
+    "single_session_recall": {
+      "engram_consolidated": {
+        "accuracy": 1,
+        "n": 6
+      }
+    },
+    "temporal_reasoning": {
+      "engram_consolidated": {
+        "accuracy": 1,
+        "n": 6
+      }
     }
   }
 }

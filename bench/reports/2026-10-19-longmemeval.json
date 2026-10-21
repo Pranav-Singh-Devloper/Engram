@@ -3,7 +3,7 @@
   "runId": "2026-10-19-longmemeval",
   "split": "longmemeval",
   "date": "2026-10-19",
-  "finishedAt": "2026-10-19T15:36:49.337Z",
+  "finishedAt": "2026-10-21T09:58:24.024Z",
   "model": "gemini-3.5-flash-lite + embeddinggemma:300m embeddings",
   "judge": "openai/gpt-oss-120b",
   "items": 98,
@@ -12,22 +12,122 @@
     "buffer": {
       "accuracy": 0.082,
       "n": 98,
-      "recallAt8": null
+      "recallAt8": null,
+      "requestsPerItem": 1,
+      "promptTokensPerItem": 2026
     },
     "rag": {
       "accuracy": 0.52,
       "n": 98,
-      "recallAt8": 0.505
+      "recallAt8": 0.505,
+      "requestsPerItem": 10.2,
+      "promptTokensPerItem": 1057
     },
     "full_context": {
       "accuracy": 0.541,
       "n": 98,
-      "recallAt8": null
+      "recallAt8": null,
+      "requestsPerItem": 1,
+      "promptTokensPerItem": 48432
     },
     "engram": {
       "accuracy": 0.449,
       "n": 98,
-      "recallAt8": 0.452
+      "recallAt8": 0.452,
+      "requestsPerItem": 64.4,
+      "promptTokensPerItem": 128681
+    }
+  },
+  "categories": {
+    "abstention": {
+      "buffer": {
+        "accuracy": 1,
+        "n": 5
+      },
+      "rag": {
+        "accuracy": 1,
+        "n": 5
+      },
+      "full_context": {
+        "accuracy": 0.8,
+        "n": 5
+      },
+      "engram": {
+        "accuracy": 1,
+        "n": 5
+      }
+    },
+    "cross_session_recall": {
+      "buffer": {
+        "accuracy": 0,
+        "n": 24
+      },
+      "rag": {
+        "accuracy": 0.375,
+        "n": 24
+      },
+      "full_context": {
+        "accuracy": 0.375,
+        "n": 24
+      },
+      "engram": {
+        "accuracy": 0.292,
+        "n": 24
+      }
+    },
+    "knowledge_update": {
+      "buffer": {
+        "accuracy": 0.143,
+        "n": 14
+      },
+      "rag": {
+        "accuracy": 0.786,
+        "n": 14
+      },
+      "full_context": {
+        "accuracy": 0.643,
+        "n": 14
+      },
+      "engram": {
+        "accuracy": 0.643,
+        "n": 14
+      }
+    },
+    "single_session_recall": {
+      "buffer": {
+        "accuracy": 0.033,
+        "n": 30
+      },
+      "rag": {
+        "accuracy": 0.533,
+        "n": 30
+      },
+      "full_context": {
+        "accuracy": 0.633,
+        "n": 30
+      },
+      "engram": {
+        "accuracy": 0.5,
+        "n": 30
+      }
+    },
+    "temporal_reasoning": {
+      "buffer": {
+        "accuracy": 0,
+        "n": 25
+      },
+      "rag": {
+        "accuracy": 0.4,
+        "n": 25
+      },
+      "full_context": {
+        "accuracy": 0.48,
+        "n": 25
+      },
+      "engram": {
+        "accuracy": 0.32,
+        "n": 25
+      }
     }
   }
 }

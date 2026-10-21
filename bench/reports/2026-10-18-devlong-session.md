@@ -1,6 +1,6 @@
 # Engram-Bench — dev-long split, run 2026-10-18-devlong-session
 
-2026-10-18 · system model `gemini-3.5-flash-lite` · judge `openai/gpt-oss-120b` · 40 items
+2026-10-18 · system model `gemini-3.5-flash-lite + gemini-embedding-2 embeddings` · judge `openai/gpt-oss-120b` · 40 items
 
 ## Accuracy by category
 

@@ -1,6 +1,6 @@
 # Engram-Bench — dev-long split, run 2026-10-17-devlong-consolidated
 
-2026-10-17 · system model `gemini-3.5-flash-lite` · judge `openai/gpt-oss-120b` · 40 items
+2026-10-17 · system model `gemini-3.5-flash-lite + gemini-embedding-2 embeddings` · judge `openai/gpt-oss-120b` · 40 items
 
 ## Accuracy by category
 
@@ -29,6 +29,11 @@ Share of answerable items where a retrieved memory contains the expected answer 
 | engram_consolidated | 100% | 100% | 3.5 | 85.0 | 1535 | 5015 ms | 33151 ms |
 
 Latency includes cache hits, so it understates cold runs. Real calls and tokens count only what this run sent to the network.
+
+## Engram store health
+
+- Ad-hoc predicate rate: 1% of current facts (SPEC §18 threshold ~15%).
+- Duplicate-entity rate: 0% of entities share a name with another.
 
 ## Consolidation
 

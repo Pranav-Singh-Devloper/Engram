@@ -23,7 +23,17 @@ export const BenchSummary = z.object({
       n: z.number().int(),
       /** Retrieval modes only. */
       recallAt8: z.number().nullable(),
+      /** Model requests per item (sent + replayed from the bench cache), and tokens sent. */
+      requestsPerItem: z.number().optional(),
+      promptTokensPerItem: z.number().optional(),
     }),
   ),
+  /** Accuracy per category and mode (P09b's eval charts). Absent in summaries written before it. */
+  categories: z
+    .record(
+      z.string(),
+      z.record(z.string(), z.object({ accuracy: z.number(), n: z.number().int() })),
+    )
+    .optional(),
 });
 export type BenchSummary = z.infer<typeof BenchSummary>;

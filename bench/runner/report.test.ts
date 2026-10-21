@@ -127,10 +127,28 @@ describe('summarizeRun', () => {
       items: 2,
       retrievalOnly: false,
       modes: {
-        buffer: { accuracy: 1, n: 1, recallAt8: null },
-        engram: { accuracy: 0.5, n: 2, recallAt8: 0.5 },
+        buffer: { accuracy: 1, n: 1, recallAt8: null, requestsPerItem: 0, promptTokensPerItem: 0 },
+        engram: { accuracy: 0.5, n: 2, recallAt8: 0.5, requestsPerItem: 0, promptTokensPerItem: 0 },
+      },
+      categories: {
+        cross_session_recall: { buffer: { accuracy: 1, n: 1 }, engram: { accuracy: 0.5, n: 2 } },
       },
     });
+  });
+
+  it('counts requests per item, sent and replayed from cache', () => {
+    const summary = summarizeRun(
+      [
+        result({ usage: { calls: 3, cached: 5, promptTokens: 900, outputTokens: 10 }, answer: {} }),
+        result({
+          itemId: 'dev-002',
+          usage: { calls: 1, cached: 1, promptTokens: 100, outputTokens: 1 },
+          answer: {},
+        }),
+      ],
+      { ...meta, finishedAt },
+    );
+    expect(summary.modes.engram).toMatchObject({ requestsPerItem: 5, promptTokensPerItem: 500 });
   });
 
   it('marks ranker comparisons as retrieval-only', () => {

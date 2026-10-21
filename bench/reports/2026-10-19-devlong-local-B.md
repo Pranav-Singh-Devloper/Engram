@@ -1,6 +1,6 @@
 # Engram-Bench — dev-long split, run 2026-10-19-devlong-local-B
 
-2026-10-19 · system model `ollama qwen3.5:9b` · judge `openai/gpt-oss-120b` · 40 items
+2026-10-19 · system model `ollama qwen3.5:9b + gemini-embedding-2 embeddings` · judge `openai/gpt-oss-120b` · 40 items
 
 ## Accuracy by category
 

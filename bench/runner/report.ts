@@ -79,15 +79,42 @@ export function summarizeRun(
         const hits = answerable.filter((r) =>
           (r.answer.retrieved ?? []).some((t) => normalize(t).includes(normalize(r.expected))),
         );
+        const avg = (f: (r: ItemResult) => number) =>
+          rs.length === 0
+            ? 0
+            : Math.round((rs.reduce((n, r) => n + f(r), 0) / rs.length) * 10) / 10;
         return [
           m,
           {
             accuracy: share(rs.filter((r) => r.verdict.correct).length, rs.length),
             n: rs.length,
             recallAt8: answerable.length > 0 ? share(hits.length, answerable.length) : null,
+            requestsPerItem: avg((r) => r.usage.calls + r.usage.cached),
+            promptTokensPerItem: Math.round(avg((r) => r.usage.promptTokens)),
           },
         ];
       }),
+    ),
+    categories: Object.fromEntries(
+      [...new Set(results.map((r) => r.category))].sort().map((c) => [
+        c,
+        Object.fromEntries(
+          modes.flatMap((m) => {
+            const rs = results.filter((r) => r.mode === m && r.category === c);
+            return rs.length === 0
+              ? []
+              : [
+                  [
+                    m,
+                    {
+                      accuracy: share(rs.filter((r) => r.verdict.correct).length, rs.length),
+                      n: rs.length,
+                    },
+                  ],
+                ];
+          }),
+        ),
+      ]),
     ),
   };
 }

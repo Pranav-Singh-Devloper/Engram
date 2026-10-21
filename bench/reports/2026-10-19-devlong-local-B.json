@@ -3,8 +3,8 @@
   "runId": "2026-10-19-devlong-local-B",
   "split": "dev-long",
   "date": "2026-10-19",
-  "finishedAt": "2026-10-19T03:46:44.164Z",
-  "model": "ollama qwen3.5:9b",
+  "finishedAt": "2026-10-19T03:46:44.103Z",
+  "model": "ollama qwen3.5:9b + gemini-embedding-2 embeddings",
   "judge": "openai/gpt-oss-120b",
   "items": 40,
   "retrievalOnly": false,
@@ -12,7 +12,47 @@
     "engram": {
       "accuracy": 0.925,
       "n": 40,
-      "recallAt8": 0.972
+      "recallAt8": 0.972,
+      "requestsPerItem": 30,
+      "promptTokensPerItem": 588
+    }
+  },
+  "categories": {
+    "abstention": {
+      "engram": {
+        "accuracy": 1,
+        "n": 4
+      }
+    },
+    "cross_session_recall": {
+      "engram": {
+        "accuracy": 1,
+        "n": 12
+      }
+    },
+    "knowledge_update": {
+      "engram": {
+        "accuracy": 0.75,
+        "n": 8
+      }
+    },
+    "multi_hop": {
+      "engram": {
+        "accuracy": 1,
+        "n": 4
+      }
+    },
+    "single_session_recall": {
+      "engram": {
+        "accuracy": 1,
+        "n": 6
+      }
+    },
+    "temporal_reasoning": {
+      "engram": {
+        "accuracy": 0.833,
+        "n": 6
+      }
     }
   }
 }
