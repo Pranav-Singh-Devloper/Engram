@@ -13,13 +13,15 @@
     "bench:lme": "tsx longmemeval/prepare.ts",
     "bench:label": "tsx runner/label-cli.ts",
     "bench:agreement": "tsx runner/label-cli.ts agreement",
-    "bench:calibrate": "tsx calibration/calibrate.ts"
+    "bench:calibrate": "tsx calibration/calibrate.ts",
+    "explorer:data": "tsx explorer/build.ts"
   },
   "dependencies": {
     "@engram/core": "workspace:*",
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "tsx": "^4.23.15"
+    "tsx": "^4.23.15",
+    "umap-js": "1.4.0"
   }
 }

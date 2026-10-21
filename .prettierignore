@@ -10,3 +10,5 @@ bench/reports/
 bench/fixtures/
 bench/calibration/*.json
 bench/spikes/*.json
+# Explorer data written by pnpm explorer:data (P09c).
+apps/web/src/content/generated/*.json

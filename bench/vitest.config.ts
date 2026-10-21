@@ -7,6 +7,7 @@ export default defineConfig({
       'runner/**/*.test.ts',
       'longmemeval/**/*.test.ts',
       'calibration/**/*.test.ts',
+      'explorer/**/*.test.ts',
     ],
     // Migrates the local database before integration tests (shared with core).
     globalSetup: ['../packages/core/src/testing/globalSetup.ts'],

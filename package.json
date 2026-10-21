@@ -31,7 +31,8 @@
     "db:reembed": "pnpm --filter @engram/scripts reembed",
     "local:setup": "pnpm --filter @engram/scripts local:setup",
     "local:doctor": "pnpm --filter @engram/scripts local:doctor",
-    "bench:calibrate": "pnpm --filter @engram/bench bench:calibrate"
+    "bench:calibrate": "pnpm --filter @engram/bench bench:calibrate",
+    "explorer:data": "pnpm --filter @engram/bench explorer:data"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

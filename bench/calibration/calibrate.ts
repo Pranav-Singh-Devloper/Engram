@@ -108,11 +108,25 @@ async function main(): Promise<void> {
   const score = (p: Pair) => cosine(vec(p.a, p.query ?? false), vec(p.b, false));
 
   const report: Record<string, FamilyReport> = {};
+  // Per-pair scores too: the architecture explorer lets a reader drag a
+  // threshold over them (P09c chapter 5).
+  const scores: Record<string, { positive: number[]; negative: number[] }> = {};
+  const r3 = (x: number) => Math.round(x * 1000) / 1000;
   for (const family of Object.keys(FAMILIES) as Family[]) {
     const scored = pairs
       .filter((p) => p.family === family)
       .map((p) => ({ positive: p.positive, score: score(p) }));
     report[family] = reportFamily(scored, CURRENT[family], maxFalse);
+    scores[family] = {
+      positive: scored
+        .filter((x) => x.positive)
+        .map((x) => r3(x.score))
+        .sort((a, b) => a - b),
+      negative: scored
+        .filter((x) => !x.positive)
+        .map((x) => r3(x.score))
+        .sort((a, b) => a - b),
+    };
   }
   const out = {
     space,
@@ -123,6 +137,7 @@ async function main(): Promise<void> {
   };
   const file = path.resolve(import.meta.dirname, `${space.replace(/[^\w.-]+/g, '_')}.json`);
   writeFileSync(file, `${JSON.stringify(out, null, 2)}\n`);
+  writeFileSync(file.replace(/\.json$/, '.scores.json'), `${JSON.stringify({ space, scores })}\n`);
   console.log(`${space}: ${pairs.length} pairs (max false-merge ${maxFalse})`);
   console.log(
     'family               current (fp / fn)        suggested (fp / kept)    positives       negatives',
