@@ -1,6 +1,6 @@
 # P09b — Web UI (and P09c — Architecture explorer)
 
-**Status:** P09b done (2026-10-21). P09c in progress: chapters 1–8, 15 and 16 built. Approved 2026-10-21 as written: two phases, a 3D galaxy (three.js), the dependencies listed.
+**Status:** P09b done (2026-10-21). P09c in progress: chapters 1–10, 15 and 16 built. Approved 2026-10-21 as written: two phases, a 3D galaxy (three.js), the dependencies listed.
 
 This file plans two phases. **P09b** is the dashboard SPEC §12 requires. **P09c** is the architecture explorer the user asked for on 2026-10-21: an interactive, animated, deeply referenced tour of how Engram works and why. P09c depends on P09b's design system and data plumbing. They're split so each phase stays one reviewable unit (decision 1).
 
@@ -155,6 +155,15 @@ Each citation states what Engram *took* from the work ("inspired by", "implement
   - **KaTeX** 0.19.0 was added, as approved. It ships its own types, so `@types/katex` was removed again.
   - **Phone checks found two layout faults.** Charts drawn in a fixed 760-wide viewBox shrank their labels to about 5 px at 390 px. They now measure their real width (`useWidth`). The formulas also overflowed, so phones get a stacked form.
   - **Generated files churn.** Each explorer build replays the story with fresh UUIDs. A regenerated file whose content didn't change is restored, not committed.
+- **Task 5: chapters 9 (the galaxy) and 10 (storage).**
+  - **Dependencies.** Installed three 0.186.1, @react-three/fiber 9.8.2 and @xyflow/react 12.12.0, all approved and MIT. `@types/three` 0.186.0 is a dev dependency because three ships no types. **drei was not installed**: three's own `OrbitControls` is all the scene needs, so the approved list shrank by one. Both heavy libraries are code-split (`next/dynamic`, no SSR) and load only when their chapter mounts.
+  - **The galaxy** is one draw call. Colour, alpha and size are per-vertex attributes on a small shader, so highlighting a persona or a search never rebuilds geometry. Frames render only while the chapter is on screen. Rotation is off under reduced motion. The wheel scrolls the page, never the scene; zoom is on buttons. Without WebGL it falls back to a flat SVG of the same points.
+  - **What the projection shows, measured, not asserted.** A point's 5 nearest neighbours share its kind 72–100% of the time, but its persona only 10–14% (chance: 13%). The space sorts by meaning, not by speaker: p2's "I live in Melbourne" sits beside p4's "I live in Osaka". A test checks this, and the chapter uses it to explain why users are separated by namespace in SQL rather than by embeddings. UMAP keeps neighbourhoods, not distances, and the chapter says so.
+  - **A new reference: UMAP** (McInnes, Healy & Melville, arXiv 1802.03426). Verified against its arXiv page on 2026-10-22 before it was added.
+  - **Screenshot rig.** The headless Chrome used for checks had been started with `--disable-gpu`, so it silently showed the SVG fallback. It's now started with the GPU (ANGLE on Metal). The first real render exposed a point-size formula that was about 500× too large.
+  - **Storage** is read from Postgres's catalog after every migration (`bench/explorer/schema.ts`): tables, columns, constraints, indexes and functions. Tests fail if a new table has no description or diagram position, or if the data predates a migration.
+    - **Writing the lock paragraph turned up a better story than the plan's.** No model call runs under `pg_advisory_xact_lock`. Rule decisions apply at once. A case that needs the adjudicator ends its transaction, asks the model, then applies the answer under a new lock only if a fingerprint of the current beliefs hasn't changed, retrying otherwise (`conflict/resolver.ts`).
+    - **Phones:** the diagram's `minZoom` was lowered so it fits a 358 px column, and it stays shorter than half a phone screen, so a pan gesture never traps the page's scroll.
 
 ## P09b — scope
 **In:**
