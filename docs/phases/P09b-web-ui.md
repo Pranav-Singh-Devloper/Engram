@@ -121,6 +121,12 @@ Each citation states what Engram *took* from the work ("inspired by", "implement
   - **Design fixes from screenshots:** room on the axis for unknown starts (Marseille was a sliver); All / 5-year / 1-year zoom (Paris, Jan–Mar 2024, was a few pixels on a 12-year axis); a legend for the five encodings; a responsive label column; the "valid at" label flipping side near the edge.
   - **Screenshot method:** the 390 px iframe trick catches charts before their ResizeObserver re-measures. Mobile checks now use DevTools device emulation (`Emulation.setDeviceMetricsOverride`) through the same driver.
 
+- **Task 7: walking `docs/demo.md` end to end in the browser found four things.**
+  1. **The script's wording.** "I moved to Berlin in March" said minutes after "I live in Paris" dates Berlin *before* Paris. The engine then correctly records Berlin as older history and keeps Paris current. Same-day demos must state moves in the present ("I just moved to Berlin"). Local qwen even dated "just moved" to yesterday. On Gemini the full script passed: Paris → Berlin, Initech retracted → Acme, "You live in Berlin and work at Acme."
+  2. **A real bug: stepped sliders.** The timeline's known-at slider stepped by hours from its range start, so its maximum snapped back before the move, and "known at now" still answered Paris. The sliders are now continuous (`step="any"`), and same-day ranges show the time of day.
+  3. **A layout rule that was wrong for demos.** "Pad a short history to a year" squeezed a 20-minute demo against the axis's right edge. The axis now fits the data (10-minute floor) with hour, day or month ticks to match, and zoom shows only for histories over a year.
+  4. **Memory pressure (18 GB).** qwen (10 GB) and embeddinggemma loaded for both the demo app and the LongMemEval run, alongside Docker, Chrome and Next, crashed Ollama's embedding runner and Chrome. Heavy local jobs run one at a time. At the user's request the demo was then walked on Gemini (five keys) instead of Ollama.
+
 ## P09b — scope
 **In:**
 - `/` landing: what Engram is, live showcase stats, links.
