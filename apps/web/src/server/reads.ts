@@ -2,7 +2,7 @@
 // browsing a memory isn't using it (§6.2 rule 7).
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
-import { BenchSummary, history, retentionScore, uuidArray } from '@engram/core';
+import { BenchSummary, history, namespaceStats, retentionScore, uuidArray } from '@engram/core';
 import type { Sql } from '@engram/core';
 import { z } from 'zod';
 import type { Access } from './auth';
@@ -134,6 +134,11 @@ export async function entityTimeline(
 }
 
 const notFound = () => Response.json({ error: 'Not found.' }, { status: 404 });
+
+/** GET /api/stats: the namespace's size and shape, for the landing page (showcase when anonymous). */
+export async function stats(db: Sql, access: Access): Promise<Response> {
+  return Response.json({ scope: access.kind, ...(await namespaceStats(db, access.namespaceId)) });
+}
 
 const AgreementFile = z.object({
   runs: z.array(z.string()),

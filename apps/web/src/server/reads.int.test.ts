@@ -113,6 +113,18 @@ describe('GET /api/entities/:id/timeline', () => {
   });
 });
 
+describe('GET /api/stats', () => {
+  it("reports the showcase's shape to anonymous visitors, and the token's own namespace otherwise", async () => {
+    const anon = (await (await t.routes.stats(get('/api/stats', false))).json()) as {
+      scope: string;
+      facts: { total: number };
+    };
+    expect(anon).toMatchObject({ scope: 'showcase', facts: { total: 3 } });
+    const mine = (await (await t.routes.stats(get('/api/stats'))).json()) as { scope: string };
+    expect(mine.scope).toBe('token');
+  });
+});
+
 describe('GET /api/evals', () => {
   it('lists valid bench summaries newest first and skips anything else', async () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'engram-evals-'));

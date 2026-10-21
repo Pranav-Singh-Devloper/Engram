@@ -8,7 +8,7 @@ import { chat } from './chat';
 import type { WebConfig } from './config';
 import { createDemoSession } from './demo';
 import { health } from './health';
-import { entityTimeline, listEvals, listMemories } from './reads';
+import { entityTimeline, listEvals, listMemories, stats } from './reads';
 import { recallRoute, remember } from './writes';
 
 export interface Deps {
@@ -56,6 +56,10 @@ export function createRoutes(deps: Deps) {
         : entityTimeline(db, access, entityId, new URL(req.url));
     },
     evals: () => listEvals(config.reportsDir),
+    stats: async (req: Request) => {
+      const access = await readAccess(db, config, req, clock.now());
+      return access instanceof Response ? access : stats(db, access);
+    },
     remember: async (req: Request) => {
       const access = await tokenAccess(db, config, req);
       return access instanceof Response ? access : remember(deps, access, req);
