@@ -31,4 +31,15 @@ export function formatDay(d: Date): string {
   return day.format(d);
 }
 
+const time = new Intl.DateTimeFormat('en-GB', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+});
+
+/** "21 Oct 2026, 15:42" in the viewer's time zone: for same-day histories. */
+export function formatMoment(d: Date): string {
+  return `${day.format(d)}, ${time.format(d)}`;
+}
+
 export const pct = (x: number) => `${Math.round(100 * x)}%`;

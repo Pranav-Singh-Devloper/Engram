@@ -52,6 +52,17 @@ export interface TimelineLayout {
 }
 
 const YEAR = 365.25 * 86_400_000;
+const MIN_SPAN = 10 * 60_000;
+
+/** Tick labels to match the axis span: hours, days, or year-months. */
+export function tickUnit(domain: [Date, Date]): 'time' | 'day' | 'month' {
+  const span = domain[1].getTime() - domain[0].getTime();
+  return span < 2 * 86_400_000 ? 'time' : span < 120 * 86_400_000 ? 'day' : 'month';
+}
+
+/** Zoom presets only help when the history spans more than a year. */
+export const zoomUseful = (domain: [Date, Date]) =>
+  domain[1].getTime() - domain[0].getTime() > YEAR;
 
 /**
  * The time axis: from the earliest known start or record time to now, padded
@@ -67,7 +78,9 @@ export function timeDomain(entries: readonly TimelineEntry[], now: Date): [Date,
   }
   let lo = Math.min(...times);
   const hi = Math.max(...times);
-  if (hi - lo < YEAR / 12) lo = hi - YEAR;
+  // The axis fits the data: a live demo spans minutes, a life story decades.
+  // A floor of 10 minutes keeps a single fact from collapsing to a point.
+  if (hi - lo < MIN_SPAN) lo = hi - MIN_SPAN;
   const span = hi - lo;
   // An unknown start needs visible room before the earliest known date, or
   // its bar is a sliver under the fade.

@@ -4,7 +4,7 @@ import { scaleTime } from 'd3';
 import { motion, useReducedMotion } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { formatDay, formatWindow } from '@/lib/format';
-import { believedAt, trueAt } from '@/lib/timeline';
+import { believedAt, tickUnit, trueAt } from '@/lib/timeline';
 import type { Bar, TimelineLayout } from '@/lib/timeline';
 import { cn } from '@/lib/utils';
 
@@ -50,6 +50,19 @@ export function TimelineChart({ layout, knownAt, validAt, selected, onSelect }: 
         .range([LABEL_W, width - 12]),
     [layout.domain, width, LABEL_W],
   );
+  const unit = tickUnit(layout.domain);
+  const hm = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+  const dm = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' });
+  const tick = (t: Date) =>
+    unit === 'time'
+      ? hm.format(t)
+      : unit === 'day'
+        ? dm.format(t)
+        : `${String(t.getUTCFullYear())}${t.getUTCMonth() === 0 ? '' : `-${String(t.getUTCMonth() + 1).padStart(2, '0')}`}`;
   const ticks = x.ticks(Math.max(2, Math.floor(width / 120)));
 
   let y = AXIS_H;
@@ -99,8 +112,7 @@ export function TimelineChart({ layout, knownAt, validAt, selected, onSelect }: 
               textAnchor="middle"
               className="fill-muted-foreground font-mono text-[10px]"
             >
-              {t.getUTCFullYear()}
-              {t.getUTCMonth() === 0 ? '' : `-${String(t.getUTCMonth() + 1).padStart(2, '0')}`}
+              {tick(t)}
             </text>
           </g>
         ))}

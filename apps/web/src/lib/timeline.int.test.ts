@@ -6,7 +6,15 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { TEST_TOKEN, testRoutes } from '../server/testing';
 import { Timeline } from './api';
 import type { TimelineEntry } from './api';
-import { believedAt, layoutTimeline, revisionChain, timeDomain, trueAt } from './timeline';
+import {
+  believedAt,
+  layoutTimeline,
+  revisionChain,
+  tickUnit,
+  timeDomain,
+  trueAt,
+  zoomUseful,
+} from './timeline';
 
 const db = testDb();
 const t = testRoutes(db);
@@ -125,17 +133,27 @@ describe('layout', () => {
     expect(chain[1]?.replaced).toBe(true);
   });
 
-  it('pads a short history to a year-long axis', () => {
-    const one = entries.slice(0, 1).map((e) => ({
+  it('fits a short history: a same-day demo gets a minutes-wide axis with time ticks', () => {
+    const at = (m: number) => new Date(Date.parse('2026-10-21T15:40:00Z') + m * 60_000);
+    const sameDay = entries.slice(0, 2).map((e, i) => ({
       ...e,
       fact: {
         ...e.fact,
-        validFrom: new Date('2024-08-30T00:00:00Z'),
-        recordedAt: new Date('2024-08-30T00:00:00Z'),
+        validFrom: at(i * 10),
+        recordedAt: at(i * 10),
         validTo: null,
+        invalidatedAt: null,
       },
     }));
-    const [lo, hi] = timeDomain(one, new Date('2024-09-01T00:00:00Z'));
-    expect(hi.getTime() - lo.getTime()).toBeGreaterThan(360 * 86_400_000);
+    const domain = timeDomain(sameDay, at(20));
+    const span = domain[1].getTime() - domain[0].getTime();
+    expect(span).toBeGreaterThanOrEqual(10 * 60_000);
+    expect(span).toBeLessThan(2 * 3_600_000);
+    expect(tickUnit(domain)).toBe('time');
+    expect(zoomUseful(domain)).toBe(false);
+    // The bitemporal story (2015–2024) is long enough for year-month ticks and zoom.
+    const long = timeDomain(entries, new Date('2024-09-01T00:00:00Z'));
+    expect(tickUnit(long)).toBe('month');
+    expect(zoomUseful(long)).toBe(true);
   });
 });

@@ -4,8 +4,15 @@ import { useQuery } from '@tanstack/react-query';
 import { History } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { ApiError, api } from '@/lib/api';
-import { formatDay, formatWindow } from '@/lib/format';
-import { believedAt, layoutTimeline, revisionChain, trueAt } from '@/lib/timeline';
+import { formatDay, formatMoment, formatWindow } from '@/lib/format';
+import {
+  believedAt,
+  layoutTimeline,
+  revisionChain,
+  timeDomain,
+  trueAt,
+  zoomUseful,
+} from '@/lib/timeline';
 import type { Zoom } from '@/lib/timeline';
 import { cn } from '@/lib/utils';
 import { TimelineChart } from './timeline-chart';
@@ -21,6 +28,10 @@ export function EntityTimeline({ id }: { id: string }) {
   const layout = useMemo(
     () => (q.data ? layoutTimeline(q.data.entries, now, zoom) : null),
     [q.data, now, zoom],
+  );
+  const fullDomain = useMemo(
+    () => (q.data ? timeDomain(q.data.entries, now) : null),
+    [q.data, now],
   );
   const [known, setKnown] = useState<number | null>(null);
   const [valid, setValid] = useState<number | null>(null);
@@ -42,6 +53,11 @@ export function EntityTimeline({ id }: { id: string }) {
   const knownMin = Math.min(...recorded, now.getTime());
   const knownAt = new Date(known ?? now.getTime());
   const validAt = new Date(valid ?? now.getTime());
+  // Sliders are continuous (step "any"): a stepped range snaps its maximum back to a
+  // step boundary, which made "now" unreachable within a same-day demo. When the
+  // recorded history spans only a few days, moments show the time of day too.
+  const shortSpan = now.getTime() - knownMin < 3 * 86_400_000;
+  const moment = (d: Date) => (shortSpan ? formatMoment(d) : formatDay(d));
   const answer = entries.filter((e) => believedAt(e.fact, knownAt) && trueAt(e.fact, validAt));
   const bars = layout.lanes.flatMap((l) => l.bars);
   const chain = selected ? revisionChain(bars, selected) : [];
@@ -71,26 +87,32 @@ export function EntityTimeline({ id }: { id: string }) {
         <span className="font-mono text-xs text-muted-foreground">
           {entries.length} version{entries.length === 1 ? '' : 's'}
         </span>
-        <div className="ml-auto inline-flex rounded-lg border p-0.5" role="group" aria-label="Zoom">
-          {(['all', '5y', '1y'] as const).map((z) => (
-            <button
-              key={z}
-              type="button"
-              aria-pressed={zoom === z}
-              onClick={() => {
-                setZoom(z);
-              }}
-              className={cn(
-                'rounded-md px-2 py-1 font-mono text-[11px] transition-colors sm:px-2.5 sm:text-xs',
-                zoom === z
-                  ? 'bg-muted text-foreground'
-                  : 'text-muted-foreground hover:text-foreground',
-              )}
-            >
-              {z === 'all' ? 'all time' : z === '5y' ? '5 years' : '1 year'}
-            </button>
-          ))}
-        </div>
+        {fullDomain && zoomUseful(fullDomain) && (
+          <div
+            className="ml-auto inline-flex rounded-lg border p-0.5"
+            role="group"
+            aria-label="Zoom"
+          >
+            {(['all', '5y', '1y'] as const).map((z) => (
+              <button
+                key={z}
+                type="button"
+                aria-pressed={zoom === z}
+                onClick={() => {
+                  setZoom(z);
+                }}
+                className={cn(
+                  'rounded-md px-2 py-1 font-mono text-[11px] transition-colors sm:px-2.5 sm:text-xs',
+                  zoom === z
+                    ? 'bg-muted text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {z === 'all' ? 'all time' : z === '5y' ? '5 years' : '1 year'}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="mt-4 overflow-hidden rounded-lg border bg-card p-4">
@@ -129,12 +151,12 @@ export function EntityTimeline({ id }: { id: string }) {
 
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <label className="block rounded-lg border bg-card p-4">
-          <span className="font-mono text-xs text-valid">valid at: {formatDay(validAt)}</span>
+          <span className="font-mono text-xs text-valid">valid at: {moment(validAt)}</span>
           <input
             type="range"
             min={lo.getTime()}
             max={hi.getTime()}
-            step={86_400_000}
+            step="any"
             value={validAt.getTime()}
             onChange={(e) => {
               setValid(Number(e.target.value));
@@ -145,12 +167,12 @@ export function EntityTimeline({ id }: { id: string }) {
           <span className="text-xs text-muted-foreground">When was it true in the world?</span>
         </label>
         <label className="block rounded-lg border bg-card p-4">
-          <span className="font-mono text-xs text-record">known at: {formatDay(knownAt)}</span>
+          <span className="font-mono text-xs text-record">known at: {moment(knownAt)}</span>
           <input
             type="range"
             min={knownMin}
             max={now.getTime()}
-            step={3_600_000}
+            step="any"
             value={knownAt.getTime()}
             onChange={(e) => {
               setKnown(Number(e.target.value));
@@ -166,7 +188,7 @@ export function EntityTimeline({ id }: { id: string }) {
 
       <div className="mt-4 rounded-lg border bg-card p-4 text-sm">
         <p className="font-mono text-xs text-muted-foreground">
-          canonical query · valid at {formatDay(validAt)} · known at {formatDay(knownAt)}
+          canonical query · valid at {moment(validAt)} · known at {moment(knownAt)}
         </p>
         {answer.length === 0 ? (
           <p className="mt-1 text-muted-foreground">Nothing was believed true then.</p>
