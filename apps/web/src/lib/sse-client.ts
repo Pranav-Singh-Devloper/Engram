@@ -12,6 +12,7 @@ export const ChatMemory = z.object({
   valid_from: z.coerce.date(),
   valid_to: z.coerce.date().nullable(),
   source_episode_ids: z.array(z.string()),
+  role: z.enum(['user', 'assistant', 'system', 'tool']).nullable(),
   subject_id: z.string().nullable(),
   object_id: z.string().nullable(),
 });

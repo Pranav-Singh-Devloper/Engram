@@ -46,8 +46,8 @@ function provider() {
 }
 
 /** A visitor: their own demo session (cookie) on fresh routes. */
-async function visitor(overrides: Parameters<typeof testRoutes>[1] = {}) {
-  const t = testRoutes(db, overrides, provider());
+async function visitor(overrides: Parameters<typeof testRoutes>[1] = {}, fake = provider()) {
+  const t = testRoutes(db, overrides, fake);
   const ip = `10.9.${String(Math.floor(Math.random() * 250))}.${String(Math.floor(Math.random() * 250))}`;
   const res = await t.routes.demoSession(
     new Request('http://x/api/demo/session', { method: 'POST', headers: { 'x-real-ip': ip } }),
@@ -99,6 +99,27 @@ describe('POST /api/chat', () => {
       ['The user lives in Lisbon.', true],
       ['The user works at Acme.', false],
     ]);
+  });
+
+  it("stores the visitor's turn but not a reply no memory supported", async () => {
+    // Seen in the first browser run: an "I don't know." reply was stored and
+    // then came back as a recalled memory in the next session.
+    const v = await visitor(
+      {},
+      new FakeProvider()
+        .when('processEpisode', () => true, { importance: 0.2, candidates: [] })
+        .when('compose', () => true, {
+          answer: "I don't know.",
+          supported: false,
+          usedMemoryIds: [],
+        }),
+    );
+    const events = await readEvents(await v.say('Hello there'));
+    expect((events.at(-1)?.data as { episode_ids: string[] }).episode_ids).toHaveLength(1);
+    const rows = await db<
+      { role: string }[]
+    >`select role from episodes where namespace_id = ${v.namespaceId}`;
+    expect(rows.map((r) => r.role)).toEqual(['user']);
   });
 
   it('refuses the 31st turn in an hour with 429, before any model call', async () => {

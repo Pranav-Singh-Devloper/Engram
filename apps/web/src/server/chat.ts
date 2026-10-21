@@ -1,7 +1,7 @@
 // POST /api/chat (SPEC §11, §6.1, §6.3; P09a decision 7). One demo turn:
 // limits first, then recall, store the user's turn, compose from recalled
-// memories only, store the reply, record use of the memories the composer
-// used, and extract facts from both turns after the response is sent.
+// memories only, store the reply if memory supported it, record use of the
+// memories the composer used, and extract facts from both turns after the response is sent.
 import { ingest, processEpisode, recall, trackUse } from '@engram/core';
 import type { Clock, Provider, Sql } from '@engram/core';
 import { z } from 'zod';
@@ -95,6 +95,7 @@ export async function chat(deps: ChatDeps, access: Access, req: Request): Promis
           valid_from: m.validFrom,
           valid_to: m.validTo,
           source_episode_ids: m.sourceEpisodeIds,
+          role: m.role,
           subject_id: m.subjectId,
           object_id: m.objectId,
         })),
@@ -129,19 +130,24 @@ export async function chat(deps: ChatDeps, access: Access, req: Request): Promis
         supported: answer.supported,
         used_memory_ids: answer.usedMemoryIds,
       });
-      const reply = await ingest(
-        db,
-        provider,
-        {
-          namespaceId: access.namespaceId,
-          sessionId,
-          role: 'assistant',
-          content: answer.answer,
-          occurredAt: clock.now(),
-        },
-        { clock },
-      );
-      ids.push(reply.id);
+      // A reply no memory supported ("I don't know.", a greeting) says nothing
+      // about the user and would come back as noise in later recalls, so only
+      // supported replies are stored. The visitor's own turn always is.
+      if (answer.supported) {
+        const reply = await ingest(
+          db,
+          provider,
+          {
+            namespaceId: access.namespaceId,
+            sessionId,
+            role: 'assistant',
+            content: answer.answer,
+            occurredAt: clock.now(),
+          },
+          { clock },
+        );
+        ids.push(reply.id);
+      }
       // Only what the composer used counts as use (SPEC §6.2 rule 7; ledger row 21).
       const facts = new Set(memories.filter((m) => m.kind === 'fact').map((m) => m.id));
       await trackUse(

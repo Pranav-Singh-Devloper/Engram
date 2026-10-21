@@ -109,6 +109,12 @@ Each citation states what Engram *took* from the work ("inspired by", "implement
 - **Task 1: phone-width checks.** Headless Chrome won't size a window below 500 px; a 390 px screenshot was just a crop of a 500 px layout. True 390 px checks load the page inside a 390 px iframe. Static screenshots also force `prefers-reduced-motion`, which exercises that path at the same time.
 - **Task 1:** Tailwind 4's `@tailwindcss/postcss` works under `next build --webpack` (the plan's verify item). The theme is class-based with an inline pre-paint script, so there's no flash and no `next-themes` dependency. `?theme=light|dark` overrides it for one visit, for screenshots.
 
+- **Task 3: the first real browser run (local Ollama), driven over the DevTools protocol.** The Chrome extension wasn't connected; a ~40-line driver in the scratchpad used Node's built-in WebSocket. "I live in Lisbon and work at Acme…" in session 1, then "Where do I work?" in session 2, answered "You work at Acme." It used the stored turn while extraction was still running in the background: local qwen takes tens of seconds a turn, and the facts appeared about two minutes later. Two fixes came out of it:
+  1. The assistant's "I don't know." reply was stored and then recalled as a memory. Chat now stores a reply only when memory supported it (SPEC §11).
+  2. An unsupported reply to a *statement* read as a failure. The UI now says "no memory supported an answer · your message is stored". The composer prompt is shared with the bench, so it wasn't changed.
+
+  Recall also now returns each fact's subject and object ids (e11ff3c), so a used memory links to its entity timeline.
+
 ## P09b — scope
 **In:**
 - `/` landing: what Engram is, live showcase stats, links.
