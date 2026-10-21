@@ -19,7 +19,7 @@ The plan for building Engram, one file per phase. [`docs/SPEC.md`](../SPEC.md) i
 | P08b Local mode | [P08b-local-mode.md](P08b-local-mode.md) | done | P08 (runs in its quota waits) | Engram's processing works with no third-party call; dev-long ablation report |
 | P09a Web API | [P09a-web-api.md](P09a-web-api.md) | done | P07 | route handlers, auth, demo sessions and rate limits are tested |
 | P09b Web UI | [P09b-web-ui.md](P09b-web-ui.md) | done | P09a | the §12 pages work against the real API; `docs/demo.md` can be followed without improvising |
-| P09c Architecture explorer | [P09b-web-ui.md](P09b-web-ui.md#p09c--scope-architecture) | planned | P09b | `/architecture`: 16 interactive chapters on real repo data, every reference verified, 60 fps |
+| P09c Architecture explorer | [P09b-web-ui.md](P09b-web-ui.md#p09c--scope-architecture) | in progress | P09b | `/architecture`: 16 interactive chapters on real repo data, every reference verified, 60 fps |
 | P10 Ship | [P10-ship.md](P10-ship.md) | outline | P08, P09b | three reviewer paths are verified from a fresh clone; the hosted demo is live |
 | P11 Local mode, extended | (outline in P08b) | outline | P10 | compact format, chunked embeddings, local goldens, test/LME local runs, light profile |
 
@@ -126,4 +126,5 @@ Every item a phase deferred or put on hold, with where it landed. Rows are never
 | 44 | `bench --estimate` counts embedded texts too, not just generate calls (Gemini's free quota counts texts; ADR-018) | P08 | P10 | open (P10: a reviewer running the bench needs a true estimate) |
 | 45 | Production deploy through Vercel's Git integration (a CLI deploy uploads the working tree); remove or replace the unconfigured Production deployment the P09a preview step created by accident; apply every pending migration to Neon (0007 had been missed until P09a); first live chat turn as a smoke test | P09a | P10 | open (P10 deploy checklist) |
 | 46 | LongMemEval `engram_consolidated` (one summary per session: ≤4,458 Gemini calls, about two days of five keys' generation quota). SPEC §13.6 requires engram and full_context there; consolidation is measured on dev-long and test. Run in the background after P08 closes; add to the LongMemEval report when it lands | P08 | P10 | open (P10: before the README tables are final) |
+| 47 | Record embeddinggemma's per-pair calibration scores (`pnpm bench:calibrate --embedder=local` writes `<space>.scores.json`; no quota cost), then rebuild the explorer data, so chapter 5 shows its distributions as it does Gemini's. Needs Ollama, paused at the user's request on 2026-10-21 | P09c | P10 | open (P10: with the other Ollama work, row 46's local embeddings) |
 

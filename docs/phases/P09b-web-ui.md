@@ -1,6 +1,6 @@
 # P09b — Web UI (and P09c — Architecture explorer)
 
-**Status:** P09b done (2026-10-21). P09c planned, starting next. Approved 2026-10-21 as written: two phases, a 3D galaxy (three.js), the dependencies listed.
+**Status:** P09b done (2026-10-21). P09c in progress: chapters 1–8, 15 and 16 built. Approved 2026-10-21 as written: two phases, a 3D galaxy (three.js), the dependencies listed.
 
 This file plans two phases. **P09b** is the dashboard SPEC §12 requires. **P09c** is the architecture explorer the user asked for on 2026-10-21: an interactive, animated, deeply referenced tour of how Engram works and why. P09c depends on P09b's design system and data plumbing. They're split so each phase stays one reviewable unit (decision 1).
 
@@ -128,6 +128,33 @@ Each citation states what Engram *took* from the work ("inspired by", "implement
   4. **Memory pressure (18 GB).** qwen (10 GB) and embeddinggemma loaded for both the demo app and the LongMemEval run, alongside Docker, Chrome and Next, crashed Ollama's embedding runner and Chrome. Heavy local jobs run one at a time. At the user's request the demo was then walked on Gemini (five keys) instead of Ollama.
 
 - **Task 8: the visual pass found a crash on reload.** `/chat` stores its transcripts as JSON, which turns memory dates into strings. Reloading the page after any conversation threw `e.getTime is not a function` inside a memory card. Next's error boundary showed "This page couldn't load", and an earlier test missed it because every run started from a fresh browser profile. Stored transcripts are now revived through the live stream's own zod schema, and anything malformed is dropped. A test covers the round trip. The first rebuild still looked broken: that was a stale `.next` directory. A clean build (`rm -rf .next`) fixed it, so surprising results get re-checked against a clean build.
+
+### P09c build notes
+- **Task 4: chapters 5–8 run on the engine's own output, never on invented examples.**
+  - **Recall trace (5d78370).** `recall({ trace: true })` returns every list's ranked keys and every candidate's similarity, RRF sum, priors and final score. It's additive and off by default, so no caller changes. The chapter needed it to show *real* ranked lists instead of made-up ones. It's also useful for debugging any recall.
+  - **Where the traces come from.** The bitemporal story plus five turns on other topics (a sister in Lisbon, a cello, a penicillin allergy, a beagle, ramen). Extraction is scripted with the FakeProvider, so no model calls; embeddings are real Gemini (about 30 texts, cached per text). The engine's linear-ranker scores are recorded on the same store for comparison.
+  - **What the traces show, recorded rather than tuned** (no dev evidence that it costs accuracy; recall@8 on dev-long is 97%):
+    1. The graph list re-finds facts the vector list already ranked. A fact usually gets two votes and an episode one. A literal-valued fact ("allergic to penicillin") has no entity to walk to, so it misses the second vote.
+    2. Near-ties are broken by the recency prior, so the newest fact ("likes ramen") rises in unrelated queries.
+    3. An unrelated query ("quantum chromodynamics lattice", best 0.564) clears Gemini's 0.5 floor. That matches ADR-010: the floor is a safety net, and the composer does the abstaining.
+
+    In every trace, the right answers are inside the top 8.
+  - **Floor simulation.** The bench's report logic is now an exported `simulateFloor`. Both affected committed reports re-render byte-identical. The explorer uses two runs: Gemini's `2026-10-18-devlong-session`, and embeddinggemma's `2026-10-18-devlong-local-C-guard`. `local-C-floor0` was retrieval-only, so it has no verdicts to simulate.
+  - **Consolidation.** dev-long `dev-001` went through `engram_consolidated` on Gemini, exactly as the bench runs it. A new `inspect` hook on the bench's `ModeDeps` reads the store before the namespace is deleted.
+    - **Cost:** about 17 generate calls the first time (key 0 was out of quota and rotation moved to key 1), then none, from cache.
+    - **Result:** 4 story sessions summarized; 8 filler sessions skipped at importance 0.1 with no call; 18 candidates merged; 1 rejected.
+    - **Test-split totals** are read from the run's results, not typed in: 3.7 summarized and 10.3 skipped per item; 43 inserted vs 3,077 merged.
+  - **Mirrors and their parity tests.** The client can't import core, so each formula is mirrored and tested equal to the engine:
+    - RRF, priors and the linear ranker against the engine's recorded scores and returned order, and against core `rrf` / `withPriors` at every slider k;
+    - `simulateFloor` against the bench's grid;
+    - retention, crossing time and decayed access against core;
+    - calibration error rates against the calibration summary;
+    - the consolidation skip rule against the engine run;
+    - the threshold markers against `SIMILARITY_PROFILES`.
+  - **embeddinggemma has no per-pair scores yet.** Computing them needs Ollama, which is paused at the user's request. Chapter 5 shows its summary ranges and says so; ledger row 47 carries the rest.
+  - **KaTeX** 0.19.0 was added, as approved. It ships its own types, so `@types/katex` was removed again.
+  - **Phone checks found two layout faults.** Charts drawn in a fixed 760-wide viewBox shrank their labels to about 5 px at 390 px. They now measure their real width (`useWidth`). The formulas also overflowed, so phones get a stacked form.
+  - **Generated files churn.** Each explorer build replays the story with fresh UUIDs. A regenerated file whose content didn't change is restored, not committed.
 
 ## P09b — scope
 **In:**
