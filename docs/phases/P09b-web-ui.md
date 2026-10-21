@@ -104,6 +104,11 @@ Each citation states what Engram *took* from the work ("inspired by", "implement
    - Visual and interaction checks in Chrome (screenshots at phone and desktop widths, the performance trace for the fps budget), recorded in task notes.
    - *Rejected:* Playwright, a new dependency, for a phase whose behavior is mostly visual.
 
+## Build notes (recorded as they happen)
+- **Task 1: reduced motion must still animate to the end state.** Motion renders an element's `initial` state on the server (`opacity: 0`). Passing no animation props when the visitor prefers reduced motion therefore left the hero **invisible**. Every entrance now always animates, with `duration: 0` under reduced motion. That's the pattern for every animated component here.
+- **Task 1: phone-width checks.** Headless Chrome won't size a window below 500 px; a 390 px screenshot was just a crop of a 500 px layout. True 390 px checks load the page inside a 390 px iframe. Static screenshots also force `prefers-reduced-motion`, which exercises that path at the same time.
+- **Task 1:** Tailwind 4's `@tailwindcss/postcss` works under `next build --webpack` (the plan's verify item). The theme is class-based with an inline pre-paint script, so there's no flash and no `next-themes` dependency. `?theme=light|dark` overrides it for one visit, for screenshots.
+
 ## P09b — scope
 **In:**
 - `/` landing: what Engram is, live showcase stats, links.

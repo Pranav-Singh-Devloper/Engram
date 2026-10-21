@@ -5,7 +5,14 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
-    "plugins": [{ "name": "next" }]
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
-  "include": ["next-env.d.ts", "app", "src", "*.ts", ".next/types/**/*.ts"]
+  "include": ["next-env.d.ts", "app", "src", "*.ts", "*.mjs", ".next/types/**/*.ts"]
 }
