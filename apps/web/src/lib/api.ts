@@ -78,10 +78,31 @@ export const BenchRun = z.object({
   items: z.number(),
   modes: z.record(
     z.string(),
-    z.object({ accuracy: z.number(), n: z.number(), recallAt8: z.number().nullable() }),
+    z.object({
+      accuracy: z.number(),
+      n: z.number(),
+      recallAt8: z.number().nullable(),
+      requestsPerItem: z.number().optional(),
+      promptTokensPerItem: z.number().optional(),
+    }),
   ),
+  categories: z
+    .record(z.string(), z.record(z.string(), z.object({ accuracy: z.number(), n: z.number() })))
+    .optional(),
 });
-export const Evals = z.object({ runs: z.array(BenchRun) });
+export const Agreement = z.object({
+  runs: z.array(z.string()),
+  pooled: z.object({
+    n: z.number(),
+    agreement: z.number(),
+    kappa: z.number().nullable(),
+    humanCorrect: z.number(),
+    humanIncorrect: z.number(),
+    judgeTooLenient: z.number(),
+    judgeTooStrict: z.number(),
+  }),
+});
+export const Evals = z.object({ runs: z.array(BenchRun), agreement: Agreement.nullable() });
 export type BenchRun = z.infer<typeof BenchRun>;
 
 export class ApiError extends Error {

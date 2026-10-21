@@ -135,26 +135,49 @@ export async function entityTimeline(
 
 const notFound = () => Response.json({ error: 'Not found.' }, { status: 404 });
 
-/** GET /api/evals: every bench run's summary, newest first. Public (no personal data). */
+const AgreementFile = z.object({
+  runs: z.array(z.string()),
+  pooled: z.object({
+    n: z.number(),
+    agreement: z.number(),
+    kappa: z.number().nullable(),
+    humanCorrect: z.number(),
+    humanIncorrect: z.number(),
+    judgeTooLenient: z.number(),
+    judgeTooStrict: z.number(),
+  }),
+});
+
+/** GET /api/evals: every bench run's summary, newest first, and the latest judge agreement. Public (no personal data). */
 export function listEvals(reportsDir: string | null): Response {
-  if (!reportsDir) return Response.json({ runs: [] });
+  if (!reportsDir) return Response.json({ runs: [], agreement: null });
   let files: string[];
   try {
     files = readdirSync(reportsDir).filter((f) => f.endsWith('.json'));
   } catch {
-    return Response.json({ runs: [] });
+    return Response.json({ runs: [], agreement: null });
   }
+  const read = (f: string): unknown => {
+    try {
+      return JSON.parse(readFileSync(path.join(reportsDir, f), 'utf8'));
+    } catch {
+      return null;
+    }
+  };
   const runs = files
+    .filter((f) => !f.startsWith('agreement-'))
     .flatMap((f) => {
-      try {
-        const parsed = BenchSummary.safeParse(
-          JSON.parse(readFileSync(path.join(reportsDir, f), 'utf8')),
-        );
-        return parsed.success ? [parsed.data] : [];
-      } catch {
-        return [];
-      }
+      const parsed = BenchSummary.safeParse(read(f));
+      return parsed.success ? [parsed.data] : [];
     })
     .sort((a, b) => b.finishedAt.localeCompare(a.finishedAt));
-  return Response.json({ runs });
+  const agreements = files
+    .filter((f) => f.startsWith('agreement-'))
+    .flatMap((f) => {
+      const parsed = AgreementFile.safeParse(read(f));
+      return parsed.success ? [parsed.data] : [];
+    })
+    // The widest pooled sheet is the one to show.
+    .sort((a, b) => b.pooled.n - a.pooled.n);
+  return Response.json({ runs, agreement: agreements[0] ?? null });
 }
