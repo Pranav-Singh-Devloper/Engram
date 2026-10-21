@@ -8,6 +8,34 @@ import type { ItemResult } from './run.js';
 
 const pct = (num: number, den: number) => (den === 0 ? '—' : `${Math.round((100 * num) / den)}%`);
 
+export interface FloorItem {
+  category: string;
+  /** Best raw query similarity. */
+  best: number;
+  /** The judge's verdict at the floor the run used. */
+  correct: boolean;
+}
+
+/**
+ * Floor simulation: an item whose best similarity is under the floor gets
+ * nothing back and the composer abstains, so it's correct exactly when it's
+ * an abstention item. Valid only for floors at or above the one the run used.
+ */
+export function simulateFloor(items: readonly FloorItem[], floor: number) {
+  const outcome = items.map((r) => {
+    const below = r.best < floor;
+    return { r, below, correct: below ? r.category === 'abstention' : r.correct };
+  });
+  const abst = outcome.filter((o) => o.r.category === 'abstention');
+  return {
+    n: outcome.length,
+    correct: outcome.filter((o) => o.correct).length,
+    abstentions: abst.length,
+    abstentionCorrect: abst.filter((o) => o.correct).length,
+    wronglyAbstained: outcome.filter((o) => o.below && o.r.category !== 'abstention').length,
+  };
+}
+
 function quantile(values: number[], q: number): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
@@ -183,9 +211,7 @@ export function renderReport(results: readonly ItemResult[], meta: ReportMeta): 
     lines.push('');
   }
 
-  // Floor simulation: an item whose best similarity is under the floor gets
-  // nothing back and the composer abstains, so it's correct exactly when it's
-  // an abstention item. Valid only for floors at or above the one the run used.
+  // Floor simulation (simulateFloor), for floors at or above the run's.
   const composed = of('engram').filter(
     (r) => r.answer.bestSimilarity !== undefined && !r.answer.retrievedBy,
   );
@@ -195,14 +221,16 @@ export function renderReport(results: readonly ItemResult[], meta: ReportMeta): 
     lines.push(`## Abstention floor simulation (run floor ${ran})`, '');
     lines.push('| floor | accuracy | abstention recall | wrongly abstained |', '|---|---|---|---|');
     for (const f of floors) {
-      const outcome = composed.map((r) => {
-        const below = (r.answer.bestSimilarity ?? 0) < f;
-        return { r, below, correct: below ? r.category === 'abstention' : r.verdict.correct };
-      });
-      const abst = outcome.filter((o) => o.r.category === 'abstention');
-      const wrong = outcome.filter((o) => o.below && o.r.category !== 'abstention').length;
+      const sim = simulateFloor(
+        composed.map((r) => ({
+          category: r.category,
+          best: r.answer.bestSimilarity ?? 0,
+          correct: r.verdict.correct,
+        })),
+        f,
+      );
       lines.push(
-        `| ${f} | ${pct(outcome.filter((o) => o.correct).length, outcome.length)} | ${pct(abst.filter((o) => o.correct).length, abst.length)} | ${wrong} |`,
+        `| ${f} | ${pct(sim.correct, sim.n)} | ${pct(sim.abstentionCorrect, sim.abstentions)} | ${sim.wronglyAbstained} |`,
       );
     }
     lines.push('');

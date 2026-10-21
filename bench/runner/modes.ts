@@ -142,6 +142,8 @@ export interface ModeDeps {
   retrievalOnly?: boolean;
   /** Engram modes: how extraction batches turns (default: one call per turn). */
   extraction?: Extraction;
+  /** Engram modes: reads the store after answering, before the namespace is deleted (explorer data). */
+  inspect?: (db: Sql, namespaceId: string) => Promise<void>;
 }
 
 export async function runMode(mode: Mode, item: BenchItem, deps: ModeDeps): Promise<ModeAnswer> {
@@ -350,7 +352,11 @@ async function engram(
       ...(options.consolidate ? { consolidation } : {}),
     };
   } finally {
-    await db`delete from namespaces where id = ${namespace.id}`;
+    try {
+      await deps.inspect?.(db, namespace.id);
+    } finally {
+      await db`delete from namespaces where id = ${namespace.id}`;
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-// pnpm explorer:data [--skip-galaxy]
+// pnpm explorer:data [--skip-galaxy] [--skip-consolidation]
 // Writes the architecture explorer's build-time data (P09c decision 3) to
 // apps/web/src/content/generated/: the parsed ADRs, the calibration summaries
 // and the embedding galaxy. The page reads only these committed files, so it
@@ -7,7 +7,8 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 
 import path from 'node:path';
 import { loadEnv, makeProviders } from '../runner/providers.js';
 import { parseAdrs } from './adrs.js';
-import { bitemporal, cases, writePath } from './engine-data.js';
+import { CONSOLIDATION_ITEM, consolidationStory, floorRuns } from './chapters.js';
+import { bitemporal, cases, recallTraces, writePath } from './engine-data.js';
 import { FACT_RUN, galaxyTexts, project } from './galaxy.js';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
@@ -46,9 +47,18 @@ async function main(): Promise<void> {
   // Replays the story through the engine on the local database (pnpm db:up).
   write('bitemporal.json', await bitemporal());
 
-  if (process.argv.includes('--skip-galaxy')) return;
   loadEnv();
   const { gemini } = makeProviders();
+  // Real Gemini embeddings for ~30 texts, cached per text after the first run.
+  write('recall.json', { ...(await recallTraces(gemini)), floors: floorRuns() });
+  if (!process.argv.includes('--skip-consolidation')) {
+    // One dev-long history through engram_consolidated on Gemini: ~20 generate
+    // calls on a cold cache, none when the bench cache already holds them.
+    console.log(`consolidating ${CONSOLIDATION_ITEM} through the engine`);
+    write('consolidation.json', await consolidationStory(makeProviders().system));
+  }
+
+  if (process.argv.includes('--skip-galaxy')) return;
   const texts = galaxyTexts();
   console.log(
     `embedding ${String(texts.length)} texts with ${await gemini.embeddingSpace()} (per-text cache)`,
