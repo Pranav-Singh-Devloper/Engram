@@ -94,6 +94,7 @@ export { DEFAULT_JUDGE_MODEL, GROQ_BASE_URL, GroqProvider } from './providers/gr
 export type { GroqOptions, GroqRequest } from './providers/groq.js';
 export { DONT_KNOW } from './compose/prompt.js';
 export { recall } from './retrieve/recall.js';
+export { minMax, recency, rrf, withPriors } from './retrieve/fuse.js';
 export type {
   ListName,
   RecallOptions,

@@ -82,7 +82,7 @@ const NODES: Node[] = [
     sub: 'entities · conflicts',
     x: 760,
     y: 70,
-    chapter: 'write-path',
+    chapter: 'resolution',
     detail:
       'Entities are matched by name, alias, embedding or a model call; each candidate is inserted, merged, updated, backfilled, corrected, kept alongside or rejected.',
   },

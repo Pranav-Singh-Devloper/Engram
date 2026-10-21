@@ -2,9 +2,13 @@
 // listed only once it's built: no placeholder chapters are ever published.
 import type { ReactNode } from 'react';
 import { Bitemporal } from './chapters/bitemporal';
+import { Consolidation } from './chapters/consolidation';
+import { Decay } from './chapters/decay';
 import { DecisionLog } from './chapters/decision-log';
 import { Overview } from './chapters/overview';
+import { Recall } from './chapters/recall';
 import { References } from './chapters/references';
+import { Resolution } from './chapters/resolution';
 import { Versions } from './chapters/versions';
 import { WritePath } from './chapters/write-path';
 
@@ -22,6 +26,10 @@ const PUBLISHED = new Set([
   'write-path',
   'bitemporal',
   'versions',
+  'resolution',
+  'recall',
+  'decay',
+  'consolidation',
   'decisions',
   'references',
 ]);
@@ -54,6 +62,34 @@ export const CHAPTERS: ChapterDef[] = [
     title: 'Nothing is overwritten',
     kicker: 'Fact versions',
     body: () => <Versions />,
+  },
+  {
+    id: 'resolution',
+    n: 5,
+    title: 'Is this the same Sam?',
+    kicker: 'Entity resolution and similarity profiles',
+    body: () => <Resolution />,
+  },
+  {
+    id: 'recall',
+    n: 6,
+    title: 'Four searches, one ranking',
+    kicker: 'Recall',
+    body: () => <Recall />,
+  },
+  {
+    id: 'decay',
+    n: 7,
+    title: 'Forgetting on purpose',
+    kicker: 'Decay',
+    body: () => <Decay />,
+  },
+  {
+    id: 'consolidation',
+    n: 8,
+    title: 'Sleeping on it',
+    kicker: 'Consolidation',
+    body: () => <Consolidation />,
   },
   {
     id: 'decisions',
