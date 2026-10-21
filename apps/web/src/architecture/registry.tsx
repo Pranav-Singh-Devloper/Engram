@@ -1,12 +1,15 @@
 // The chapters of /architecture, in reading order (P09c scope). A chapter is
 // listed only once it's built: no placeholder chapters are ever published.
 import type { ReactNode } from 'react';
+import { Benchmarks } from './chapters/benchmarks';
 import { Bitemporal } from './chapters/bitemporal';
 import { Consolidation } from './chapters/consolidation';
 import { Decay } from './chapters/decay';
 import { Galaxy } from './chapters/galaxy';
+import { Interfaces } from './chapters/interfaces';
 import { DecisionLog } from './chapters/decision-log';
 import { Overview } from './chapters/overview';
+import { Providers } from './chapters/providers';
 import { Recall } from './chapters/recall';
 import { References } from './chapters/references';
 import { Resolution } from './chapters/resolution';
@@ -34,6 +37,9 @@ const PUBLISHED = new Set([
   'consolidation',
   'galaxy',
   'storage',
+  'providers',
+  'interfaces',
+  'benchmarks',
   'decisions',
   'references',
 ]);
@@ -108,6 +114,27 @@ export const CHAPTERS: ChapterDef[] = [
     title: 'One database, two clocks',
     kicker: 'Storage',
     body: () => <Storage />,
+  },
+  {
+    id: 'providers',
+    n: 11,
+    title: 'Any model, measured',
+    kicker: 'Providers and local mode',
+    body: () => <Providers />,
+  },
+  {
+    id: 'interfaces',
+    n: 12,
+    title: 'How agents and people reach it',
+    kicker: 'Interfaces',
+    body: () => <Interfaces />,
+  },
+  {
+    id: 'benchmarks',
+    n: 13,
+    title: 'Losses included',
+    kicker: 'Benchmarks',
+    body: () => <Benchmarks />,
   },
   {
     id: 'decisions',
