@@ -251,7 +251,7 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 
 **Decision.**
 
-- **Transport: Ollama with the schema in the prompt stays the default.** The adoption rule set in advance required zero off-schema replies _at comparable speed_. The grammar removes most bad replies but runs 53% slower here, with the same recall, and the one-round repair already absorbs most of Ollama's bad replies (1 failure in 30). `OpenAICompatibleProvider` stays available as `ENGRAM_PROVIDER=openai-compatible` for llama.cpp, LM Studio and vLLM users.
+- **Transport: Ollama with the schema in the prompt stays the default.** The adoption rule set in advance required zero off-schema replies _at comparable speed_. The grammar removes most bad replies but runs 46% slower here (804 s vs 550 s; per-turn calls 62% slower), with the same recall, and the one-round repair already absorbs most of Ollama's bad replies (1 failure in 30). `OpenAICompatibleProvider` stays available as `ENGRAM_PROVIDER=openai-compatible` for llama.cpp, LM Studio and vLLM users.
 - **Sampling: the model's defaults stay.** The presence penalty doesn't explain the repairs (5 at every setting). Dropping it to 0 was 75% slower, with longer outputs and twice the failures, which matches the Qwen card's note that it prevents repetition. Structured calls send only `temperature 0` and `think: false`.
 - **Output cap: `num_predict` 4,096 on every structured call** (no reply in the 120 measured calls reached it); capped replies are counted.
 - **Question left open (P11, ledger row 37):** whether a compact output format would let both Gemini and local models drop the verbose time-hint objects. One wire format beats two.
@@ -261,6 +261,7 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 - Local structured calls fail validation about 3% of the time after repair. Those turns contribute no facts, and their episodes are still stored and recallable.
 - Runs aren't bit-reproducible (greedy decoding isn't a guarantee); the response cache makes reruns repeatable.
 - The llama.cpp GGUF (5.7 GB) was deleted after the spike.
+- _Correction (2026-10-22):_ this ADR first said the grammar ran "53% slower". Its own table and `bench/spikes/transport-*.json` give 46% (wall time). The decision is unchanged: either figure fails the comparable-speed rule.
 
 ---
 
