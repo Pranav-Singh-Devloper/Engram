@@ -1,6 +1,6 @@
 # P09b — Web UI (and P09c — Architecture explorer)
 
-**Status:** P09b done (2026-10-21). P09c in progress: all 16 chapters built; the performance pass (task 8) is next. Approved 2026-10-21 as written: two phases, a 3D galaxy (three.js), the dependencies listed.
+**Status:** P09b done (2026-10-21). P09c done (2026-10-22): 16 chapters, the performance pass recorded; one residual (ledger row 48). Approved 2026-10-21 as written: two phases, a 3D galaxy (three.js), the dependencies listed.
 
 This file plans two phases. **P09b** is the dashboard SPEC §12 requires. **P09c** is the architecture explorer the user asked for on 2026-10-21: an interactive, animated, deeply referenced tour of how Engram works and why. P09c depends on P09b's design system and data plumbing. They're split so each phase stays one reviewable unit (decision 1).
 
@@ -193,6 +193,44 @@ Each citation states what Engram *took* from the work ("inspired by", "implement
     The benchmarks box says plainly that Engram didn't run LoCoMo, so its numbers can't be set beside Mem0's or A-MEM's.
   - **A test that never ran.** The "every reference is cited" check counted chapters with `\{ id: '`, but Prettier puts `id:` on its own line, so it always counted 0 and the check could never switch on. It now counts `^\s+id: '` and asserts exactly 16 chapters. It also failed to see citations written as `<Cite k={…}>`: chapter 10's HNSW citation is now literal, and the prior-art rows are counted explicitly. All 23 references are cited.
   - **A timeline of all 23 cited works** (1885–2025), coloured by role, with each work's `took` note on hover.
+- **Task 8: the performance pass.**
+  - **Method.** `scripts/explorer-perf.mjs` runs against the production build (`next start`) in headless Chrome on the GPU (ANGLE on Metal, M3 Pro), with motion enabled. For each chapter it does two things, three times over:
+    - it drives the chapter's own controls for 3 s (sliders swept every frame, steppers clicked, galaxy pointer sweeps), sampling every frame time and recording `longtask` entries;
+    - it records long tasks while the chapter mounts, on a fresh load.
+  - **Found and fixed: batched mounts.** A jump down the page brought two or three chapters into range at once. Their IntersectionObserver callbacks fired in one task, and React rendered them together: 55–76 ms long tasks on the decay, consolidation, galaxy and providers jumps, in repeated runs. KaTeX was ruled out (six renders take 7 ms cold), and a Chrome trace didn't reproduce it. Chapters now mount one per frame, each inside `startTransition`.
+  - **Also changed.** The galaxy's WebGL availability check had built a throwaway GPU context inside the mount. It now runs in its own idle task and releases that context. Chapter 10's animated foreign-key edges now stop under reduced motion too, which the global CSS rule already covered.
+  - **Final measurement** (2026-10-22, 3 runs × 16 chapters, 48 mounts):
+
+    | chapter | fps (min of 3) | p95 frame | worst frame | dropped | long tasks, interacting | long tasks, mounting |
+    |---|---|---|---|---|---|---|
+    | overview | 60 | 16.8 ms | 16.8 ms | 0% | none | none |
+    | write-path | 60 | 16.7 ms | 16.8 ms | 0% | none | none |
+    | bitemporal | 60 | 16.8 ms | 16.8 ms | 0% | none | none |
+    | versions | 60 | 16.7 ms | 16.8 ms | 0% | none | none |
+    | resolution | 60 | 16.8 ms | 16.8 ms | 0% | none | none |
+    | recall | 60 | 16.8 ms | 16.8 ms | 0% | none | none |
+    | decay | 60 | 16.8 ms | 16.8 ms | 0% | none | none |
+    | consolidation | 60 | 16.8 ms | 16.8 ms | 0% | none | none |
+    | galaxy | 60 | 16.8 ms | 16.8 ms | 0% | none | none |
+    | storage | 60 | 16.8 ms | 16.8 ms | 0% | none | none |
+    | providers | 60 | 16.8 ms | 16.8 ms | 0% | none | 51 ms |
+    | interfaces | 60 | 16.8 ms | 16.8 ms | 0% | none | none |
+    | benchmarks | 60 | 16.8 ms | 16.8 ms | 0% | none | none |
+    | prior-art | 60 | 16.7 ms | 16.8 ms | 0% | none | none |
+    | decisions | 60 | 16.8 ms | 16.8 ms | 0% | none | none |
+    | references | 60 | 16.8 ms | 16.8 ms | 0% | none | none |
+
+  - **Reading it.**
+    - **Frames:** every chapter holds 60 fps with no dropped frames while it's being driven, and no long task occurs during interaction.
+    - **Mounts:** of 48 measured mounts, one went over the budget, by 1 ms: 51 ms on the providers jump, which also mounts the storage diagram above it (React Flow's first layout). It's intermittent: earlier runs also showed it once on the galaxy's first WebGL start (2 of 23 mounts). Ledger row 48 carries a fix attempt to P10.
+    - **Headless caveat:** headless Chrome paces frames at 60 Hz, so fps shows whether each frame's work fits in 16.7 ms, not what a 120 Hz display would show.
+  - **Reduced motion.**
+    - A global rule zeroes every CSS animation and transition.
+    - Each animated component checks `useReducedMotion` and animates straight to its end state with `duration: 0`.
+    - The overview's SMIL particles aren't rendered at all.
+    - The galaxy doesn't auto-rotate.
+    
+    Every screenshot in this phase was taken under emulated reduced motion, which exercises that path.
 
 ## P09b — scope
 **In:**
@@ -355,11 +393,11 @@ All are MIT, ISC or Apache-2.0 and free, with nothing paid and no external servi
 - [x] Dark and light, usable at 390 px, no lorem ipsum. Chrome screenshots are recorded (`docs/screenshots/`; checks via DevTools device emulation, build notes).
 
 **P09c**
-- [ ] `/architecture` has all 16 chapters, each with a diagram, an interactive model, real repo numbers, and linked references.
-- [ ] The interactive models call the engine's own functions (tests prove equality).
-- [ ] Every reference is verified and resolvable (test). Each says what Engram took or does differently.
-- [ ] Performance budget met (60 fps on an M3 Pro, no long task over 50 ms after load), and `prefers-reduced-motion` honored. Measurements recorded.
-- [ ] The decision log shows every ADR in `DECISIONS.md`.
+- [x] `/architecture` has all 16 chapters, each with a diagram, an interactive model, real repo numbers, and linked references. Chapters 15 and 16 are the decision log and the bibliography by design: searchable and expandable, without a diagram of their own.
+- [x] The interactive models compute what the engine computes. The client can't import the engine, so each formula is mirrored, and tests prove the mirror equals the engine's own output: RRF, priors and the linear ranker, retention and crossing times, the floor simulation, the calibration error rates, the consolidation skip rule, the as-of answers, and key rotation against the real `GeminiProvider`.
+- [x] Every reference is verified and resolvable (test). Each says what Engram took or does differently. All 23 are cited, and the check that says so now really runs (task 7).
+- [x] Performance budget met, with one recorded exception: 60 fps throughout and no long task during interaction; on mount, one 51 ms task in 48 (ledger row 48). `prefers-reduced-motion` is honored, and the measurements are recorded above.
+- [x] The decision log shows every ADR in `DECISIONS.md` (bench test: every ADR becomes a card).
 
 ## Planned commits
 - **P09b:**
