@@ -9,6 +9,7 @@ import { Galaxy } from './chapters/galaxy';
 import { Interfaces } from './chapters/interfaces';
 import { DecisionLog } from './chapters/decision-log';
 import { Overview } from './chapters/overview';
+import { PriorArt } from './chapters/prior-art';
 import { Providers } from './chapters/providers';
 import { Recall } from './chapters/recall';
 import { References } from './chapters/references';
@@ -40,6 +41,7 @@ const PUBLISHED = new Set([
   'providers',
   'interfaces',
   'benchmarks',
+  'prior-art',
   'decisions',
   'references',
 ]);
@@ -135,6 +137,13 @@ export const CHAPTERS: ChapterDef[] = [
     title: 'Losses included',
     kicker: 'Benchmarks',
     body: () => <Benchmarks />,
+  },
+  {
+    id: 'prior-art',
+    n: 14,
+    title: 'Standing on whose shoulders',
+    kicker: 'Prior art',
+    body: () => <PriorArt />,
   },
   {
     id: 'decisions',
