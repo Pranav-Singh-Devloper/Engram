@@ -5,6 +5,7 @@
 import '@xyflow/react/dist/style.css';
 import { Background, Controls, Handle, Position, ReactFlow } from '@xyflow/react';
 import type { Edge, Node, NodeProps } from '@xyflow/react';
+import { useReducedMotion } from 'motion/react';
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { SCHEMA, TABLE_INFO, fkColumns } from '../data/schema';
@@ -95,6 +96,8 @@ export default function StorageDiagram({
   onSelect: (name: string | null) => void;
   dark: boolean;
 }) {
+  // React Flow's marching-ants edges are a CSS animation; reduced motion keeps them still.
+  const still = useReducedMotion() ?? false;
   const { nodes, edges } = useMemo(() => {
     const related = new Set<string>();
     const edges: Edge[] = [];
@@ -119,7 +122,7 @@ export default function StorageDiagram({
           label: fkColumns(c.definition).join(', '),
           labelStyle: { fontSize: 9, fill: 'var(--muted-foreground)' },
           labelBgStyle: { fill: 'var(--card)' },
-          animated: hot,
+          animated: hot && !still,
           style: {
             stroke: hot ? 'var(--accent)' : 'var(--border)',
             strokeWidth: hot ? 2 : 1.25,
@@ -142,7 +145,7 @@ export default function StorageDiagram({
       },
     }));
     return { nodes, edges };
-  }, [selected]);
+  }, [selected, still]);
 
   return (
     <ReactFlow

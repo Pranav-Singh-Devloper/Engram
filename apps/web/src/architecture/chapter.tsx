@@ -1,7 +1,32 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { startTransition, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
+
+/**
+ * Chapters that come into range together mount one per frame, each as a
+ * transition React can slice. Mounting two or three heavy chapters in the same
+ * task made 51–76 ms long tasks after load (P09c task 8, measured).
+ */
+const queue: (() => void)[] = [];
+let draining = false;
+function scheduleMount(mount: () => void) {
+  queue.push(mount);
+  if (draining) return;
+  draining = true;
+  const next = () => {
+    const job = queue.shift();
+    if (!job) {
+      draining = false;
+      return;
+    }
+    startTransition(job);
+    requestAnimationFrame(() => {
+      setTimeout(next, 0);
+    });
+  };
+  requestAnimationFrame(next);
+}
 
 /**
  * A chapter of /architecture. Its body mounts only when the reader scrolls
@@ -30,11 +55,14 @@ export function Chapter({
     const el = ref.current;
     if (!el) return;
     // Deep links (#chapter) and print should show the content at once.
-    if (location.hash === `#${id}`) setNear(true);
+    const mount = () => {
+      setNear(true);
+    };
+    if (location.hash === `#${id}`) scheduleMount(mount);
     const io = new IntersectionObserver(
       ([e]) => {
         if (e?.isIntersecting) {
-          setNear(true);
+          scheduleMount(mount);
           io.disconnect();
         }
       },

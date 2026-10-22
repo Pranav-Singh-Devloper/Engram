@@ -59,7 +59,10 @@ function useTheme() {
 const hasWebGL = () => {
   try {
     const c = document.createElement('canvas');
-    return Boolean(c.getContext('webgl2') ?? c.getContext('webgl'));
+    const gl = c.getContext('webgl2') ?? c.getContext('webgl');
+    // The probe's context is released at once; the scene creates its own.
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    return Boolean(gl);
   } catch {
     return false;
   }
@@ -109,7 +112,15 @@ export function Galaxy() {
   const stats = useMemo(() => neighbourStats(GALAXY.points), []);
 
   useEffect(() => {
-    setWebgl(hasWebGL());
+    // Creating a WebGL context is the costly part of the check, so it runs in
+    // its own idle task, not in the chapter's mount (P09c task 8).
+    const idle = 'requestIdleCallback' in window;
+    const probe = () => {
+      setWebgl(hasWebGL());
+    };
+    const handle = idle
+      ? window.requestIdleCallback(probe, { timeout: 400 })
+      : window.setTimeout(probe, 0);
     const el = box.current;
     if (!el) return;
     // Render frames only while the scene is on screen.
@@ -119,6 +130,8 @@ export function Galaxy() {
     io.observe(el);
     return () => {
       io.disconnect();
+      if (idle) window.cancelIdleCallback(handle);
+      else window.clearTimeout(handle);
     };
   }, []);
 
