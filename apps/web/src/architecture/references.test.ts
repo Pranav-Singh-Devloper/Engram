@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { REFERENCES } from '@/content/references';
+import { SYSTEMS } from './data/prior-art';
 
 const DIR = path.resolve(import.meta.dirname);
 const sources = (dir: string): string[] =>
@@ -12,12 +13,16 @@ const sources = (dir: string): string[] =>
         ? [path.join(dir, d.name)]
         : [],
   );
-const cited = new Set(
-  sources(DIR).flatMap((f) =>
+// Literal citations, plus the prior-art matrix, which cites each compared
+// system on its row (<Cite k={s.ref} />).
+const cited = new Set([
+  ...sources(DIR).flatMap((f) =>
     [...readFileSync(f, 'utf8').matchAll(/<Cite k="([^"]+)"/g)].map((m) => m[1] ?? ''),
   ),
-);
-const chapters = (readFileSync(path.join(DIR, 'registry.tsx'), 'utf8').match(/\{ id: '/g) ?? [])
+  ...SYSTEMS.map((s) => s.ref),
+]);
+// One `id: '…'` line per registered chapter (Prettier puts each on its own line).
+const chapters = (readFileSync(path.join(DIR, 'registry.tsx'), 'utf8').match(/^\s+id: '/gm) ?? [])
   .length;
 
 describe('references', () => {
@@ -42,9 +47,8 @@ describe('references', () => {
   });
 
   it('are all cited once every chapter is built', () => {
-    // The bibliography lists only works the page uses. This applies when all
-    // 16 chapters are registered; earlier, chapters 1–14 aren't written yet.
-    if (chapters < 16) return;
+    // The bibliography lists only works the page uses, once all 16 chapters exist.
+    expect(chapters).toBe(16);
     for (const k of keys) expect(cited, k).toContain(k);
   });
 });

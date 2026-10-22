@@ -36,7 +36,7 @@ const KEY_INDEXES = [
   {
     title: 'HNSW on three embeddings',
     body: 'facts, episodes and entities each carry a vector(768) with an HNSW index over cosine distance, a navigable small-world graph that answers nearest-neighbour queries without scanning',
-    cite: 'malkov2016',
+    cite: <Cite k="malkov2016" />,
     after:
       '. Recall turns on pgvector’s iterative scan (relaxed order) so a filtered search still fills its candidate list, then re-ranks by exact cosine, because the scan returns near-ties in no fixed order.',
   },
@@ -149,7 +149,7 @@ export function Storage() {
             <h4 className="font-medium">{k.title}</h4>
             <p className="mt-1 text-muted-foreground">
               {k.body}
-              {k.cite && <Cite k={k.cite} />}
+              {k.cite}
               {k.after}
             </p>
           </div>
