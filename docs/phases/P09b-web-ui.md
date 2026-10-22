@@ -1,6 +1,6 @@
 # P09b — Web UI (and P09c — Architecture explorer)
 
-**Status:** P09b done (2026-10-21). P09c in progress: chapters 1–13, 15 and 16 built. Approved 2026-10-21 as written: two phases, a 3D galaxy (three.js), the dependencies listed.
+**Status:** P09b done (2026-10-21). P09c in progress: all 16 chapters built; the performance pass (task 8) is next. Approved 2026-10-21 as written: two phases, a 3D galaxy (three.js), the dependencies listed.
 
 This file plans two phases. **P09b** is the dashboard SPEC §12 requires. **P09c** is the architecture explorer the user asked for on 2026-10-21: an interactive, animated, deeply referenced tour of how Engram works and why. P09c depends on P09b's design system and data plumbing. They're split so each phase stays one reviewable unit (decision 1).
 
@@ -176,6 +176,23 @@ Each citation states what Engram *took* from the work ("inspired by", "implement
     1. **ADR-016's slowdown.** It said the grammar transport ran "53% slower"; its own table and the spike JSON give 46% on wall time (per-turn calls 62%). The ADR is corrected, with a dated note, and the decision is unchanged.
     2. **My draft of the chat sequence.** The visitor's turn is stored *before* composing, so the message survives a failed reply. The draft had it after. The diagram follows `server/chat.ts`.
     3. **My draft's provider count.** There are five implementations, Groq (the judge) included, not four.
+- **Task 7: chapter 14 (prior art), and the bibliography check switched on.**
+  - **Every cell checked against the paper.** The capability matrix compares seven systems on six capabilities: valid time, record time, versions kept, forgetting, consolidation, entity graph. Each cell was checked on 2026-10-22 against the paper's own text (the arXiv HTML), not written from memory. Two notes that changed wording:
+    - MemGPT's in-prompt memory is "working context", edited in place.
+    - Generative Agents' recency decay (0.995 per game hour) only ranks; nothing is ever removed.
+    
+    "No" in the matrix means the paper doesn't describe it. Each row also says what Engram *lacks*:
+    - MemGPT's self-directed memory;
+    - Generative Agents' reflection trees;
+    - MemoryBank's user portrait;
+    - Mem0's production scale;
+    - Zep's community summaries and rerankers;
+    - A-MEM's per-note metadata;
+    - HippoRAG's multi-hop PageRank.
+    
+    The benchmarks box says plainly that Engram didn't run LoCoMo, so its numbers can't be set beside Mem0's or A-MEM's.
+  - **A test that never ran.** The "every reference is cited" check counted chapters with `\{ id: '`, but Prettier puts `id:` on its own line, so it always counted 0 and the check could never switch on. It now counts `^\s+id: '` and asserts exactly 16 chapters. It also failed to see citations written as `<Cite k={…}>`: chapter 10's HNSW citation is now literal, and the prior-art rows are counted explicitly. All 23 references are cited.
+  - **A timeline of all 23 cited works** (1885–2025), coloured by role, with each work's `took` note on hover.
 
 ## P09b — scope
 **In:**
