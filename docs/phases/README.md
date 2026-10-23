@@ -20,7 +20,7 @@ The plan for building Engram, one file per phase. [`docs/SPEC.md`](../SPEC.md) i
 | P09a Web API | [P09a-web-api.md](P09a-web-api.md) | done | P07 | route handlers, auth, demo sessions and rate limits are tested |
 | P09b Web UI | [P09b-web-ui.md](P09b-web-ui.md) | done | P09a | the §12 pages work against the real API; `docs/demo.md` can be followed without improvising |
 | P09c Architecture explorer | [P09b-web-ui.md](P09b-web-ui.md#p09c--scope-architecture) | done | P09b | `/architecture`: 16 interactive chapters on real repo data, every reference verified, 60 fps |
-| P10 Ship | [P10-ship.md](P10-ship.md) | outline | P08, P09b | three reviewer paths are verified from a fresh clone; the hosted demo is live |
+| P10 Ship | [P10-ship.md](P10-ship.md) | planned | P08, P09b | three reviewer paths are verified from a fresh clone; the hosted demo is live |
 | P11 Local mode, extended | (outline in P08b) | outline | P10 | compact format, chunked embeddings, local goldens, test/LME local runs, light profile |
 
 Statuses are `outline` → `planned` → `in progress` → `done`. P08 and P09a/b can overlap if bench runs are waiting on quota.
