@@ -1,6 +1,12 @@
 # P10 — Ship
 
-**Status:** planned (2026-10-23), awaiting approval. Expanded from the outline at phase start, using what P08–P09c learned.
+**Status:** approved 2026-10-23, building. Expanded from the outline at phase start, using what P08–P09c learned.
+
+**Approval (2026-10-23):**
+- decisions 1–6, 8 and 9 approved as written;
+- **decision 7: rows 46 and 47 are paused, not re-targeted.** They stay open in the ledger and run only when you say so;
+- **decision 10: CI only.** The local machine's Node stays at 22.14;
+- **Vercel Git:** I connect the repo with `vercel git connect` at task 6, with env values still approved by you first.
 
 ## Goal
 Make Engram easy for a reviewer to try, and true to what it claims. Concretely:
@@ -146,6 +152,15 @@ DECISIONS.md                                           tidy, ADR-020 (deploy top
 6. `docs: add the README, architecture notes and hero gif` (and `feat(scripts): generate the README bench tables`)
 7. `docs(decisions): tidy statuses and record the deploy topology (ADR-020)`
 8. `docs(phases): close P10`
+
+## Verified free-tier limits (task 1, 2026-10-23)
+| service | limit, as published or measured | source |
+|---|---|---|
+| Neon Free | 1 GB storage a project; 100 CU-hours a project a month (a 0.25 CU compute for ~400 h); 5 GB egress a month; scales to zero after 5 idle minutes (can't be disabled). Out of compute or egress: the compute **suspends until the next month**, and no data is deleted. Over storage: writes fail | neon.com/docs/introduction/plans |
+| Vercel Hobby | non-commercial use only; functions run up to 300 s; 4 active CPU-hours, 360 GB-hours of memory and 1M invocations a month; 100 GB fast data transfer; 100 deployments a day; 1 hour of runtime logs. Over a limit: wait 30 days | vercel.com/docs/plans/hobby (updated 2026-09-14) |
+| Gemini free | per key and day, **measured** (memory and ADR-018): ~500 generate calls (flash-lite) and 1,000 embedded **texts**. The docs now list per-model numbers only in AI Studio. Daily quotas reset at midnight Pacific. Free-tier inputs and outputs may be used to improve Google's products and **may be read by human reviewers**; don't send sensitive data | ai.google.dev/gemini-api/docs/rate-limits, ai.google.dev/gemini-api/terms |
+| Groq | the docs list gpt-oss-120b at 30 RPM, 1K requests and 200K tokens a day as the *Developer* plan's base limits. The free org's own limits are in its console. The bench judge has stayed within them | console.groq.com/docs/rate-limits |
+| GitHub Actions | free for public repositories. **Scheduled workflows are disabled automatically after 60 days without repository activity**; re-enable from the Actions tab or `gh workflow enable nightly.yml` | docs.github.com (disabling and enabling a workflow) |
 
 ## Free-tier notes
 | resource | P10 use (estimate) |
