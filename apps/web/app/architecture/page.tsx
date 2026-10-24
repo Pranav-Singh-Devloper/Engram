@@ -19,8 +19,8 @@ export default function ArchitecturePage() {
         </h1>
         <p className="mt-4 text-lg text-muted-foreground text-pretty">
           Every subsystem, with the model behind it, the numbers this repository measured, and the
-          research it builds on. The interactive parts run the engine’s own code, and every number
-          comes from a committed report.
+          research it builds on. The interactive parts compute exactly what the engine computes
+          (tests compare them with its own output), and every number comes from a committed report.
         </p>
       </header>
       <div className="grid gap-10 lg:grid-cols-[220px_1fr]">
