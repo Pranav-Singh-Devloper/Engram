@@ -7,6 +7,11 @@
 - **decision 7: rows 46 and 47 are paused, not re-targeted.** They stay open in the ledger and run only when you say so;
 - **decision 10: CI only.** The local machine's Node stays at 22.14;
 - **Vercel Git:** I connect the repo with `vercel git connect` at task 6, with env values still approved by you first.
+- **Decision 3, revised (2026-10-23, your choice):** the seed was tested locally before it touched Neon, and live Gemini extraction can't produce a fully correct showcase.
+  - **Per-turn extraction** answers 9 of 10. It misses "And before that, Marseille.", because extraction sees each turn alone, so "that" refers to nothing.
+  - **Session extraction** answers 4 of 10. Packing a story spread over months blurs record time, as ADR-015 warned.
+  
+  You chose live per-turn extraction with one documented gap: the 2010 question may come back empty, never wrong. Every other answer must match, or the seed fails. The cross-turn gap is a product limitation (live chat has it too). It goes in the README limitations and ledger row 49 (P11).
 
 ## Goal
 Make Engram easy for a reviewer to try, and true to what it claims. Concretely:
