@@ -15,7 +15,8 @@
     "maintain": "tsx maintain.ts",
     "reembed": "tsx reembed.ts",
     "local:setup": "tsx local.ts setup",
-    "local:doctor": "tsx local.ts doctor"
+    "local:doctor": "tsx local.ts doctor",
+    "seed:showcase": "tsx seed-showcase.ts"
   },
   "devDependencies": {
     "tsx": "^4.23.15"
