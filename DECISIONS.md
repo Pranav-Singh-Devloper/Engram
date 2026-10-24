@@ -156,7 +156,7 @@ Short ADRs, append-only. When a decision changes, add a new entry that supersede
 
 ## ADR-012 — Repeatable migrations for generated hosted SQL
 
-**Date:** 2026-10-17 · **Status:** Accepted
+**Date:** 2026-10-17 · **Status:** Accepted, then its use case superseded by ADR-014. Neon has no pg_cron, so there are no generated schedules left to re-apply. The `R__*.sql` mechanism stays in the migration runner, unused and tested, for any future generated SQL
 
 **Context.** The pg_cron schedules in `supabase/hosted/` are generated from `config` (P06b), so they change whenever a decay parameter or the static-predicate list does. The migration runner refuses an applied file whose content changed, which keeps numbered migrations honest but would make every regenerated schedule break `db:migrate:hosted`.
 
@@ -369,3 +369,28 @@ embeddinggemma:300m@85462619ee72, at Gemini's thresholds vs the chosen profile:
 - Unprocessed demo turns can lag if a function dies mid-`after()`; they're picked up later, never lost.
 - The cap message is plain JSON with a 429, which the UI (P09b) must show without breaking the showcase.
 - Turbopack's faster dev server isn't used until it supports extension aliasing.
+
+---
+
+## ADR-020 — The production deploy, and a showcase extracted live with one documented gap
+
+**Date:** 2026-10-23 · **Status:** Accepted (P10)
+
+**Context.** P10 ships the hosted demo: Vercel Hobby on Neon, plus a read-only showcase that anonymous visitors see (SPEC §11). P09a's preview showed two hazards. A CLI deploy uploads the working tree, and one shipped an uncommitted file. And the first deploy of a new project went to Production with no environment.
+
+**Decision.**
+
+- **Production deploys from `main` through Vercel's Git integration**, never from the CLI. The env vars are set per environment, and Gemini keys are split by job: production has its own keys, and the nightly workflow keeps others, so a visitor spike can't starve consolidation, nor the reverse.
+- **The showcase is the shared bitemporal story** (`demo:offline`, explorer chapter 3), extracted turn by turn by the live model through the real write path, with record times set to when each turn was learned. `pnpm seed:showcase` verifies every canonical answer against the story's expected ones. It builds under a temporary slug and swaps it in one transaction, so a failed rebuild never removes the old showcase. The namespace is kind `user`, so the demo cleanup never deletes it.
+- **One answer may be missing, never wrong.** Tested 2026-10-23 on Gemini:
+  - per-turn extraction answered 9 of 10; "And before that, Marseille." extracts nothing, because each turn is extracted alone;
+  - session extraction (ADR-015) answered 4 of 10, since packing a months-long story blurs record time.
+
+  The user chose live extraction with that single documented gap (`LIVE_GAPS`) over scripted extraction.
+
+**Alternatives.**
+
+- Scripted extraction: complete and reproducible, but it would show facts no model extracted.
+- Fixing cross-turn context first: a prompt change, with goldens and a bench rerun; ledger row 49, P11.
+
+**Consequences.** The showcase's timeline has no Marseille row. The gap is a real product limitation: a chat visitor's "before that" fails the same way, and the README says so.
