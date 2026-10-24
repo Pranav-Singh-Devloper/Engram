@@ -21,6 +21,7 @@
     "fixtures:record": "pnpm --filter @engram/scripts fixtures:record",
     "demo:offline": "pnpm --filter @engram/scripts demo:offline",
     "seed:showcase": "pnpm --filter @engram/scripts seed:showcase",
+    "web": "pnpm --filter @engram/web dev",
     "bench": "pnpm --filter @engram/bench bench",
     "bench:generate": "pnpm --filter @engram/bench bench:generate",
     "bench:inspect": "pnpm --filter @engram/bench bench:inspect",

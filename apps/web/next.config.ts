@@ -1,5 +1,11 @@
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import type { NextConfig } from 'next';
+
+// Local runs read the repository's single .env (the quickstart's). Variables
+// already set win, and a deploy has no such file, so its platform env applies.
+const rootEnv = path.join(import.meta.dirname, '../../.env');
+if (existsSync(rootEnv)) process.loadEnvFile(rootEnv);
 
 const config: NextConfig = {
   // Workspace packages ship TypeScript source (no build step).
