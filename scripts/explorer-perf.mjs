@@ -165,11 +165,16 @@ const HARNESS = String.raw`
 const MOUNT = (id) =>
   `(async()=>{const long=[];const po=new PerformanceObserver(l=>l.getEntries().forEach(e=>long.push(Math.round(e.duration))));po.observe({type:"longtask"});await new Promise(r=>setTimeout(r,300));document.getElementById(${JSON.stringify(id)}).scrollIntoView();await new Promise(r=>setTimeout(r,2500));po.disconnect();return long})()`;
 
+// Every long task between the load event and now, including idle-time chunk
+// preloads (row 48), from the buffered entries.
+const AFTER_LOAD = `(async()=>{await new Promise(r=>setTimeout(r,4000));const nav=performance.getEntriesByType("navigation")[0];const loaded=nav?nav.loadEventEnd:0;return new Promise(r=>{new PerformanceObserver((l,o)=>{o.disconnect();r(l.getEntries().filter(e=>e.startTime>=loaded).map(e=>Math.round(e.duration)))}).observe({type:"longtask",buffered:true});setTimeout(()=>r([]),500)})})()`;
+const afterLoad = [];
 const rows = Object.fromEntries(
   IDS.map((id) => [id, { fps: [], p95: [], max: [], dropped: [], interact: [], mount: [] }]),
 );
 for (let r = 0; r < runs; r++) {
   await nav(`i${r}`);
+  afterLoad.push(...(await evaluate(AFTER_LOAD)));
   await evaluate(HARNESS);
   for (const id of IDS) {
     const m = await evaluate(`window.__perf(${JSON.stringify(id)})`);
@@ -186,6 +191,10 @@ for (let r = 0; r < runs; r++) {
   }
 }
 ws.close();
+console.log(
+  `Long tasks after the load event, before any interaction (${runs} loads): ${afterLoad.length ? afterLoad.map((x) => `${x} ms`).join(', ') : 'none'}`,
+);
+console.log('');
 const worst = (xs) => (xs.length ? Math.max(...xs) : 0);
 console.log(
   `| chapter | fps (min of ${runs}) | p95 frame | worst frame | dropped | long tasks, interacting | long tasks, mounting |`,
