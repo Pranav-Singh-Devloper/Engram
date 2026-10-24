@@ -66,3 +66,39 @@ jobs:
       - run: pnpm bench --subset=smoke --offline --memory=engram_consolidated
       # Bulk session extraction (ADR-015), as the bench and imports use it.
       - run: pnpm bench --subset=smoke --offline --memory=engram --extraction=session
+
+  # The README's reviewer paths, literally, on the pinned Node (P10, ledger
+  # row 34): a fresh checkout, no .env and no migrate step for the offline
+  # demo; then the quickstart's database steps from .env.example. The
+  # Postgres service stands in for `pnpm db:up` (Docker), on the same port.
+  fresh-clone:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      db:
+        image: pgvector/pgvector:0.8.7-pg17
+        env:
+          POSTGRES_USER: engram
+          POSTGRES_PASSWORD: engram
+          POSTGRES_DB: engram
+        ports:
+          - 54329:5432
+        options: >-
+          --health-cmd "pg_isready -U engram -d engram"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+      - run: node --version
+      - run: pnpm install --frozen-lockfile
+      # Path 2: the offline demo, exactly as the README runs it.
+      - run: pnpm demo:offline
+      # Path 3's database steps, from the example env file.
+      - run: cp .env.example .env && pnpm db:migrate
