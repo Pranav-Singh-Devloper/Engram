@@ -236,7 +236,7 @@ recorded_at <= K  and (invalidated_at is null or invalidated_at > K)
 and valid_from <= T and (valid_to is null or valid_to > T)
 ```
 
-**Versioned rows.** Fact rows are immutable. An update writes the new fact, then a closed copy of the old one (`valid_to` = the new start, `revises` and `superseded_by` linking them), then sets the old row's `invalidated_at`. All three happen in one transaction, at one timestamp, so no instant is believed twice or not at all. Corrections retract instead of closing. Backfills of older history land without disturbing the present. Queries filter on the time columns, never on `status`. Fourteen conflict cases are tested on every commit (SPEC §7.4).
+**Versioned rows.** Fact rows are immutable. An update writes the new fact, then a closed copy of the old one (`valid_to` = the new start, `revises` and `superseded_by` linking them), then sets the old row's `invalidated_at`. All three happen in one transaction, at one timestamp, so no instant is believed twice or not at all. Corrections retract instead of closing. Backfills of older history land without disturbing the present. Queries filter on the time columns, never on `status`. Fifteen conflict cases are tested on every commit (SPEC §7.4).
 
 **Decay.** Each night, every current belief gets a retention score:
 
