@@ -30,6 +30,22 @@ export const CAP_MESSAGE =
   "The demo has used today's free model quota. Try again tomorrow; the showcase is still available.";
 
 /** What the composer sees for a turn, as in the bench: assistant turns are labelled. */
+/** What the chat shows when the composer abstains on a statement, not a question. */
+export const NOTED = 'Noted.';
+
+const QUESTION_START =
+  /^(who|whom|whose|what|when|where|which|why|how|do|does|did|is|are|was|were|am|can|could|will|would|should|shall|have|has|had|tell me|remind me)\b/i;
+
+/**
+ * Whether a message reads as a question. The composer answers questions and
+ * abstains with "I don't know." on anything else, which reads as a bug after
+ * "I just moved to Berlin."; only the shown reply changes, never what's stored.
+ */
+export function looksLikeQuestion(message: string): boolean {
+  const m = message.trim();
+  return m.includes('?') || QUESTION_START.test(m);
+}
+
 const spoken = (role: string | null, text: string) =>
   role === 'assistant' ? `assistant: ${text}` : text;
 
@@ -126,7 +142,7 @@ export async function chat(deps: ChatDeps, access: Access, req: Request): Promis
         })),
       });
       send('answer', {
-        text: answer.answer,
+        text: answer.supported || looksLikeQuestion(message) ? answer.answer : NOTED,
         supported: answer.supported,
         used_memory_ids: answer.usedMemoryIds,
       });

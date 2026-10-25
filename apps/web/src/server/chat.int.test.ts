@@ -9,7 +9,7 @@ import {
 import { aboutSelf, testDb } from '@engram/core/testing';
 import { afterAll, describe, expect, it } from 'vitest';
 import { DEMO_COOKIE, demoSlug } from './auth';
-import { CAP_MESSAGE } from './chat';
+import { CAP_MESSAGE, NOTED } from './chat';
 import { LIMITS } from './limits';
 import { readEvents } from './sse';
 import { TEST_TOKEN, cookieFrom, testRoutes } from './testing';
@@ -115,11 +115,20 @@ describe('POST /api/chat', () => {
         }),
     );
     const events = await readEvents(await v.say('Hello there'));
+    // A statement shows an acknowledgement; a question keeps the abstention.
+    expect(events.find((e) => e.event === 'answer')?.data).toMatchObject({
+      text: NOTED,
+      supported: false,
+    });
     expect((events.at(-1)?.data as { episode_ids: string[] }).episode_ids).toHaveLength(1);
+    const asked = await readEvents(await v.say('Where do I live?'));
+    expect(asked.find((e) => e.event === 'answer')?.data).toMatchObject({
+      text: "I don't know.",
+    });
     const rows = await db<
       { role: string }[]
     >`select role from episodes where namespace_id = ${v.namespaceId}`;
-    expect(rows.map((r) => r.role)).toEqual(['user']);
+    expect(rows.map((r) => r.role)).toEqual(['user', 'user']);
   });
 
   it('refuses the 31st turn in an hour with 429, before any model call', async () => {
