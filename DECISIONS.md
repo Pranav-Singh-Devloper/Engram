@@ -393,7 +393,10 @@ embeddinggemma:300m@85462619ee72, at Gemini's thresholds vs the chosen profile:
 - Scripted extraction: complete and reproducible, but it would show facts no model extracted.
 - Fixing cross-turn context first: a prompt change, with goldens and a bench rerun; ledger row 49, P11.
 
-**Consequences.** The showcase's timeline has no Marseille row. The gap is a real product limitation: a chat visitor's "before that" fails the same way, and the README says so.
+**Consequences.**
+
+- The showcase's timeline has no Marseille row. The gap is a real product limitation: a chat visitor's "before that" fails the same way, and the README says so. (Nightly consolidation later backfilled Marseille, with record time 2026-10-24, so the story's "as known at 2024-09-01" answer stays empty, as it should.)
+- **The showcase is pinned** (`seed:showcase --pin`, 2026-10-24). Nobody's reads keep its facts fresh, so the first nightly decay sweep archived 4 of them. Pinned facts are exempt from decay (SPEC §5, §9), which is what a reference dataset needs. Visitors' demo namespaces decay as usual.
 
 ## ADR-021 — A withdrawn claim isn't revived by re-reading its turns
 

@@ -1,6 +1,6 @@
 # P10 — Ship
 
-**Status:** approved 2026-10-23, building. Expanded from the outline at phase start, using what P08–P09c learned.
+**Status:** done 2026-10-25, with rows 46 and 47 paused by your decision (they need Ollama; see Outcome). Expanded from the outline at phase start, using what P08–P09c learned.
 
 **Approval (2026-10-23):**
 - decisions 1–6, 8 and 9 approved as written;
@@ -136,17 +136,57 @@ DECISIONS.md                                           tidy, ADR-020 (deploy top
 - **CI fresh-clone job:** the whole offline path on the pinned Node.
 
 ## Definition of done
-- [ ] Neon has every migration applied (`db:migrate:hosted`), its Data API is off, and the deploy's `/api/health` says `engram`.
-- [ ] Production on Vercel deploys from `main` through the Git integration, with the approved env. The stray Production deployment is superseded.
-- [ ] The showcase namespace is seeded on Neon and verified, and anonymous visitors see it read-only.
-- [ ] A `nightly.yml` run against Neon logs the decay sweep, the demo cleanup and consolidation (row 25).
-- [ ] `/api/mcp` answers with a bearer token, and a live chat turn works on production.
-- [ ] README per §17: hero gif; what and why; the three reviewer paths; architecture diagram; generated bench tables (wins and losses); MCP snippets; design notes; limitations (free-tier data terms, disambiguation, extraction error rates, dependence on clients calling remember, local mode's gap and privacy boundary, rows 13 and 15); prior art; operations (row 29, Neon's monthly limits).
-- [ ] `docs/architecture.md` is written. DECISIONS.md is tidied (superseded ADRs marked, never deleted), and ADR-020 is added.
-- [ ] All three reviewer paths are verified from a fresh clone against the README, and the quickstart takes under 10 minutes (timed).
-- [ ] `.node-version` is the current 22 LTS (≥ 22.19), and the CI fresh-clone job passes on it (row 34).
-- [ ] Rows 44 and 48 are closed with evidence. Rows 46 and 47 are closed, or re-targeted with your approval (decision 7).
-- [ ] The final §16 checks are clean: one author identity, no attribution trailers.
+- [x] Neon has every migration applied (`db:migrate:hosted`), its Data API is off, and the deploy's `/api/health` says `engram`.
+- [x] Production on Vercel deploys from `main` through the Git integration, with the approved env. The stray Production deployment is superseded.
+- [x] The showcase namespace is seeded on Neon and verified, and anonymous visitors see it read-only.
+- [x] A `nightly.yml` run against Neon logs the decay sweep, the demo cleanup and consolidation (row 25).
+- [x] `/api/mcp` answers with a bearer token, and a live chat turn works on production.
+- [x] README per §17: hero gif; what and why; the three reviewer paths; architecture diagram; generated bench tables (wins and losses); MCP snippets; design notes; limitations (free-tier data terms, disambiguation, extraction error rates, dependence on clients calling remember, local mode's gap and privacy boundary, rows 13 and 15); prior art; operations (row 29, Neon's monthly limits).
+- [x] `docs/architecture.md` is written. DECISIONS.md is tidied (superseded ADRs marked, never deleted), and ADR-020 is added.
+- [x] All three reviewer paths are verified from a fresh clone against the README, and the quickstart takes under 10 minutes (timed).
+- [x] `.node-version` is the current 22 LTS (≥ 22.19), and the CI fresh-clone job passes on it (row 34).
+- [x] Rows 44 and 48 are closed with evidence. Rows 46 and 47: **paused, by your decision** (2026-10-23, restated 2026-10-25). They stay open in P10's ledger and run when you say so.
+- [x] The final §16 checks are clean: one author identity, no attribution trailers.
+
+## Outcome (2026-10-25)
+**Hosted demo** (https://engram-lime.vercel.app). Production deploys from `main` through Vercel's Git integration (ADR-020). Neon has all migrations, and `/api/health` returns `{"ok":true,"schema":"engram"}`. Smoke-tested on production:
+- an anonymous visitor sees the showcase, read-only;
+- a live chat turn works, and a new session recalls it ("You play the cello.");
+- `/api/mcp` lists 6 tools with the token, and returns 401 without it.
+
+The landing page's fallback at the daily cap is covered by `chat.int.test.ts` ("answers with the cap message at the global cap, while showcase reads keep working"). The plan said to check it on a preview; the integration test replaced that check.
+
+**Showcase.**
+- Seeded live per turn on Neon and verified 9 of 10; the Marseille gap is recorded in ADR-020 and ledger row 49.
+- The 2026-10-24 decay sweep archived 4 of its facts (it is a demo with no reads). They were rebuilt with `seed:showcase --replace --pin`; pinned facts never decay. The next nightly archived 0.
+- That night's consolidation backfilled Marseille with record time 2026-10-24. So "2010, as known at 2024-09-01" correctly stays empty.
+
+**Nightly (row 25).** Run 40097912204 logged the decay sweep, the demo cleanup and consolidation: merged 4, backfilled 1, 5 promoted to `long_term`.
+
+**Row 48.** The idle preload made no measurable difference over 3 runs of `explorer-perf.mjs`, so it was removed rather than shipped. Row 31 closed as won't-do (decision 8).
+
+**Incidents and fixes found while shipping:**
+- **CI was red from 2026-10-21 to 10-24, unnoticed.** A galaxy test read the gitignored `bench/runs/`, so it passed only locally. It now skips when that data is absent, and every push is now watched to the end of its CI run.
+- **"I just moved" started at midnight.** That put the move before an undated fact said earlier the same day. A day-precision start on the turn's own day, before the turn, now resolves to the turn's moment (`ingest/candidates.ts`, with tests).
+- **Consolidation revived a corrected fact.** It re-read a session from before the correction, and Initech came back beside Acme on the hosted demo. Fixed by SPEC §7.2 step 9 and case 15 (ADR-021).
+- **The timeline flashed back to loading.** Toggling record-time history showed the loading message during the ~2 s refetch. The previous chart now stays on screen while it loads.
+- **Hydration error under reduced motion** (React #418). The landing components chose markup with `useReducedMotion`, which the server can't know. Motion is now chosen in CSS, or in the transition only.
+- **"I don't know." replied to statements.** The composer abstains on anything that isn't a question. When it abstains on a statement, the chat now shows "Noted.". This is a display-only change; the engine, stored turns and bench are untouched.
+- **A failing web test was pushed once (4538b7e).** A piped `grep` hid the test run's exit code. The next commit (db1fd37) fixed it within minutes, and nothing was force-pushed.
+
+**Brand and site.** The logos are in `assets/logos/` (originals) and `assets/brand/` (derived by `scripts/brand-assets.py`, plus the social preview). The site has an icon, an OG image, a footer and a branded 404 page, and the landing page was redesigned with a floating glass nav. The effects are hand-written, with no copied components (licences unclear) and no new dependency.
+
+**Fresh clone (task 10, 2026-10-25).** The three paths were followed literally from `git clone`. Docker ran under a separate compose project name (the file pins `name: engram`, which would have reused the dev volume), with the dev DB stopped.
+
+| path | result | time |
+|---|---|---|
+| 1. hosted demo | health ok; anonymous showcase reads; chat, MCP and timeline (above) | none |
+| 2. offline demo | all 10 answers correct, exit 0 | 11 s: clone 3, install 3 (warm pnpm store), `db:up` 3, demo 2 |
+| 3. quickstart | the app started, a turn was extracted, and session 2 recalled it ("You live in Lisbon.") | about 1.5 min of commands: clone 4 s, install 10 s (**empty** pnpm store), `db:up` + `db:migrate` 5 s, server 6 s, first chat flow 41 s |
+
+Not measured: the first Docker image pull, which was cached, and getting a Gemini key. Both are one-time and quick, so the quickstart stays well under 10 minutes. The local machine ran Node 22.14, below the pin: pnpm warns but everything works. CI's `fresh-clone` job covers the pinned Node.
+
+**§16.** All 263 commits have one author and committer identity, and no attribution trailers.
 
 ## Planned commits
 1. `docs(phases): expand the P10 ship plan`
