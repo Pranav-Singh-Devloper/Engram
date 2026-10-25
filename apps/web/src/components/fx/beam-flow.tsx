@@ -2,8 +2,8 @@
 
 // Agents → MCP → Engram → Postgres, with light travelling along the wires
 // (SVG animateMotion, which the browser runs off the main thread). Under
-// reduced motion the wires are drawn and nothing travels.
-import { useReducedMotion } from 'motion/react';
+// reduced motion the wires are drawn and nothing travels (hidden in CSS, so the
+// server and client render the same markup).
 import { useId } from 'react';
 import { EngramMark } from '../brand/mark';
 
@@ -15,7 +15,6 @@ const NODES = [
 ] as const;
 
 export function BeamFlow() {
-  const still = useReducedMotion();
   const uid = useId().replace(/:/g, '');
   const y = 70;
   return (
@@ -45,20 +44,19 @@ export function BeamFlow() {
           <g key={n.id}>
             <path d={d} fill="none" stroke="var(--border)" strokeWidth="2" />
             <path d={d} fill="none" stroke={`url(#${uid}-w)`} strokeWidth="2" opacity="0.55" />
-            {!still &&
-              [0, 1].map((k) => (
-                <circle key={k} r="7" fill={`url(#${uid}-p)`}>
-                  <animateMotion
-                    dur="2.4s"
-                    begin={`${String(i * 0.5 + k * 1.2)}s`}
-                    repeatCount="indefinite"
-                    path={d}
-                    keyPoints={k === 0 ? '0;1' : '1;0'}
-                    keyTimes="0;1"
-                    calcMode="linear"
-                  />
-                </circle>
-              ))}
+            {[0, 1].map((k) => (
+              <circle key={k} r="7" fill={`url(#${uid}-p)`} className="motion-reduce:hidden">
+                <animateMotion
+                  dur="2.4s"
+                  begin={`${String(i * 0.5 + k * 1.2)}s`}
+                  repeatCount="indefinite"
+                  path={d}
+                  keyPoints={k === 0 ? '0;1' : '1;0'}
+                  keyTimes="0;1"
+                  calcMode="linear"
+                />
+              </circle>
+            ))}
           </g>
         );
       })}

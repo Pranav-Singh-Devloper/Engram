@@ -3,7 +3,8 @@
 // "How it works" as a bento grid: each card is one subsystem with a small live
 // picture of it, and links to its /architecture chapter. Visuals animate when
 // scrolled into view (transform and opacity, or a short SVG path draw), and
-// show their final state under reduced motion.
+// show their final state under reduced motion. The server render never depends
+// on the motion setting (it can't know it), so hydration always matches.
 import { ArrowUpRight } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import Link from 'next/link';
@@ -25,7 +26,6 @@ function useEnter() {
 
 /** Two clocks: versions as bars on a valid-time axis, a crosshair sweeping across. */
 function TimeAxes() {
-  const still = useReducedMotion();
   const enter = useEnter();
   const rows = [
     { l: '8%', w: '34%', c: 'var(--valid)', o: 0.45, label: 'Paris · closed' },
@@ -44,10 +44,9 @@ function TimeAxes() {
           <span className="px-2">{r.label}</span>
         </motion.div>
       ))}
-      <div
-        className="absolute top-2 bottom-2 w-px bg-foreground/70"
-        style={still ? { left: '70%' } : { left: 0, animation: 'sweep 6s ease-in-out infinite' }}
-      />
+      {/* Motion is chosen in CSS, not with useReducedMotion: the server can't know
+          the visitor's setting, and a different style would break hydration. */}
+      <div className="absolute top-2 bottom-2 left-0 w-px animate-[sweep_6s_ease-in-out_infinite] bg-foreground/70 motion-reduce:left-[70%] motion-reduce:animate-none" />
       <style>{`@keyframes sweep { 0%,100% { transform: translateX(40px) } 50% { transform: translateX(min(420px, 60vw)) } }`}</style>
     </div>
   );
@@ -136,7 +135,7 @@ function DecayCurve() {
         stroke="var(--record)"
         strokeWidth="2.5"
         strokeLinecap="round"
-        initial={{ pathLength: still ? 1 : 0 }}
+        initial={{ pathLength: 0 }}
         whileInView={{ pathLength: 1 }}
         viewport={{ once: true }}
         transition={still ? { duration: 0 } : { duration: 1.4, ease }}
@@ -159,11 +158,9 @@ function Consolidate() {
               i % 3 === 0 ? 'bg-muted-foreground/40' : 'bg-valid',
             )}
             initial={{ opacity: 1, scale: 1 }}
-            whileInView={
-              still ? {} : { opacity: i % 3 === 0 ? 0.25 : 1, scale: i % 3 === 0 ? 0.6 : 1 }
-            }
+            whileInView={{ opacity: i % 3 === 0 ? 0.25 : 1, scale: i % 3 === 0 ? 0.6 : 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 + i * 0.05 }}
+            transition={still ? { duration: 0 } : { duration: 0.6, delay: 0.3 + i * 0.05 }}
           />
         ))}
       </div>

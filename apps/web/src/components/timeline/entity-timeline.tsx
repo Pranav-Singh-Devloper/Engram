@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { History } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { ApiError, api } from '@/lib/api';
@@ -23,6 +23,9 @@ export function EntityTimeline({ id }: { id: string }) {
   const q = useQuery({
     queryKey: ['timeline', id, includeRevised],
     queryFn: () => api.timeline(id, includeRevised),
+    // Toggling record-time history refetches; keep the current chart on screen
+    // meanwhile instead of falling back to the loading message.
+    placeholderData: keepPreviousData,
   });
   const now = useMemo(() => new Date(), []);
   const layout = useMemo(
@@ -85,7 +88,9 @@ export function EntityTimeline({ id }: { id: string }) {
           <History className="size-4 text-record" /> Show record-time history
         </label>
         <span className="font-mono text-xs text-muted-foreground">
-          {entries.length} version{entries.length === 1 ? '' : 's'}
+          {q.isPlaceholderData
+            ? 'loading…'
+            : `${String(entries.length)} version${entries.length === 1 ? '' : 's'}`}
         </span>
         {fullDomain && zoomUseful(fullDomain) && (
           <div

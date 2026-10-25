@@ -14,7 +14,8 @@ export function CountUp({
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: '-40px' });
   const still = useReducedMotion();
-  const [shown, setShown] = useState(still ? value : 0);
+  // Starts at 0 on the server and the client alike; the effect sets the value.
+  const [shown, setShown] = useState(0);
   useEffect(() => {
     if (!inView) return;
     if (still) {
