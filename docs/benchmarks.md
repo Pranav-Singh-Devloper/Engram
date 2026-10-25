@@ -68,7 +68,7 @@ Model requests per item, counting generate and embedding requests, whether sent 
 
 | | buffer | rag | full_context | engram | engram_consolidated |
 |---|---|---|---|---|---|
-| test: requests / item | 1.0 | 3.0 | 0.9 | 33.8 | 45.0 |
+| test: requests / item | 1.0 | 3.0 | 1.0 | 33.8 | 45.0 |
 | LongMemEval: requests / item | 1.0 | 10.2 | 1.0 | 64.4 | pending |
 | LongMemEval: prompt tokens / question | 2,026 | 1,057 | **48,432** | about 1,000 (see note) | |
 
