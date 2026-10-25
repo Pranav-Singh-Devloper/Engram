@@ -2,7 +2,7 @@
 // limits first, then recall, store the user's turn, compose from recalled
 // memories only, store the reply if memory supported it, record use of the
 // memories the composer used, and extract facts from both turns after the response is sent.
-import { ingest, processEpisode, recall, trackUse } from '@engram/core';
+import { DONT_KNOW, ingest, processEpisode, recall, trackUse } from '@engram/core';
 import type { Clock, Provider, Sql } from '@engram/core';
 import { z } from 'zod';
 import type { Access } from './auth';
@@ -142,7 +142,7 @@ export async function chat(deps: ChatDeps, access: Access, req: Request): Promis
         })),
       });
       send('answer', {
-        text: answer.supported || looksLikeQuestion(message) ? answer.answer : NOTED,
+        text: answer.answer === DONT_KNOW && !looksLikeQuestion(message) ? NOTED : answer.answer,
         supported: answer.supported,
         used_memory_ids: answer.usedMemoryIds,
       });
