@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Chapter } from '@/architecture/chapter';
+import { BrandImage } from '@/components/brand/brand-image';
 import { CHAPTERS } from '@/architecture/registry';
 import { MobileToc, Toc } from '@/architecture/toc';
 
@@ -12,16 +13,26 @@ export const metadata: Metadata = {
 export default function ArchitecturePage() {
   return (
     <div className="mx-auto max-w-7xl px-4">
-      <header className="max-w-3xl pt-16 pb-6">
-        <p className="font-mono text-xs tracking-widest text-accent uppercase">Architecture</p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-          How Engram works, and why it works that way
-        </h1>
-        <p className="mt-4 text-lg text-muted-foreground text-pretty">
-          Every subsystem, with the model behind it, the numbers this repository measured, and the
-          research it builds on. The interactive parts compute exactly what the engine computes
-          (tests compare them with its own output), and every number comes from a committed report.
-        </p>
+      <header className="relative pt-16 pb-6">
+        <BrandImage
+          name="stacked"
+          alt=""
+          width={220}
+          height={196}
+          className="pointer-events-none absolute top-14 right-0 hidden h-44 w-auto opacity-90 xl:block"
+        />
+        <div className="max-w-3xl">
+          <p className="font-mono text-xs tracking-widest text-accent uppercase">Architecture</p>
+          <h1 className="mt-3 text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
+            How Engram works, and why it works that way
+          </h1>
+          <p className="mt-4 text-lg text-muted-foreground text-pretty">
+            Every subsystem, with the model behind it, the numbers this repository measured, and the
+            research it builds on. The interactive parts compute exactly what the engine computes
+            (tests compare them with its own output), and every number comes from a committed
+            report.
+          </p>
+        </div>
       </header>
       <div className="grid gap-10 lg:grid-cols-[220px_1fr]">
         <aside>

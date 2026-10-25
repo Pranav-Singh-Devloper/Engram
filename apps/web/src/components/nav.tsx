@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { EngramMark } from './brand/mark';
 import { ThemeToggle } from './theme-toggle';
 
 const LINKS = [
@@ -21,10 +22,7 @@ export function Nav() {
           href="/"
           className="mr-2 flex items-center gap-2 font-semibold tracking-tight sm:mr-4"
         >
-          <span
-            aria-hidden
-            className="size-2.5 rounded-full bg-accent shadow-[0_0_12px_var(--accent)]"
-          />
+          <EngramMark className="h-5 w-auto" title="" />
           Engram
         </Link>
         {/* The links scroll sideways on narrow screens; the theme toggle stays put. */}

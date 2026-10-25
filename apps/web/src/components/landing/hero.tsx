@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from 'motion/react';
 import Link from 'next/link';
+import { EngramMark } from '../brand/mark';
 
 const QUESTIONS = [
   { tone: 'valid', q: 'Where did Sam live last March?', a: 'valid time: when it was true' },
@@ -30,6 +31,14 @@ export function Hero() {
         aria-hidden
         className="pointer-events-none absolute inset-x-0 -top-40 h-96 bg-[radial-gradient(ellipse_at_center,color-mix(in_oklch,var(--accent)_22%,transparent),transparent_70%)]"
       />
+      {/* The mark, large, beside the headline on wide screens. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-24 right-[max(1rem,calc((100vw-72rem)/2+1rem))] hidden lg:block"
+      >
+        <div className="absolute inset-0 -z-10 scale-150 rounded-full bg-[radial-gradient(circle,color-mix(in_oklch,var(--accent)_28%,transparent),transparent_65%)] blur-2xl" />
+        <EngramMark animated className="h-56 w-auto text-foreground" title="" />
+      </div>
       <div className="relative mx-auto max-w-6xl px-4 pt-20 pb-16 sm:pt-28">
         <motion.p {...rise(0)} className="font-mono text-xs tracking-widest text-accent uppercase">
           Persistent memory for AI agents
