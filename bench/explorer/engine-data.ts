@@ -60,23 +60,19 @@ export function writePath() {
 export function cases() {
   const spec = readFileSync(path.join(ROOT, 'docs/SPEC.md'), 'utf8');
   const section = spec.slice(spec.indexOf('### 7.4'), spec.indexOf('## 8.'));
-  const testFile = 'packages/core/src/conflict/conflict.int.test.ts';
-  const tests = readFileSync(path.join(ROOT, testFile), 'utf8').split('\n');
+  // Case 15 is about consolidation, so its test lives with the consolidation tests.
+  const files = [
+    'packages/core/src/conflict/conflict.int.test.ts',
+    'packages/core/src/consolidate/consolidate.int.test.ts',
+  ].map((file) => ({ file, lines: readFileSync(path.join(ROOT, file), 'utf8').split('\n') }));
   return [...section.matchAll(/^(\d+)\. (.+)$/gm)].map((m) => {
     const n = Number(m[1]);
-    const line = tests.findIndex((l) => l.includes(`it('${String(n)}. `));
-    return {
-      n,
-      text: m[2] ?? '',
-      test:
-        line >= 0
-          ? {
-              file: testFile,
-              line: line + 1,
-              title: /it\('([^']+)'/.exec(tests[line] ?? '')?.[1] ?? '',
-            }
-          : null,
-    };
+    const test = files.flatMap(({ file, lines }) => {
+      const line = lines.findIndex((l) => l.includes(`it('${String(n)}. `));
+      if (line < 0) return [];
+      return [{ file, line: line + 1, title: /it\('([^']+)'/.exec(lines[line] ?? '')?.[1] ?? '' }];
+    })[0];
+    return { n, text: m[2] ?? '', test: test ?? null };
   });
 }
 

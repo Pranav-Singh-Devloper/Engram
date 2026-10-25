@@ -194,6 +194,89 @@ describe('consolidate: provenance and promotion', () => {
   });
 });
 
+describe('consolidate: withdrawn claims', () => {
+  const INITECH = aboutSelf('works_at', 'Initech', {
+    type: 'org',
+    statement: 'The user works at Initech.',
+  });
+  const ACME = aboutSelf('works_at', 'Acme', {
+    type: 'org',
+    statement: 'The user works at Acme.',
+    correction: true,
+  });
+  const told = async (s: Scenario) => {
+    await s.tell({
+      at: '2026-10-25T13:38:54Z',
+      content: 'I live in Paris and work at Initech.',
+      candidates: [INITECH],
+    });
+    await s.tell({
+      at: '2026-10-25T13:39:58Z',
+      content: 'Actually, I work at Acme, not Initech.',
+      candidates: [ACME],
+    });
+  };
+  const employers = async (s: Scenario) =>
+    (
+      await db<{ name: string }[]>`
+        select o.name from facts f join entities o on o.id = f.object_id
+        where f.namespace_id = ${s.ns.namespace.id} and f.predicate = 'works_at'
+          and f.invalidated_at is null order by o.name`
+    ).map((r) => r.name);
+
+  // The hosted demo, 2026-10-25: the nightly run re-read the first turn and put
+  // Initech back beside Acme.
+  it('15. does not revive a corrected claim from the turns it was corrected after', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const s = new Scenario(db, ns);
+      await told(s);
+      expect(await employers(s)).toEqual(['Acme']);
+
+      scriptSummary(s, 'The user works at Initech.', [
+        [['I live in Paris and work at Initech.'], INITECH],
+      ]);
+      s.clock.set('2026-10-26T03:00:00Z');
+      const r = await run(s);
+      expect(r.outcomes.rejected).toBe(1);
+      expect(r.promoted).toBe(0);
+      expect(await employers(s)).toEqual(['Acme']);
+      const [logged] = await db<{ reason: string }[]>`
+        select reason from fact_revisions
+        where namespace_id = ${ns.namespace.id} and kind = 'reject'`;
+      expect(logged?.reason).toBe('withdrawn after the turns it cites');
+      expect(await s.checkInvariants()).toEqual([]);
+    });
+  });
+
+  it('still hears a later turn that states the claim again', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const s = new Scenario(db, ns);
+      await told(s);
+      await s.tell({
+        at: '2026-11-02T09:00:00Z',
+        content: 'Good news: Initech hired me back.',
+        candidates: [INITECH],
+      });
+      expect(await employers(s)).toContain('Initech');
+      expect(await s.checkInvariants()).toEqual([]);
+    });
+  });
+
+  it('still merges a restatement of the corrected belief into it', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const s = new Scenario(db, ns);
+      await told(s);
+      scriptSummary(s, 'The user works at Acme.', [
+        [['Actually, I work at Acme, not Initech.'], { ...ACME, isCorrection: false }],
+      ]);
+      const r = await run(s);
+      expect(r.outcomes.merged).toBe(1);
+      expect(r.promoted).toBe(1);
+      expect(await employers(s)).toEqual(['Acme']);
+    });
+  });
+});
+
 describe('consolidate: summaries and scheduling', () => {
   it('writes a recallable summary, marks its turns, and never re-extracts it', async () => {
     await withTestNamespace(db, async (ns) => {

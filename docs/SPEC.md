@@ -388,6 +388,7 @@ Let the candidate be `c` with window `[c.from, c.to)`. `c.from` defaults to the 
 6. **One timestamp.** Every write in a resolution uses one transaction timestamp `t`, read from the engine's clock inside the lock. A new version's `recorded_at` equals its original's `invalidated_at`, so a `knownAt` query at any instant sees exactly one of them: no gap, no overlap.
 7. **Locking.** Classification runs under the namespace lock against fresh beliefs, and rule decisions apply immediately. Only adjudication leaves the lock: the adjudicator is asked outside any transaction, and its answer applies only if `E` is unchanged when the lock is retaken; otherwise the loop re-classifies. (Re-checking outside the lock for rule decisions starves under many concurrent restatements of one fact.)
 8. **Every resolution writes one `fact_revisions` row** (merge, coexist, update, backfill, correction, reject), with the candidate and the resolver (`rule` or `llm`). The entity timeline renders this chain; it's the demo money-shot.
+9. **Withdrawn claims stay withdrawn** (ADR-021). Unless `c` merges (step 3), it is rejected when a version of the same claim (subject, predicate and object) was corrected or retracted at or after the latest turn `c` cites. Log `reject` with the reason "withdrawn after the turns it cites". Re-reading old turns, as consolidation does, is no new evidence; a later turn that states the claim again is heard as usual. This runs before steps 2, 4 and 5.
 
 ### 7.3 Temporal APIs
 
@@ -414,6 +415,7 @@ Let the candidate be `c` with window `[c.from, c.to)`. `c.from` defaults to the 
 12. Relative date resolution against `occurred_at`.
 13. A backfill candidate that overlaps an existing closed history row goes to the adjudicator, not the rule fast-path.
 14. No `knownAt` gap or overlap at the update instant: at `t`, at `t − ε`, and at `t + ε`, exactly one row (open original or closed copy) is believed.
+15. Consolidation never revives a corrected claim from the turns it was corrected after, still merges a restatement of the corrected belief, and a later turn can assert the old claim again (step 9).
 
 ---
 

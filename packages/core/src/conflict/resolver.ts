@@ -5,12 +5,13 @@
 // beliefs are unchanged when the lock is retaken. Record time `t` is read
 // inside the lock, so it never precedes a concurrent writer's row.
 import { config } from '../config/index.js';
-import { transaction } from '../db/client.js';
+import { transaction, uuidArray } from '../db/client.js';
 import type { Queryable } from '../db/client.js';
 import { parseFact } from '../db/factRows.js';
 import type { FactRow } from '../db/factRows.js';
 import type { CandidateResolver, ResolvedCandidate } from '../ingest/resolver.js';
 import type { MethodInput } from '../providers/contracts.js';
+import type { Fact } from '../types/index.js';
 import type { Provider } from '../providers/provider.js';
 import { lockNamespace } from '../resolve/lock.js';
 import { applyDecision } from './apply.js';
@@ -32,6 +33,38 @@ export async function currentBeliefs(
       and f.predicate = ${c.predicate} and f.invalidated_at is null
     order by f.valid_from, f.recorded_at, f.statement`;
   return rows.map(({ objectName, ...row }) => ({ ...parseFact(row), objectName }));
+}
+
+/**
+ * A version of this same claim that the user withdrew (a correction or a
+ * retraction) after every turn the candidate cites. Re-reading those turns, as
+ * consolidation does, is no new evidence, so the claim must not come back; a
+ * later turn that states it again is still heard.
+ */
+export async function withdrawnClaim(
+  db: Queryable,
+  c: Pick<
+    ResolvedCandidate,
+    'namespaceId' | 'subjectId' | 'predicate' | 'objectId' | 'objectLiteral' | 'sourceEpisodeIds'
+  >,
+): Promise<Fact | undefined> {
+  if (c.sourceEpisodeIds.length === 0) return undefined;
+  const rows = await db<FactRow[]>`
+    select f.* from facts f
+    where f.namespace_id = ${c.namespaceId} and f.subject_id = ${c.subjectId}
+      and f.predicate = ${c.predicate}
+      and f.object_id is not distinct from ${c.objectId}::uuid
+      and lower(f.object_literal) is not distinct from lower(${c.objectLiteral}::text)
+      and exists (
+        select 1 from fact_revisions r
+        where r.old_fact_id = f.id and r.kind in ('correction', 'retraction'))
+      and f.invalidated_at >= (
+        select max(e.occurred_at) from episodes e
+        where e.id = any(${uuidArray(db, c.sourceEpisodeIds)}))
+    order by f.invalidated_at desc
+    limit 1`;
+  const row = rows[0];
+  return row && parseFact(row);
 }
 
 const fingerprint = (facts: readonly Belief[]) => facts.map((f) => f.id).join(',');
@@ -90,6 +123,21 @@ export function createConflictResolver(
           await lockNamespace(tx, c.namespaceId);
           const existing = await currentBeliefs(tx, c);
           const proposed = classify(c, existing, spec, cfg);
+          // A merge only adds provenance to a current belief; anything else
+          // would bring back a claim the user withdrew after its evidence.
+          if (proposed.kind !== 'merge') {
+            const withdrawn = await withdrawnClaim(tx, c);
+            if (withdrawn) {
+              const reason = 'withdrawn after the turns it cites';
+              const reject = {
+                kind: 'reject',
+                target: withdrawn,
+                resolver: 'rule',
+                reason,
+              } as const;
+              return applyDecision(tx, reject, c, clock.now());
+            }
+          }
           // Rule decisions are pure and fast, so they apply under the lock
           // straight away; concurrent writers can't starve them.
           if (proposed.kind !== 'adjudicate') return applyDecision(tx, proposed, c, clock.now());

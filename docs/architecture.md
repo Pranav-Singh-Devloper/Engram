@@ -78,7 +78,7 @@ An **update** ("moved to Berlin in March") runs in one transaction, at one times
 2. insert a closed copy of Paris, valid until March;
 3. set the original Paris row's `invalidated_at = t`.
 
-**Corrections** retract. **Backfills** of older history close against the existing history without touching the present, and an overlapping backfill goes to the adjudicator. SPEC §7.4's 14 cases are integration tests.
+**Corrections** retract. **Backfills** of older history close against the existing history without touching the present, and an overlapping backfill goes to the adjudicator. SPEC §7.4's 15 cases are integration tests, and consolidation can't revive a claim the user corrected (ADR-021).
 
 ## Entity resolution and similarity profiles ([chapter 5](https://engram-lime.vercel.app/architecture#resolution))
 

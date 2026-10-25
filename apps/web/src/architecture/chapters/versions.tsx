@@ -182,7 +182,9 @@ export function Versions() {
         </table>
       </div>
 
-      <h3 className="mt-10 text-lg font-semibold">The 14 cases that must always hold</h3>
+      <h3 className="mt-10 text-lg font-semibold">
+        The {cases.length} cases that must always hold
+      </h3>
       <p className="mt-1 text-sm text-muted-foreground">
         SPEC §7.4, each proven by a test that runs on every commit.
       </p>

@@ -394,3 +394,23 @@ embeddinggemma:300m@85462619ee72, at Gemini's thresholds vs the chosen profile:
 - Fixing cross-turn context first: a prompt change, with goldens and a bench rerun; ledger row 49, P11.
 
 **Consequences.** The showcase's timeline has no Marseille row. The gap is a real product limitation: a chat visitor's "before that" fails the same way, and the README says so.
+
+## ADR-021 — A withdrawn claim isn't revived by re-reading its turns
+
+**Date:** 2026-10-25 · **Status:** Accepted (P10)
+
+**Context.** On the hosted demo, a visitor said "I live in Paris and work at Initech.", then in another session "Actually, I work at Acme, not Initech." The correction retracted Initech. That night consolidation summarized the first session on its own, emitted "works at Initech" from the first turn, and found no current belief to stop it: retracted rows aren't current beliefs (§7.2 step 1). Initech came back beside Acme. Clusters are per session (§8), so a cluster can't see a correction made in another one.
+
+**Decision.** A new rule, SPEC §7.2 step 9. Unless the candidate merges, it is rejected when a version of the same claim was corrected or retracted at or after the latest turn it cites. The check reads `fact_revisions` (`correction`, `retraction`) and the time columns, not `status`. The rejection is logged with its reason.
+
+**Alternatives.**
+
+- Show consolidation the namespace's corrections in the prompt: costs tokens on every cluster, and still depends on the model obeying.
+- Cluster across sessions: changes what a summary is, and only moves the boundary.
+- Skip candidates that cite only already-extracted turns: also drops the confirmations that promote facts to `long_term` (§8).
+
+**Consequences.**
+
+- Re-reading the same evidence can't undo a user's correction, and a later turn that states the claim again is still heard. Integration tests cover all three cases, the first replaying the demo incident.
+- One extra query per non-merge resolution.
+- The committed bench reports predate the rule and were not re-run (free quota). It can only change items where consolidation re-reads turns that came before a correction.
