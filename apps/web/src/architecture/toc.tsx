@@ -66,7 +66,7 @@ export function Toc({ entries }: { entries: TocEntry[] }) {
 export function MobileToc({ entries }: { entries: TocEntry[] }) {
   const [active, setActive] = useActive(entries);
   return (
-    <label className="sticky top-14 z-30 -mx-4 block border-b bg-background/90 px-4 py-2 backdrop-blur lg:hidden">
+    <label className="sticky top-[4.25rem] z-30 -mx-4 block border-b bg-background/90 px-4 py-2 backdrop-blur lg:hidden">
       <span className="sr-only">Jump to chapter</span>
       <select
         value={active}

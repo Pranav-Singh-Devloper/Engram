@@ -6,6 +6,10 @@ import Link from 'next/link';
 import { z } from 'zod';
 import { api } from '@/lib/api';
 import { pct } from '@/lib/format';
+import { BeamFlow } from '../fx/beam-flow';
+import { BorderBeam } from '../fx/border-beam';
+import { Marquee } from '../fx/marquee';
+import { SpotlightCard } from '../fx/spotlight-card';
 import { CountUp } from './count-up';
 
 const Stats = z.object({
@@ -39,68 +43,14 @@ export function LiveStats() {
       </p>
       <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {cells.map(([label, n]) => (
-          <div key={label} className="rounded-lg border bg-card p-4">
-            <dd className="text-3xl font-semibold tracking-tight">
+          <SpotlightCard key={label} className="p-5">
+            <dd className="text-4xl font-semibold tracking-tight tabular-nums">
               <CountUp value={n} />
             </dd>
             <dt className="mt-1 text-xs text-muted-foreground">{label}</dt>
-          </div>
+          </SpotlightCard>
         ))}
       </dl>
-    </section>
-  );
-}
-
-const STEPS = [
-  {
-    n: '01',
-    title: 'Remember',
-    body: 'Each turn is stored as an episode, then one validated model call extracts its facts, with time hints resolved against when it was said.',
-    href: '/chat',
-    cta: 'Try it in the chat',
-  },
-  {
-    n: '02',
-    title: 'Resolve',
-    body: 'Entities are matched by name, alias, embedding or a model call. A changed fact closes the old version instead of overwriting it, so history is never lost.',
-    href: '/memories?all=true',
-    cta: 'See every version',
-  },
-  {
-    n: '03',
-    title: 'Recall',
-    body: 'Facts and turns are found by vectors, full text and the entity graph, fused by reciprocal rank, and Engram abstains when nothing is close enough.',
-    href: '/chat',
-    cta: 'Watch which memories get used',
-  },
-  {
-    n: '04',
-    title: 'Forget and consolidate',
-    body: 'Unused memories decay on a forgetting curve until they are archived; sessions are summarized into long-term facts.',
-    href: '/memories',
-    cta: 'Inspect retention scores',
-  },
-] as const;
-
-export function HowItWorks() {
-  return (
-    <section className="mx-auto max-w-6xl px-4 pb-16">
-      <h2 className="text-2xl font-semibold tracking-tight">How it works</h2>
-      <ol className="mt-6 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-        {STEPS.map((s) => (
-          <li key={s.n} className="flex flex-col rounded-lg border bg-card p-5">
-            <span className="font-mono text-xs text-accent">{s.n}</span>
-            <h3 className="mt-2 font-medium">{s.title}</h3>
-            <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
-            <Link
-              href={s.href}
-              className="mt-4 inline-flex items-center gap-1 text-sm text-accent hover:underline"
-            >
-              {s.cta} <ArrowRight className="size-3.5" />
-            </Link>
-          </li>
-        ))}
-      </ol>
     </section>
   );
 }
@@ -116,17 +66,18 @@ export function Measured() {
   const acc = (r: typeof test, m: string) => (r.modes[m] ? pct(r.modes[m].accuracy) : '—');
   return (
     <section className="mx-auto max-w-6xl px-4 pb-16">
-      <h2 className="text-2xl font-semibold tracking-tight">Measured, not asserted</h2>
+      <p className="font-mono text-xs tracking-widest text-accent uppercase">Benchmarks</p>
+      <h2 className="mt-2 text-3xl font-semibold tracking-tight">Measured, not asserted.</h2>
       <div className="mt-6 grid gap-3 md:grid-cols-3">
-        <div className="rounded-lg border bg-card p-5">
+        <SpotlightCard className="p-5">
           <p className="font-mono text-xs text-muted-foreground">test split · {test.items} items</p>
           <p className="mt-2 text-3xl font-semibold">{acc(test, 'engram')}</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Engram, against {acc(test, 'buffer')} for a 20-turn buffer. Rag and full context also
             reach {acc(test, 'rag')}: these histories fit in one prompt.
           </p>
-        </div>
-        <div className="rounded-lg border bg-card p-5">
+        </SpotlightCard>
+        <SpotlightCard className="p-5">
           <p className="font-mono text-xs text-muted-foreground">
             LongMemEval-S · {lme.items} items
           </p>
@@ -136,8 +87,8 @@ export function Measured() {
             ~470-turn histories, using a fraction of full context&apos;s ~48k-token prompts.
             Reported as is.
           </p>
-        </div>
-        <div className="rounded-lg border bg-card p-5">
+        </SpotlightCard>
+        <SpotlightCard className="p-5">
           <p className="font-mono text-xs text-muted-foreground">judge validity</p>
           <p className="mt-2 text-3xl font-semibold">
             κ {kappa === null || kappa === undefined ? '—' : kappa.toFixed(2)}
@@ -146,7 +97,7 @@ export function Measured() {
             Agreement between the LLM judge and {q.data?.agreement?.pooled.n ?? 0} blind hand
             labels.
           </p>
-        </div>
+        </SpotlightCard>
       </div>
       <Link
         href="/evals"
@@ -161,21 +112,61 @@ export function Measured() {
 export function UseIt() {
   return (
     <section className="mx-auto max-w-6xl px-4 pb-24">
-      <h2 className="text-2xl font-semibold tracking-tight">Use it from your agent</h2>
+      <p className="font-mono text-xs tracking-widest text-accent uppercase">Use it</p>
+      <h2 className="mt-2 text-3xl font-semibold tracking-tight">Plug it into your agent.</h2>
       <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
         Engram is an MCP server: six tools (remember, recall, entities, history, forget,
         consolidate) and a stats resource, over stdio for a local install or streamable HTTP for a
         hosted one.
       </p>
-      <pre className="mt-4 overflow-x-auto rounded-lg border bg-card p-4 font-mono text-xs leading-relaxed">
-        <code>{`# local (stdio)
+      <div className="mt-8 rounded-2xl border bg-card/60 p-4">
+        <BeamFlow />
+      </div>
+      <BorderBeam className="mt-4 rounded-2xl" duration={9}>
+        <pre className="overflow-x-auto rounded-2xl bg-card p-5 font-mono text-xs leading-relaxed">
+          <code>{`# local (stdio)
 claude mcp add engram -e ENGRAM_NAMESPACE=me -- \\
   /path/to/Engram/packages/mcp/node_modules/.bin/tsx /path/to/Engram/packages/mcp/src/stdio.ts
 
 # hosted (HTTP)
 claude mcp add --transport http engram https://<your-deploy>/api/mcp \\
   --header "Authorization: Bearer <token>"`}</code>
-      </pre>
+        </pre>
+      </BorderBeam>
+    </section>
+  );
+}
+
+const STACK = [
+  'TypeScript',
+  'Postgres 17',
+  'pgvector · HNSW',
+  'Full-text search',
+  'Model Context Protocol',
+  'Gemini',
+  'Ollama',
+  'Next.js 16',
+  'Vercel',
+  'Neon',
+  'zod',
+  'three.js',
+  'GitHub Actions',
+];
+
+/** What it's built on, as a slow strip that pauses on hover. */
+export function Stack() {
+  return (
+    <section className="pb-20">
+      <Marquee>
+        {STACK.map((t) => (
+          <span
+            key={t}
+            className="rounded-full border bg-card/60 px-4 py-1.5 font-mono text-xs whitespace-nowrap text-muted-foreground transition-colors hover:border-accent/60 hover:text-foreground"
+          >
+            {t}
+          </span>
+        ))}
+      </Marquee>
     </section>
   );
 }

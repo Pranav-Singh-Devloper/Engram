@@ -12,7 +12,8 @@ vi.mock('next/navigation', () => ({
 }));
 
 const { Hero } = await import('./components/landing/hero');
-const { HowItWorks, UseIt } = await import('./components/landing/sections');
+const { Stack, UseIt } = await import('./components/landing/sections');
+const { Bento } = await import('./components/landing/bento');
 const { Playground } = await import('./components/chat/playground');
 const { Inspector } = await import('./components/memories/inspector');
 const { EntityTimeline } = await import('./components/timeline/entity-timeline');
@@ -26,12 +27,14 @@ describe('pages render', () => {
     const html = render(
       <>
         <Hero />
-        <HowItWorks />
+        <Stack />
+        <Bento />
         <UseIt />
       </>,
     );
     expect(html).toContain('knows when it learned');
-    expect(html).toContain('Forget and consolidate');
+    expect(html).toContain('Forgetting on purpose');
+    expect(html).toContain('Model Context Protocol');
     expect(html).toContain('claude mcp add');
   });
 
