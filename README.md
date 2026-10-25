@@ -16,6 +16,7 @@
   <img alt="MCP: 6 tools" src="https://img.shields.io/badge/MCP-6%20tools-8b5cf6">
   <img alt="LongMemEval-S" src="https://img.shields.io/badge/benchmark-LongMemEval--S-f59e0b">
   <img alt="runs on free tiers" src="https://img.shields.io/badge/cost-free%20tiers-f59e0b">
+  <a href="LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-34d399"></a>
 </p>
 
 <p align="center">
@@ -304,6 +305,10 @@ docs              SPEC.md (the source of truth), phase plans, architecture, benc
 Quality gates, all green on every commit: `pnpm typecheck`, `pnpm test`, `pnpm lint` and `pnpm format:check`. Unit tests use a scripted model and never touch the network. Integration tests use the local Docker database.
 
 ---
+
+## Licence
+
+[MIT](LICENSE). Use it, change it, ship it; keep the copyright notice.
 
 <p align="center">
   <picture>

@@ -417,3 +417,19 @@ embeddinggemma:300m@85462619ee72, at Gemini's thresholds vs the chosen profile:
 - Re-reading the same evidence can't undo a user's correction, and a later turn that states the claim again is still heard. Integration tests cover all three cases, the first replaying the demo incident.
 - One extra query per non-merge resolution.
 - The committed bench reports predate the rule and were not re-run (free quota). It can only change items where consolidation re-reads turns that came before a correction.
+
+## ADR-022 — MIT licence
+
+**Date:** 2026-10-25 · **Status:** Accepted (P10)
+
+**Context.** The repository had no licence, so legally it was all rights reserved: readable, but not reusable. The project is meant to be tried, forked and judged.
+
+**Decision.** MIT, chosen by the project's author. `LICENSE` sits at the root, and every package declares `"license": "MIT"`.
+
+**Alternatives.**
+
+- Apache-2.0: adds an explicit patent grant, which matters little for a single-author project, and is longer to read.
+- GPL-3.0: forces derivatives open, which deters the companies that might evaluate it.
+- No licence: rules out the reuse the project is shared for.
+
+**Consequences.** Anyone may use, modify and redistribute it, commercially too, provided the copyright notice stays. There's no warranty. Third-party dependencies keep their own licences.
