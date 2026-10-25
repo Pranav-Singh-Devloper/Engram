@@ -151,7 +151,7 @@ Each citation states what Engram *took* from the work ("inspired by", "implement
     - calibration error rates against the calibration summary;
     - the consolidation skip rule against the engine run;
     - the threshold markers against `SIMILARITY_PROFILES`.
-  - **embeddinggemma has no per-pair scores yet.** Computing them needs Ollama, which is paused at the user's request. Chapter 5 shows its summary ranges and says so; ledger row 47 carries the rest.
+  - **embeddinggemma has no per-pair scores yet.** Computing them needs Ollama, which is paused at the user's request. Chapter 5 shows its summary ranges and says so; ledger row 47 carries the rest. (Done in P10 on 2026-10-26: per-pair scores and the local galaxy.)
   - **KaTeX** 0.19.0 was added, as approved. It ships its own types, so `@types/katex` was removed again.
   - **Phone checks found two layout faults.** Charts drawn in a fixed 760-wide viewBox shrank their labels to about 5 px at 390 px. They now measure their real width (`useWidth`). The formulas also overflowed, so phones get a stacked form.
   - **Generated files churn.** Each explorer build replays the story with fresh UUIDs. A regenerated file whose content didn't change is restored, not committed.

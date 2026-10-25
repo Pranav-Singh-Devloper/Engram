@@ -1,7 +1,7 @@
 // The galaxy plots one point per distinct real text, inside the unit ball the
 // projection was rescaled to, and its neighbourhood statistics are sound.
 import { describe, expect, it } from 'vitest';
-import { GALAXY, PERSONAS, neighbourStats, neighbours } from './galaxy';
+import { GALAXY, PERSONAS, SPACES, neighbourStats, neighbours } from './galaxy';
 
 describe('galaxy data', () => {
   it('has one point per distinct text, inside the unit ball', () => {
@@ -20,13 +20,25 @@ describe('galaxy data', () => {
     });
   });
 
-  it('shows the projection groups by meaning, not by speaker', () => {
-    const stats = neighbourStats(GALAXY.points);
+  it('shows each space groups by meaning, not by speaker', () => {
     const chance = 1 / PERSONAS.length;
-    for (const s of stats) {
-      expect(s.sameKind, s.kind).toBeGreaterThan(0.6);
-      // Persona agreement stays near chance: users aren't separated by embeddings.
-      expect(Math.abs(s.samePersona - chance), s.kind).toBeLessThan(0.06);
+    for (const g of SPACES) {
+      for (const s of neighbourStats(g.points)) {
+        expect(s.sameKind, `${g.space} ${s.kind}`).toBeGreaterThan(0.6);
+        // Persona agreement stays near chance: users aren't separated by embeddings.
+        expect(Math.abs(s.samePersona - chance), `${g.space} ${s.kind}`).toBeLessThan(0.06);
+      }
     }
+  });
+
+  it('holds the same texts in the same order in both spaces (ledger row 47)', () => {
+    const [gemini, local] = SPACES;
+    expect(gemini?.space).toBe('gemini-embedding-2');
+    expect(local?.space).toMatch(/^embeddinggemma:300m@/);
+    expect(local?.points.map((p) => [p.text, p.kind, p.persona])).toEqual(
+      gemini?.points.map((p) => [p.text, p.kind, p.persona]),
+    );
+    for (const p of local?.points ?? [])
+      expect(Math.hypot(p.x, p.y, p.z)).toBeLessThanOrEqual(1.0001);
   });
 });

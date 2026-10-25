@@ -7,8 +7,8 @@ import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Cite } from '../cite';
-import { GALAXY, PERSONAS, neighbourStats } from '../data/galaxy';
-import type { GalaxyKind } from '../data/galaxy';
+import { GALAXY, PERSONAS, SPACES, neighbourStats } from '../data/galaxy';
+import type { GalaxyKind, GalaxyPoint } from '../data/galaxy';
 
 const Scene = dynamic(() => import('./galaxy-scene'), {
   ssr: false,
@@ -72,9 +72,17 @@ const hasWebGL = () => {
  * Without WebGL: the same points flattened onto the projection's two widest
  * axes (z across, y up), the view the 3D camera starts from.
  */
-function Flat({ colors, alphas }: { colors: Float32Array; alphas: Float32Array }) {
-  const zs = GALAXY.points.map((p) => p.z);
-  const ys = GALAXY.points.map((p) => -p.y);
+function Flat({
+  points,
+  colors,
+  alphas,
+}: {
+  points: readonly GalaxyPoint[];
+  colors: Float32Array;
+  alphas: Float32Array;
+}) {
+  const zs = points.map((p) => p.z);
+  const ys = points.map((p) => -p.y);
   const pad = 0.06;
   const [x0, x1, y0, y1] = [Math.min(...zs), Math.max(...zs), Math.min(...ys), Math.max(...ys)];
   const rgb = (i: number) =>
@@ -87,7 +95,7 @@ function Flat({ colors, alphas }: { colors: Float32Array; alphas: Float32Array }
       role="img"
       aria-label="The embedding galaxy, flattened to two dimensions"
     >
-      {GALAXY.points.map((p, i) => (
+      {points.map((p, i) => (
         <circle key={i} cx={p.z} cy={-p.y} r={0.011} fill={rgb(i)} opacity={alphas[i] ?? 1}>
           <title>{p.text}</title>
         </circle>
@@ -109,7 +117,10 @@ export function Galaxy() {
   const [distance, setDistance] = useState(DEFAULT_DISTANCE);
   const [visible, setVisible] = useState(false);
   const [webgl, setWebgl] = useState<boolean | null>(null);
-  const stats = useMemo(() => neighbourStats(GALAXY.points), []);
+  // Which embedding space to show: Gemini, or local mode's embeddinggemma.
+  const [spaceIndex, setSpaceIndex] = useState(0);
+  const G = SPACES[spaceIndex] ?? GALAXY;
+  const stats = useMemo(() => neighbourStats(G.points), [G]);
 
   useEffect(() => {
     // Creating a WebGL context is the costly part of the check, so it runs in
@@ -150,12 +161,12 @@ export function Galaxy() {
 
   const needle = query.trim().toLowerCase();
   const { colors, alphas, sizes, matches } = useMemo(() => {
-    const n = GALAXY.points.length;
+    const n = G.points.length;
     const colors = new Float32Array(n * 3);
     const alphas = new Float32Array(n);
     const sizes = new Float32Array(n);
     let matches = 0;
-    GALAXY.points.forEach((p, i) => {
+    G.points.forEach((p, i) => {
       const c =
         (mode === 'kind' ? palette?.kind[p.kind] : palette?.persona[p.persona]) ??
         ([1, 1, 1] as const);
@@ -169,10 +180,10 @@ export function Galaxy() {
       sizes[i] = KIND[p.kind].size * (i === picked ? 2.2 : dim ? 0.7 : 1);
     });
     return { colors, alphas, sizes, matches };
-  }, [mode, palette, persona, needle, picked]);
+  }, [G, mode, palette, persona, needle, picked]);
 
-  const pickedPoint = picked === null ? null : GALAXY.points[picked];
-  const hoverPoint = hover ? GALAXY.points[hover.i] : null;
+  const pickedPoint = picked === null ? null : G.points[picked];
+  const hoverPoint = hover ? G.points[hover.i] : null;
   const rect = box.current?.getBoundingClientRect();
 
   return (
@@ -181,12 +192,33 @@ export function Galaxy() {
         Everything Engram recalls by meaning lives in one 768-dimensional space. Gemini Embedding
         <Cite k="lee2025" /> is asked for 768 of its dimensions, which its Matryoshka training makes
         a faithful truncation
-        <Cite k="kusupati2022" />. Below are {GALAXY.points.length} real texts from the dev-long
+        <Cite k="kusupati2022" />. Below are {G.points.length} real texts from the dev-long
         histories, embedded exactly as the engine embeds them and projected to 3D with seeded UMAP
         <Cite k="mcinnes2018" />. Drag to turn it, hover a star to read it, click to pin it.
       </p>
 
       <div className="mt-6 flex flex-wrap items-center gap-2">
+        <div
+          className="inline-flex rounded-md border p-0.5"
+          role="group"
+          aria-label="Embedding space"
+        >
+          {SPACES.map((g, i) => (
+            <button
+              key={g.space}
+              onClick={() => {
+                setSpaceIndex(i);
+              }}
+              aria-pressed={spaceIndex === i}
+              className={cn(
+                'rounded px-2.5 py-0.5 font-mono text-[11px]',
+                spaceIndex === i ? 'bg-accent/15 text-foreground' : 'text-muted-foreground',
+              )}
+            >
+              {g.space.split('@')[0]}
+            </button>
+          ))}
+        </div>
         {(['kind', 'persona'] as const).map((m) => (
           <button
             key={m}
@@ -242,11 +274,11 @@ export function Galaxy() {
           }}
         >
           {webgl === false && palette ? (
-            <Flat colors={colors} alphas={alphas} />
+            <Flat points={G.points} colors={colors} alphas={alphas} />
           ) : (
             webgl && (
               <Scene
-                points={GALAXY.points}
+                points={G.points}
                 colors={colors}
                 alphas={alphas}
                 sizes={sizes}
@@ -387,9 +419,12 @@ export function Galaxy() {
       </div>
 
       <p className="mt-3 max-w-3xl text-xs text-muted-foreground">
-        {GALAXY.method}. Source: {GALAXY.source}. UMAP keeps neighbourhoods, not distances: two
-        clusters far apart here aren’t necessarily far apart in 768-d, and recall never uses this
-        projection. The same view for embeddinggemma needs a local Ollama run (ledger row 47).
+        {G.method}. Source: {G.source}. UMAP keeps neighbourhoods, not distances: two clusters far
+        apart here aren’t necessarily far apart in 768-d, and recall never uses this projection.
+        Switch the space to see local mode’s embeddinggemma place the same texts: the shapes differ,
+        but the neighbourhoods agree (about three quarters of a story turn’s neighbours are story
+        turns in either, and persona stays near chance). The coordinates themselves can’t be
+        compared, which is why a namespace never mixes the two spaces (ADR-017).
       </p>
     </div>
   );

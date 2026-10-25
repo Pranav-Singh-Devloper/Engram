@@ -1,6 +1,8 @@
 // The embedding galaxy (bench explorer:data): real dev-long turns and recalled
-// facts, embedded with Gemini and projected to 3D with seeded UMAP.
+// facts, embedded with Gemini, and again with embeddinggemma (local mode), each
+// projected to 3D with seeded UMAP. Both hold the same texts in the same order.
 import raw from '@/content/generated/galaxy.json';
+import rawLocal from '@/content/generated/galaxy-local.json';
 
 export type GalaxyKind = 'story' | 'filler' | 'fact';
 
@@ -13,12 +15,17 @@ export interface GalaxyPoint {
   z: number;
 }
 
-export const GALAXY = raw as {
+export interface Galaxy {
   space: string;
   method: string;
   source: string;
   points: GalaxyPoint[];
-};
+}
+
+export const GALAXY = raw as Galaxy;
+
+/** The spaces chapter 9 can switch between: Gemini first, then local mode's. */
+export const SPACES: readonly Galaxy[] = [GALAXY, rawLocal as Galaxy];
 
 export const PERSONAS = [...new Set(GALAXY.points.map((p) => p.persona))].sort();
 

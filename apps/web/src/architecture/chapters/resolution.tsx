@@ -271,7 +271,7 @@ function DotPlot({ cal, family }: { cal: Calibration; family: Family }) {
   );
 }
 
-/** embeddinggemma has summary ranges only: per-pair scores need a local Ollama run. */
+/** A fallback for a model whose per-pair scores weren't recorded: summary ranges only. */
 function Bands({ cal, family }: { cal: Calibration; family: Family }) {
   const [box, W] = useWidth<HTMLDivElement>();
   const s = cal.families[family];
@@ -327,8 +327,8 @@ function Bands({ cal, family }: { cal: Calibration; family: Family }) {
         ))}
       </svg>
       <p className="mt-2 text-xs text-muted-foreground">
-        Ranges from the calibration summary. Per-pair scores for this model weren’t recorded: they
-        need a local Ollama run, queued as ledger row 47.
+        Ranges from the calibration summary. Per-pair scores for this model weren’t recorded; `pnpm
+        bench:calibrate` writes them.
       </p>
     </div>
   );
