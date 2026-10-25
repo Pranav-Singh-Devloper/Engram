@@ -174,7 +174,7 @@ The landing page's fallback at the daily cap is covered by `chat.int.test.ts` ("
 - **"I don't know." replied to statements.** The composer abstains on anything that isn't a question. When it abstains on a statement, the chat now shows "Noted.". This is a display-only change; the engine, stored turns and bench are untouched.
 - **A failing web test was pushed once (4538b7e).** A piped `grep` hid the test run's exit code. The next commit (db1fd37) fixed it within minutes, and nothing was force-pushed.
 
-**Brand and site.** The logos are in `assets/logos/` (originals) and `assets/brand/` (derived by `scripts/brand-assets.py`, plus the social preview). The site has an icon, an OG image, a footer and a branded 404 page, and the landing page was redesigned with a floating glass nav. The effects are hand-written, with no copied components (licences unclear) and no new dependency.
+**Brand and site.** The logos are in `assets/logos/` (originals) and `assets/brand/` (derived by `scripts/brand-assets.py`, plus the social preview). The site has an icon, an OG image, a footer and a branded 404 page, and the landing page was redesigned with a floating glass nav. The effects are hand-written, with no copied components (licences unclear) and no new dependency. Measured on production (headless Chrome, animations on, 3 runs): 60 fps over 5 s and no long tasks. Load took 1.5 s cold and about 0.1 s warm.
 
 **Fresh clone (task 10, 2026-10-25).** The three paths were followed literally from `git clone`. Docker ran under a separate compose project name (the file pins `name: engram`, which would have reused the dev volume), with the dev DB stopped.
 
