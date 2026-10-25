@@ -1,6 +1,7 @@
 import { afterAll, describe, expect, it } from 'vitest';
 import { getEpisode } from '../db/episodes.js';
 import { FakeProvider } from '../providers/fake.js';
+import { ProviderBlockedError } from '../providers/provider.js';
 import { testDb, withTestNamespace } from '../testing/db.js';
 import { aboutSelf } from '../testing/scenario.js';
 import { ingest } from './ingest.js';
@@ -54,6 +55,32 @@ describe('processPending', () => {
       const r = await processPending(db, new FakeProvider(), { namespaceId: ns.namespace.id });
       expect(r).toMatchObject({ processed: 0, remaining: 2 });
       expect(r.error).toMatch(/No scripted processEpisode/);
+    });
+  });
+
+  // A refused prompt is refused every time: it must not hold up the queue.
+  it('marks a turn the model refuses as processed with no facts, and moves on', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const fake = new FakeProvider()
+        .when('processEpisode', 'refused turn', () => {
+          throw new ProviderBlockedError('The model refused the prompt (PROHIBITED_CONTENT)', '{}');
+        })
+        .when('processEpisode', () => true, {
+          importance: 0.5,
+          candidates: [aboutSelf('likes', 'jazz', { type: 'concept' })],
+        });
+      const refused = await turn(ns.namespace.id, 'A refused turn.', '2024-01-01T00:00:00Z');
+      const next = await turn(ns.namespace.id, 'I love jazz.', '2024-01-02T00:00:00Z');
+      expect(await processPending(db, fake, { namespaceId: ns.namespace.id })).toEqual({
+        processed: 2,
+        remaining: 0,
+        error: null,
+      });
+      expect((await getEpisode(db, refused.id))?.processedAt).not.toBeNull();
+      expect((await getEpisode(db, next.id))?.processedAt).not.toBeNull();
+      const facts = await db<{ statement: string }[]>`
+        select statement from facts where namespace_id = ${ns.namespace.id}`;
+      expect(facts.map((f) => f.statement)).toEqual(['The user likes jazz.']);
     });
   });
 });

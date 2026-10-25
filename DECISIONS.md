@@ -433,3 +433,23 @@ embeddinggemma:300m@85462619ee72, at Gemini's thresholds vs the chosen profile:
 - No licence: rules out the reuse the project is shared for.
 
 **Consequences.** Anyone may use, modify and redistribute it, commercially too, provided the copyright notice stays. There's no warranty. Third-party dependencies keep their own licences.
+
+## ADR-023 — A refused prompt is skipped, not retried
+
+**Date:** 2026-10-26 · **Status:** Accepted (P10, found running ledger row 46)
+
+**Context.** Resuming LongMemEval's `engram_consolidated` run, Gemini answered one summarize call with HTTP 200, no candidates and `promptFeedback.blockReason: PROHIBITED_CONTENT`. The structured layer raised a generic "empty reply" error, and consolidation, which caught nothing per cluster, stopped the whole run. The same refusal is returned for the same prompt every time, and the bench cache had stored it. Two latent bugs were behind it: one refused cluster would also stop every nightly consolidation, and `processPending` stops at the first failure, so one refused turn would hold up every pending turn after it.
+
+**Decision.**
+
+- A reply with a block reason (`promptFeedback.blockReason`, or a finish reason of SAFETY, PROHIBITED_CONTENT, BLOCKLIST, SPII or RECITATION) raises `ProviderBlockedError`, a subclass of `ProviderOutputError`, with no repair round.
+- `processEpisode` marks a refused turn processed with no facts; the turn stays stored and recallable.
+- `consolidate` handles each cluster separately: a refused cluster is marked consolidated without a summary (`blocked`), a summary that fails validation leaves its cluster for the next run (`failed`), and the run goes on. Both counts appear in the job log, the MCP tool's result and the bench report.
+
+**Alternatives.**
+
+- Retry refused prompts: they fail identically, so this only spends quota.
+- Rephrase or truncate the prompt to get past the filter: changes what is summarised, silently.
+- Skip the bench item: hides the failure and changes the denominator.
+
+**Consequences.** A refused cluster contributes no summary and no promoted facts; its turns keep their extracted facts and stay recallable. Gemini's safety settings are left at their defaults.

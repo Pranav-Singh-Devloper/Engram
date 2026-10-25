@@ -327,6 +327,12 @@ export function renderReport(results: readonly ItemResult[], meta: ReportMeta): 
       }
     }
     lines.push('## Consolidation', '');
+    const blocked = total((c) => c.blocked ?? 0);
+    if (blocked > 0) {
+      lines.push(
+        `- Clusters the model refused to summarize (safety block), consolidated without a summary: ${String(blocked)}.`,
+      );
+    }
     lines.push(
       `- Per item, on average: ${(total((c) => c.summarized) / consolidated.length).toFixed(1)} clusters summarized, ${(total((c) => c.skipped) / consolidated.length).toFixed(1)} skipped without a call, ${(total((c) => c.longTermFacts) / consolidated.length).toFixed(1)} current long_term facts.`,
       `- Candidate outcomes: ${

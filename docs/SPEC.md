@@ -290,6 +290,8 @@ The write path is split into a fast step and a slow step so interactive clients 
 3. **Conflict detection and resolution** per candidate (§7).
 4. Persist facts with provenance (`source_episode_ids`); embed statements; set `processed_at`.
 
+A turn the model refuses outright (a safety block) is marked processed with no facts. It stays stored and recallable, and can't hold up the turns queued behind it (ADR-023).
+
 **Who awaits `process`:**
 - Chat playground: runs it after the response (Next.js post-response work; verify the current API at build time).
 - MCP `engram_remember`: awaits by default so the agent sees what was stored (`wait: false` opts out).
@@ -431,6 +433,7 @@ Purpose: compress episodic memory into durable semantic memory on a schedule —
   - a one-paragraph summary, stored as an embedded, recallable `kind = 'summary'` episode with `summarizes` set. Summaries are never extracted. Source episodes are marked `consolidated`.
 - **Reuse:** every candidate goes through the normal write path (§6.1 steps 2–4), the same `resolveCandidates` pipeline extraction uses. Provenance-aware merge (§7.2.3) means a fact re-extracted from its own turns merges with confidence unchanged; only a newly cited turn raises it.
 - **Tiering:** facts created or confirmed by consolidation move from `working` to `long_term`. This is the **only** path into `long_term` (a test scans the source to enforce it). Versions copy their tier, so the history of a long-term fact stays long-term.
+- **Refusals and bad replies:** a cluster the model refuses to summarize (a safety block, `ProviderBlockedError`) is marked consolidated without a summary, since the same prompt is refused every time; a summary that fails validation leaves its cluster for the next run. Neither stops the run (ADR-023).
 - **After a purge:** a summary deleted by a hard purge (§9.3) leaves its surviving turns unconsolidated, so the next run regenerates it; the run first re-embeds turns whose embeddings a redaction removed.
 
 ---

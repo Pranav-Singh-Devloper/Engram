@@ -34,6 +34,15 @@ export class ProviderOutputError extends ProviderError {
   }
 }
 
+/**
+ * The model refused the prompt itself (a safety block, e.g. Gemini's
+ * PROHIBITED_CONTENT). The same input is refused every time, so callers give
+ * up on it instead of retrying.
+ */
+export class ProviderBlockedError extends ProviderOutputError {
+  override name = 'ProviderBlockedError';
+}
+
 /** A non-retryable HTTP failure, or a retryable one that ran out of attempts. */
 export class ProviderHttpError extends ProviderError {
   override name = 'ProviderHttpError';

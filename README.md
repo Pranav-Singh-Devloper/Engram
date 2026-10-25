@@ -256,6 +256,7 @@ Every significant choice is an ADR in [DECISIONS.md](DECISIONS.md), with the alt
 
 - **Free-tier data terms.** Gemini's free tier may use inputs to improve Google's products, and human reviewers may read them. Local mode avoids that. Its boundary is exact: local mode keeps _Engram's own processing_ on your machine, but whatever `engram_recall` returns to a cloud agent goes to that agent's model provider.
 - **Extraction sees one turn at a time.** A turn that refers back ("And before that, Marseille.") extracts nothing, in chat as in the showcase, whose timeline lacks that row for this reason (ADR-020; to be fixed in P11).
+- **Refused prompts.** When the model's safety filter refuses a turn or a consolidation cluster, it adds no facts or summary, and the turn stays recallable (ADR-023).
 - **Extraction errors.** Structured replies are validated and repaired once. Locally, 2% of calls still fail (qwen3.5:9b), and a failed turn adds no facts, though it stays recallable. Consolidation occasionally infers a weak fact: 3 of the 10 distinct facts it inserted on the test split.
 - **Entity disambiguation** is the likeliest silent error. "Rob" and "Robert" can end up as two entities: the duplicate-entity rate is 0% on dev and dev-long, but nicknames aren't specially handled.
 - **Memory depends on clients calling `engram_remember`.** An agent that never calls it stores nothing.

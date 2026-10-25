@@ -6,6 +6,7 @@ import { config } from '../config/index.js';
 import { getFact } from '../db/facts.js';
 import { forget } from '../forget/forget.js';
 import { processEpisode } from '../ingest/process.js';
+import { ProviderBlockedError, ProviderOutputError } from '../providers/provider.js';
 import { SELF_REF } from '../providers/contracts.js';
 import type { FactCandidate } from '../providers/contracts.js';
 import { testDb, withTestNamespace } from '../testing/db.js';
@@ -273,6 +274,44 @@ describe('consolidate: withdrawn claims', () => {
       expect(r.outcomes.merged).toBe(1);
       expect(r.promoted).toBe(1);
       expect(await employers(s)).toEqual(['Acme']);
+    });
+  });
+});
+
+describe('consolidate: summaries the model refuses or gets wrong', () => {
+  const tellJazz = (s: Scenario) =>
+    s.tell({
+      at: '2024-01-15T09:00:00Z',
+      content: 'I love jazz.',
+      candidates: [aboutSelf('likes', 'jazz', { type: 'concept' })],
+    });
+
+  // LongMemEval, 2026-10-26: one refused cluster stopped the whole run.
+  it('marks a refused cluster consolidated and keeps going', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const s = new Scenario(db, ns);
+      await tellJazz(s);
+      s.fake.when('summarize', '', () => {
+        throw new ProviderBlockedError('The model refused the prompt (PROHIBITED_CONTENT)', '{}');
+      });
+      const r = await run(s);
+      expect(r).toMatchObject({ blocked: 1, failed: 0, summarized: 0, clusters: 1 });
+      const eps = await episodes(s);
+      expect(eps.filter((e) => e.kind === 'summary')).toHaveLength(0);
+      expect(eps.every((e) => e.consolidated)).toBe(true);
+      expect(await run(s)).toMatchObject({ clusters: 0, blocked: 0 });
+    });
+  });
+
+  it('leaves a cluster with an invalid summary for the next run', async () => {
+    await withTestNamespace(db, async (ns) => {
+      const s = new Scenario(db, ns);
+      await tellJazz(s);
+      s.fake.when('summarize', '', () => {
+        throw new ProviderOutputError('Reply failed validation after one repair', '{}');
+      });
+      expect(await run(s)).toMatchObject({ failed: 1, blocked: 0, summarized: 0 });
+      expect((await episodes(s)).some((e) => !e.consolidated)).toBe(true);
     });
   });
 });

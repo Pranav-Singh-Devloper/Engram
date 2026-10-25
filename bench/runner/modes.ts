@@ -73,6 +73,8 @@ export interface ModeAnswer {
   consolidation?: {
     summarized: number;
     skipped: number;
+    /** Clusters the model refused to summarize (absent in results recorded before 2026-10-26). */
+    blocked?: number;
     promoted: number;
     longTermFacts: number;
     outcomes: Record<string, number>;
@@ -191,6 +193,7 @@ async function engram(
     const consolidation: NonNullable<ModeAnswer['consolidation']> = {
       summarized: 0,
       skipped: 0,
+      blocked: 0,
       promoted: 0,
       longTermFacts: 0,
       outcomes: {},
@@ -208,6 +211,7 @@ async function engram(
       });
       consolidation.summarized += r.summarized;
       consolidation.skipped += r.skipped;
+      consolidation.blocked = (consolidation.blocked ?? 0) + r.blocked;
       consolidation.promoted += r.promoted;
       for (const [k, n] of Object.entries(r.outcomes)) {
         consolidation.outcomes[k] = (consolidation.outcomes[k] ?? 0) + n;

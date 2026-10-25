@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ProviderOutputError } from './provider.js';
+import { ProviderBlockedError, ProviderOutputError } from './provider.js';
 
 /** Sends a generateContent request body and returns the parsed response JSON. */
 export type GeneratePost = (body: unknown) => Promise<unknown>;
@@ -37,6 +37,7 @@ const GenerateResponse = z.object({
       }),
     )
     .optional(),
+  promptFeedback: z.object({ blockReason: z.string().optional() }).optional(),
   usageMetadata: z
     .object({
       promptTokenCount: z.number().optional(),
@@ -46,11 +47,21 @@ const GenerateResponse = z.object({
     .optional(),
 });
 
+/** Finish reasons that mean the model refused, not that it ran out or failed. */
+const BLOCKED = new Set(['SAFETY', 'PROHIBITED_CONTENT', 'BLOCKLIST', 'SPII', 'RECITATION']);
+
 function replyText(json: unknown): string {
   const res = GenerateResponse.parse(json);
   const candidate = res.candidates?.[0];
   const text = candidate?.content?.parts.map((p) => p.text ?? '').join('') ?? '';
   if (text === '') {
+    const reason = res.promptFeedback?.blockReason ?? candidate?.finishReason;
+    if (res.promptFeedback?.blockReason || (reason && BLOCKED.has(reason))) {
+      throw new ProviderBlockedError(
+        `The model refused the prompt (${reason ?? 'blocked'})`,
+        JSON.stringify(json).slice(0, 500),
+      );
+    }
     throw new ProviderOutputError(
       `Empty reply (finishReason: ${candidate?.finishReason ?? 'none'})`,
       JSON.stringify(json).slice(0, 500),

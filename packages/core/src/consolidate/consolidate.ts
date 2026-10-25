@@ -16,6 +16,7 @@ import { createConflictResolver } from '../conflict/resolver.js';
 import { emptyOutcomes, resolveCandidates } from '../ingest/candidates.js';
 import type { CandidateSource } from '../ingest/candidates.js';
 import type { CandidateResolver, ResolutionKind } from '../ingest/resolver.js';
+import { ProviderBlockedError, ProviderOutputError } from '../providers/provider.js';
 import type { Provider } from '../providers/provider.js';
 import { pendingClusters } from './cluster.js';
 import type { Cluster, ConsolidationConfig } from './cluster.js';
@@ -38,6 +39,10 @@ export interface ConsolidateSummary {
   skipped: number;
   /** Clusters left for a later run by the cap. */
   remaining: number;
+  /** Clusters the model refused to summarize; marked consolidated, since it always would. */
+  blocked: number;
+  /** Clusters whose summary failed validation; left for the next run. */
+  failed: number;
   candidates: number;
   promoted: number;
   outcomes: Record<ResolutionKind, number>;
@@ -97,6 +102,8 @@ export async function consolidate(
     summarized: 0,
     skipped: 0,
     remaining: 0,
+    blocked: 0,
+    failed: 0,
     candidates: 0,
     promoted: 0,
     outcomes: emptyOutcomes(),
@@ -122,15 +129,29 @@ export async function consolidate(
     }
     calls++;
 
-    const output = await provider.summarize({
-      episodes: cluster.turns.map((t) => ({
-        id: t.id,
-        role: t.role,
-        content: t.content,
-        occurredAt: t.occurredAt,
-      })),
-      predicates: [...PREDICATE_NAMES],
-    });
+    let output;
+    try {
+      output = await provider.summarize({
+        episodes: cluster.turns.map((t) => ({
+          id: t.id,
+          role: t.role,
+          content: t.content,
+          occurredAt: t.occurredAt,
+        })),
+        predicates: [...PREDICATE_NAMES],
+      });
+    } catch (err) {
+      // One bad cluster mustn't stop the run (it would stop every night).
+      if (!(err instanceof ProviderOutputError)) throw err;
+      if (err instanceof ProviderBlockedError) {
+        await markConsolidated(db, cluster);
+        result.clusters++;
+        result.blocked++;
+      } else {
+        result.failed++;
+      }
+      continue;
+    }
     const turns = new Map(cluster.turns.map((t) => [t.id, t]));
     const sources: CandidateSource[] = [];
     for (const { sourceEpisodeIds, ...raw } of output.candidates) {

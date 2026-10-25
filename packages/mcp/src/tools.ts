@@ -557,6 +557,8 @@ export function registerTools(server: McpServer, deps: ToolDeps): void {
         summarized: z.number().int(),
         skipped: z.number().int(),
         remaining: z.number().int(),
+        blocked: z.number().int(),
+        failed: z.number().int(),
         candidates: z.number().int(),
         promoted: z.number().int(),
         outcomes: Outcomes,
@@ -576,7 +578,9 @@ export function registerTools(server: McpServer, deps: ToolDeps): void {
       const r = await consolidate(db, provider, { namespaceId, clock });
       const lines = [
         `Summarized ${plural(r.summarized, 'cluster')}, skipped ${r.skipped} as small talk` +
-          `${r.remaining > 0 ? `, ${r.remaining} left for the next run` : ''}.`,
+          (r.remaining > 0 ? `, ${r.remaining} left for the next run` : '') +
+          (r.blocked > 0 ? `; the model refused ${plural(r.blocked, 'cluster')}` : '') +
+          `${r.failed > 0 ? `; ${plural(r.failed, 'cluster')} failed and will be retried` : ''}.`,
         `${plural(r.candidates, 'candidate')} (${counts(r.outcomes)}); ${plural(r.promoted, 'fact')} promoted to long-term.`,
       ];
       if (pending.processed > 0 || pending.remaining > 0) {
@@ -593,6 +597,8 @@ export function registerTools(server: McpServer, deps: ToolDeps): void {
           summarized: r.summarized,
           skipped: r.skipped,
           remaining: r.remaining,
+          blocked: r.blocked,
+          failed: r.failed,
           candidates: r.candidates,
           promoted: r.promoted,
           outcomes: r.outcomes,

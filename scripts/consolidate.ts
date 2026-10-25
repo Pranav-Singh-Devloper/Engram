@@ -56,7 +56,8 @@ async function main(): Promise<void> {
       .map(([k, n]) => `${k} ${n}`)
       .join(', ');
     console.log(
-      `summarized ${r.summarized}, skipped ${r.skipped}, remaining ${r.remaining}; ` +
+      `summarized ${r.summarized}, skipped ${r.skipped}, remaining ${r.remaining}` +
+        `${r.blocked > 0 ? `, refused ${r.blocked}` : ''}${r.failed > 0 ? `, failed ${r.failed}` : ''}; ` +
         `${r.candidates} candidate(s) (${outcomes || 'none'}), ${r.promoted} promoted to long_term; ` +
         `${r.reembedded} turn(s) re-embedded; ${((Date.now() - started) / 1000).toFixed(1)}s`,
     );

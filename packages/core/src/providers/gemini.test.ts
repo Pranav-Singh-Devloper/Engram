@@ -5,7 +5,7 @@ import { EMBEDDING_DIM } from '../config/index.js';
 import { GeminiProvider, embedText } from './gemini.js';
 import type { GeminiOptions } from './gemini.js';
 import { postJson, retryInfoMs } from './http.js';
-import { ProviderHttpError, ProviderOutputError } from './provider.js';
+import { ProviderBlockedError, ProviderHttpError, ProviderOutputError } from './provider.js';
 
 type Handler = (url: string, body: unknown) => Response | Promise<Response>;
 
@@ -256,8 +256,33 @@ describe('GeminiProvider.generate', () => {
   });
 
   it('reports an empty reply with its finish reason', async () => {
+    const { provider } = setup(() => json({ candidates: [{ finishReason: 'MAX_TOKENS' }] }));
+    const err = await provider
+      .generate({ system: 's', user: 'u', schema })
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ProviderOutputError);
+    expect(err).not.toBeInstanceOf(ProviderBlockedError);
+    expect(String(err)).toMatch(/MAX_TOKENS/);
+  });
+
+  // Seen on LongMemEval, 2026-10-26: a 200 with no candidates and a block reason.
+  it('marks a refused prompt as blocked, without a repair round', async () => {
+    const { provider, requests } = setup(() =>
+      json({ promptFeedback: { blockReason: 'PROHIBITED_CONTENT' } }),
+    );
+    const err = await provider
+      .generate({ system: 's', user: 'u', schema })
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ProviderBlockedError);
+    expect(String(err)).toMatch(/PROHIBITED_CONTENT/);
+    expect(requests).toHaveLength(1);
+  });
+
+  it('marks a safety finish as blocked', async () => {
     const { provider } = setup(() => json({ candidates: [{ finishReason: 'SAFETY' }] }));
-    await expect(provider.generate({ system: 's', user: 'u', schema })).rejects.toThrow(/SAFETY/);
+    await expect(provider.generate({ system: 's', user: 'u', schema })).rejects.toBeInstanceOf(
+      ProviderBlockedError,
+    );
   });
 
   it('needs a chat model', async () => {
