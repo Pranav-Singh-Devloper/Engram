@@ -29,7 +29,13 @@
 
 Engram remembers what users say across sessions, keeps every fact with both the time it was true and the time it was believed, resolves contradictions, forgets what nobody needs, and consolidates conversations into lasting knowledge. Agents use it over MCP.
 
-<!-- hero:start --><!-- hero:end -->
+<!-- hero:start -->
+<p align="center">
+  <img src="docs/hero.gif" width="860" alt="The hosted demo: the user says they live in Paris and work at Initech, moves to Berlin, corrects Initech to Acme; a new session answers Berlin and Acme, and the entity timeline shows every version on both time axes.">
+  <br>
+  <sub>Recorded on the hosted demo: two sessions, an update, a correction, then the entity timeline with its record-time history. Waits for the model are cut.</sub>
+</p>
+<!-- hero:end -->
 
 ## What and why
 

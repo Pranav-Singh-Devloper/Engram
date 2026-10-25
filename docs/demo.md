@@ -16,7 +16,7 @@ Type:
 
 > I live in Paris and work at Initech.
 
-The reply has no memory to draw on yet (typically "I don't know."), and the caption under it says *no memory supported an answer · your message is stored*. That's expected: you told it something; you didn't ask. Your message is stored at once. Facts are extracted in the background, which takes a few seconds on Gemini.
+The reply is "Noted.", and the caption under it says *no memory supported an answer · your message is stored*. You told it something; you didn't ask. (The composer only answers questions. When it abstains on a message that isn't one, the chat shows "Noted." instead of its "I don't know.") Your message is stored at once. Facts are extracted in the background, which takes a few seconds on Gemini.
 
 ## 2. Ask from a different conversation (session 2)
 
@@ -32,7 +32,7 @@ Click **+** next to *Sessions* to open session 2, and ask:
 
 > Actually, I work at Acme, not Initech.
 
-Say the move in the present ("I just moved"), not with a past date. Everything in this demo happens within minutes. If you say "I moved to Berlin in March", Berlin's start lands *before* today's Paris, and Engram correctly records Berlin as earlier history that Paris replaced. Seen in the walk-through: a local 9B model even dated "just moved" to yesterday, with the same effect.
+Say the move in the present ("I just moved"), not with a past date. Everything in this demo happens within minutes. Dates resolve at day precision, and a start on the turn's own day is taken as the turn's moment, so Berlin starts after Paris. If you say "I moved to Berlin in March", Berlin's start lands *before* today's Paris, and Engram correctly records Berlin as earlier history that Paris replaced. A model that dates "just moved" to yesterday has the same effect; a local 9B model did once in the walk-through.
 
 ## 4. Ask again (session 3)
 
