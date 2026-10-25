@@ -66,13 +66,22 @@ interface Window {
   droppedBound: boolean;
 }
 
+const DAY_MS = 86_400_000;
+
 /**
  * Turns a candidate's hints into a validity window. An end resolves to the
  * start of its period, so "from 2015 to 2018" meets "since 2018" instead of
  * overlapping it; "in summer 2023" (the same period at both ends) spans it.
  */
 export function resolveWindow(raw: FactCandidate, occurredAt: Date): Window {
-  const from = resolveHint(raw.validFrom, occurredAt, 'start');
+  let from = resolveHint(raw.validFrom, occurredAt, 'start');
+  // Hints resolve at day precision, which can't order events within the turn's
+  // own day: "I just moved" would start at midnight, before anything undated
+  // said earlier that day (which starts at its own moment). A start on the
+  // turn's day, before the turn, is taken as the turn's moment.
+  if (from && from < occurredAt && occurredAt.getTime() - from.getTime() < DAY_MS) {
+    from = occurredAt;
+  }
   const validFrom = from ?? occurredAt;
   const validFromSource = from ? 'explicit' : 'episode';
   let validTo = resolveHint(raw.validTo, occurredAt, 'start');
