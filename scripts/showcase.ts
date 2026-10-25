@@ -8,7 +8,7 @@
 // be missing (LIVE_GAPS): per-turn extraction sees no earlier turns, so "And
 // before that, Marseille." yields nothing (found 2026-10-23; ledger row 49).
 import { randomUUID } from 'node:crypto';
-import { ensureNamespace, getNamespaceBySlug, transaction } from '@engram/core';
+import { ensureNamespace, getNamespaceBySlug, setFactPinned, transaction } from '@engram/core';
 import type { Provider, Sql } from '@engram/core';
 import { STORY_NOW, STORY_QUESTIONS, STORY_TURNS, Scenario } from '@engram/core/testing';
 
@@ -27,6 +27,23 @@ export const LIVE_GAPS: Record<string, string> = {
   'Where did they live in 2010?':
     'per-turn extraction has no cross-turn context, so "before that" in "And before that, Marseille." resolves to nothing',
 };
+
+/**
+ * Pins every current belief in the showcase (SPEC §9.2: pinned facts are exempt
+ * from decay). The story's facts carry 2024 record times and visitors' reads
+ * don't count as access, so without this the nightly sweep archives them and
+ * the showcase empties (seen 2026-10-24: 4 facts archived). New versions copy
+ * the pin; facts consolidation inserts later need `seed:showcase --pin` again.
+ * Returns how many facts were newly pinned.
+ */
+export async function pinShowcase(db: Sql, slug: string): Promise<number> {
+  const ns = await getNamespaceBySlug(db, slug);
+  if (!ns) throw new Error(`No namespace "${slug}".`);
+  const rows = await db<{ id: string }[]>`
+    select id from facts where namespace_id = ${ns.id} and invalidated_at is null and not pinned`;
+  for (const r of rows) await setFactPinned(db, r.id, true);
+  return rows.length;
+}
 
 export class ShowcaseExistsError extends Error {
   override name = 'ShowcaseExistsError';
@@ -93,6 +110,7 @@ export async function seedShowcase(
       await tx`delete from namespaces where slug = ${options.slug}`;
       await tx`update namespaces set slug = ${options.slug} where id = ${ns.namespace.id}`;
     });
+    await pinShowcase(db, options.slug);
     return result;
   } catch (err) {
     // Never leave a half-built or wrong showcase behind.

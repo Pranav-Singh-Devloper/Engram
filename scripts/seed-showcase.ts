@@ -1,19 +1,21 @@
-// pnpm seed:showcase [--hosted] [--replace] [--scripted]
+// pnpm seed:showcase [--hosted] [--replace] [--scripted] [--pin]
 // Seeds the read-only showcase namespace (ENGRAM_SHOWCASE_NAMESPACE, default
 // "showcase") with the bitemporal story, extracted by the configured model
 // (Gemini by default: ~6 extraction calls and ~20 embedded texts), then checks
 // every canonical answer. --scripted uses the story's scripted extraction
 // instead (no model calls). --hosted seeds HOSTED_DATABASE_URL (run
 // `pnpm db:migrate:hosted` first); otherwise DATABASE_URL or the local database.
+// --pin only pins the existing showcase's current beliefs (no model calls), for
+// facts consolidation added after the seed.
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { DEFAULT_DATABASE_URL, createDb, isLocalUrl, providerFromEnv } from '@engram/core';
 import { PORTABLE, migrate } from '@engram/core/migrate';
-import { seedShowcase } from './showcase.js';
+import { pinShowcase, seedShowcase } from './showcase.js';
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  const unknown = args.filter((a) => !['--hosted', '--replace', '--scripted'].includes(a));
+  const unknown = args.filter((a) => !['--hosted', '--replace', '--scripted', '--pin'].includes(a));
   if (unknown.length > 0) throw new Error(`Unknown argument(s): ${unknown.join(' ')}`);
   const envFile = path.resolve(import.meta.dirname, '../.env');
   if (existsSync(envFile)) process.loadEnvFile(envFile);
@@ -28,6 +30,10 @@ async function main(): Promise<void> {
 
   const db = createDb(url, { max: 2 });
   try {
+    if (args.includes('--pin')) {
+      console.log(`Pinned ${String(await pinShowcase(db, slug))} more fact(s) in "${slug}".`);
+      return;
+    }
     // Locally the portable migrations are idempotent; the hosted database is migrated by db:migrate:hosted.
     if (!hosted) await migrate(db, { sources: [PORTABLE] });
     console.log(

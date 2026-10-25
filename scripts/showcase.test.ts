@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { DEFAULT_DATABASE_URL, createDb } from '@engram/core';
 import { PORTABLE, migrate } from '@engram/core/migrate';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { LIVE_GAPS, ShowcaseExistsError, seedShowcase } from './showcase.js';
+import { LIVE_GAPS, ShowcaseExistsError, pinShowcase, seedShowcase } from './showcase.js';
 
 const db = createDb(process.env.DATABASE_URL || DEFAULT_DATABASE_URL, { max: 2 });
 const slug = `showcase-test-${randomUUID().slice(0, 8)}`;
@@ -30,6 +30,16 @@ describe('seedShowcase', () => {
     // Not a demo namespace, so the nightly cleanup never deletes it.
     expect(ns).toEqual({ kind: 'user', expiresAt: null });
   }, 60_000);
+
+  it('pins every current belief, so decay never empties the showcase', async () => {
+    const rows = await db<{ pinned: boolean }[]>`
+      select f.pinned from facts f join namespaces n on n.id = f.namespace_id
+      where n.slug = ${slug} and f.invalidated_at is null`;
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((r) => r.pinned)).toBe(true);
+    // Idempotent: nothing left to pin.
+    expect(await pinShowcase(db, slug)).toBe(0);
+  });
 
   it('refuses to overwrite an existing showcase', async () => {
     await expect(seedShowcase(db, { slug })).rejects.toBeInstanceOf(ShowcaseExistsError);
