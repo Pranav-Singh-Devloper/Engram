@@ -39,9 +39,9 @@ Engram remembers what users say across sessions, keeps every fact with both the 
 <!-- hero:end -->
 
 <p align="center">
-  <a href="https://github.com/Pranav-Singh-Devloper/Engram/releases/download/v1.0.0/engram-film-1080p.mp4"><img src="docs/film-poster.jpg" width="860" alt="Play the Engram film: a 4-minute walkthrough of the architecture, the bitemporal model and the benchmarks."></a>
+  <a href="https://huggingface.co/datasets/pranav-singh-developer-1/engram-media/resolve/main/engram-film-1080p.mp4"><img src="docs/film-poster.jpg" width="860" alt="Play the Engram film: a 4-minute walkthrough of the architecture, the bitemporal model and the benchmarks."></a>
   <br>
-  <sub><b>The film</b> (3:57, 1080p60): the problem, a worked example, the architecture and the benchmarks, losses included. Also in the <a href="https://github.com/Pranav-Singh-Devloper/Engram/releases/tag/v1.0.0">v1.0.0 release</a>. Voice by <a href="https://elevenlabs.io">ElevenLabs</a>.</sub>
+  <sub><b>The film</b> (3:57, 1080p60): the problem, a worked example, the architecture and the benchmarks, losses included. Click to play in the browser, or watch it on <a href="https://engram-lime.vercel.app/#film">the website</a>; download it from the <a href="https://github.com/Pranav-Singh-Devloper/Engram/releases/tag/v1.0.0">v1.0.0 release</a>. Voice by <a href="https://elevenlabs.io">ElevenLabs</a>.</sub>
 </p>
 
 ## What and why

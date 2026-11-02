@@ -460,7 +460,7 @@ embeddinggemma:300m@85462619ee72, at Gemini's thresholds vs the chosen profile:
 
 **Context.** The project film is a 160 MB, 3:57, 1080p60 MP4. It should play inline on the website and be linked from the README, as the original file with no re-encode, on free services only.
 
-**Decision.** The file is an asset of the `v1.0.0` GitHub release. The README shows a poster (`docs/film-poster.jpg`) that links to it, and the landing page's `<video>` streams it from the release URL with `preload="none"` and a local poster. The release host supports range requests and the file's index sits at the front, so playback starts at once and seeking works.
+**Decision.** The file is an asset of the `v1.0.0` GitHub release, with a byte-identical copy (same SHA-256) in a public Hugging Face dataset, `pranav-singh-developer-1/engram-media`. The README shows a poster (`docs/film-poster.jpg`) that links to the Hugging Face copy, which opens in the browser's player (a GitHub README can't embed a video this large: inline video is limited to 10 MB uploads). The landing page's `<video>` uses `preload="none"` and a local poster, and lists two sources: Hugging Face first, then the release. Both hosts support range requests and the file's index sits at the front, so playback starts at once and seeking works.
 
 **Alternatives.**
 
@@ -470,4 +470,4 @@ embeddinggemma:300m@85462619ee72, at Gemini's thresholds vs the chosen profile:
 - Cloudflare R2 (free 10 GB, no egress fees): activation requires a card.
 - Cloudflare Pages: 25 MiB per-file limit.
 
-**Consequences.** GitHub sends the file as `application/octet-stream` with `Content-Disposition: attachment`. Chrome, Edge and Firefox ignore both and play it; Safari may not. The `<video>` holds a list of sources, so a second host that sends `video/mp4` (a Hugging Face dataset: free, no card) can be added in front without other changes.
+**Consequences.** GitHub sends the file as `application/octet-stream` with `Content-Disposition: attachment`. Chrome, Edge and Firefox ignore both and play it, but Safari may not, which is why Hugging Face (`video/mp4`, inline, free, no card) comes first. If Hugging Face fails, the browser moves on to the release. The download link points at the release.

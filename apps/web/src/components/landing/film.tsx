@@ -1,7 +1,11 @@
-// The 4-minute film, streamed as the original 1080p60 file (no re-encode).
-// It lives on the GitHub release, not in the deploy, so Vercel serves no video bytes.
+// The 4-minute film, streamed as the original 1080p60 file (no re-encode), never
+// from the deploy, so Vercel serves no video bytes (ADR-024). Hugging Face sends
+// video/mp4, which Safari needs; the GitHub release is the fallback and the download.
+const RELEASE =
+  'https://github.com/Pranav-Singh-Devloper/Engram/releases/download/v1.0.0/engram-film-1080p.mp4';
 const SOURCES = [
-  'https://github.com/Pranav-Singh-Devloper/Engram/releases/download/v1.0.0/engram-film-1080p.mp4',
+  'https://huggingface.co/datasets/pranav-singh-developer-1/engram-media/resolve/main/engram-film-1080p.mp4',
+  RELEASE,
 ];
 
 export function Film() {
@@ -32,7 +36,7 @@ export function Film() {
           ElevenLabs
         </a>{' '}
         ·{' '}
-        <a href={SOURCES[0]} className="underline-offset-2 hover:underline">
+        <a href={RELEASE} className="underline-offset-2 hover:underline">
           download
         </a>
       </p>
