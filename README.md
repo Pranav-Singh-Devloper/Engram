@@ -38,6 +38,12 @@ Engram remembers what users say across sessions, keeps every fact with both the 
 </p>
 <!-- hero:end -->
 
+<p align="center">
+  <a href="https://github.com/Pranav-Singh-Devloper/Engram/releases/download/v1.0.0/engram-film-1080p.mp4"><img src="docs/film-poster.jpg" width="860" alt="Play the Engram film: a 4-minute walkthrough of the architecture, the bitemporal model and the benchmarks."></a>
+  <br>
+  <sub><b>The film</b> (3:57, 1080p60): the problem, a worked example, the architecture and the benchmarks, losses included. Also in the <a href="https://github.com/Pranav-Singh-Devloper/Engram/releases/tag/v1.0.0">v1.0.0 release</a>. Voice by <a href="https://elevenlabs.io">ElevenLabs</a>.</sub>
+</p>
+
 ## What and why
 
 Chat assistants forget everything between sessions, and the usual fix, retrieving old messages by similarity, can't tell which of two contradicting messages is current. Engram stores what people say as episodes, and extracts facts from them into versioned rows with two time axes: **valid time** (when it was true) and **record time** (when Engram believed it). A change never overwrites a row. It closes the old belief and writes a new one in one transaction, so "where do I live?", "where did I live in March?" and "what did you think in May?" are three different, exact queries. Recall fuses vector, full-text and entity-graph search, decay archives facts that nobody uses, and a nightly job consolidates episodes into long-term facts. It's measured against three baselines and the external LongMemEval benchmark, and its losses are reported along with its wins.
