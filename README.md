@@ -140,16 +140,16 @@ recall@8: rag 96%, engram 96%, engram_consolidated 99%. Report: `bench/reports/2
 
 ### LongMemEval-S (98-item stratified subset)
 
-| category | n | buffer | rag | full_context | engram |
-|---|---|---|---|---|---|
-| cross-session recall | 24 | 0% | 38% | 38% | 29% |
-| knowledge update | 14 | 14% | 79% | 64% | 64% |
-| temporal reasoning | 25 | 0% | 40% | 48% | 32% |
-| single-session recall | 30 | 3% | 53% | 63% | 50% |
-| abstention | 5 | 100% | 100% | 80% | 100% |
-| **all** | 98 | **8%** (8/98) | **52%** (51/98) | **54%** (53/98) | **45%** (44/98) |
+| category | n | buffer | rag | full_context | engram | engram_consolidated |
+|---|---|---|---|---|---|---|
+| cross-session recall | 24 | 0% | 38% | 38% | 29% | 42% |
+| knowledge update | 14 | 14% | 79% | 64% | 64% | 57% |
+| temporal reasoning | 25 | 0% | 40% | 48% | 32% | 24% |
+| single-session recall | 30 | 3% | 53% | 63% | 50% | 47% |
+| abstention | 5 | 100% | 100% | 80% | 100% | 100% |
+| **all** | 98 | **8%** (8/98) | **52%** (51/98) | **54%** (53/98) | **45%** (44/98) | **44%** (43/98) |
 
-recall@8: rag 51%, engram 45%. Report: `bench/reports/2026-10-19-longmemeval.md` (gemini-3.5-flash-lite + embeddinggemma:300m embeddings; judge openai/gpt-oss-120b).
+recall@8: rag 51%, engram 45%, engram_consolidated 45%. Report: `bench/reports/2026-10-19-longmemeval.md` (gemini-3.5-flash-lite + embeddinggemma:300m embeddings; judge openai/gpt-oss-120b).
 
 ### Cost per item
 
@@ -157,8 +157,8 @@ recall@8: rag 51%, engram 45%. Report: `bench/reports/2026-10-19-longmemeval.md`
 |---|---|---|---|---|---|
 | test: requests / item | 1.0 | 3.0 | 1.0 | 33.8 | 45.0 |
 | test: prompt tokens / item | 837 | 483 | 1,528 | 4,557 | 1,487 |
-| LongMemEval: requests / item | 1.0 | 10.2 | 1.0 | 64.4 | pending |
-| LongMemEval: prompt tokens / item | 2,026 | 1,057 | 48,432 | 128,681 | pending |
+| LongMemEval: requests / item | 1.0 | 10.2 | 1.0 | 64.4 | 175.5 |
+| LongMemEval: prompt tokens / item | 2,026 | 1,057 | 48,432 | 128,681 | 192,957 |
 
 Requests count generate and embedding calls. Tokens are those sent to the generation model. Both include ingest, which Engram pays once per turn, not per question.
 
@@ -189,7 +189,7 @@ Requests count generate and embedding calls. Tokens are those sent to the genera
   - local embeddings (Gemini's free tier counts every embedded text, ADR-018);
   - packed extraction.
 
-  Its consolidated number on LongMemEval is still pending.
+  Consolidation doesn't change the total (44% against 45%, one item of 98). It gained 3 cross-session questions and lost 4 elsewhere, which is within noise at these sample sizes ([docs/benchmarks.md](docs/benchmarks.md)).
 
 - **Engram pays at ingest, not per question.** A question costs one query embedding and one compose call over at most 8 memories. Full context pays its whole history on every question.
 - **The judge** (Groq `gpt-oss-120b`, not the paper's GPT-4o) agreed with 40 blind hand labels: κ 1.00. Forty is a small sample, so this says the judge isn't systematically off, not that it's perfect.

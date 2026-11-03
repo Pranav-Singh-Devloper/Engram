@@ -3,7 +3,7 @@
   "runId": "2026-10-19-longmemeval",
   "split": "longmemeval",
   "date": "2026-10-19",
-  "finishedAt": "2026-10-21T09:58:24.024Z",
+  "finishedAt": "2026-11-03T09:20:06.987Z",
   "model": "gemini-3.5-flash-lite + embeddinggemma:300m embeddings",
   "judge": "openai/gpt-oss-120b",
   "items": 98,
@@ -36,6 +36,13 @@
       "recallAt8": 0.452,
       "requestsPerItem": 64.4,
       "promptTokensPerItem": 128681
+    },
+    "engram_consolidated": {
+      "accuracy": 0.439,
+      "n": 98,
+      "recallAt8": 0.452,
+      "requestsPerItem": 175.5,
+      "promptTokensPerItem": 192957
     }
   },
   "categories": {
@@ -53,6 +60,10 @@
         "n": 5
       },
       "engram": {
+        "accuracy": 1,
+        "n": 5
+      },
+      "engram_consolidated": {
         "accuracy": 1,
         "n": 5
       }
@@ -73,6 +84,10 @@
       "engram": {
         "accuracy": 0.292,
         "n": 24
+      },
+      "engram_consolidated": {
+        "accuracy": 0.417,
+        "n": 24
       }
     },
     "knowledge_update": {
@@ -90,6 +105,10 @@
       },
       "engram": {
         "accuracy": 0.643,
+        "n": 14
+      },
+      "engram_consolidated": {
+        "accuracy": 0.571,
         "n": 14
       }
     },
@@ -109,6 +128,10 @@
       "engram": {
         "accuracy": 0.5,
         "n": 30
+      },
+      "engram_consolidated": {
+        "accuracy": 0.467,
+        "n": 30
       }
     },
     "temporal_reasoning": {
@@ -126,6 +149,10 @@
       },
       "engram": {
         "accuracy": 0.32,
+        "n": 25
+      },
+      "engram_consolidated": {
+        "accuracy": 0.24,
         "n": 25
       }
     }

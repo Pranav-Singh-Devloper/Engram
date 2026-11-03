@@ -41,16 +41,16 @@ recall@8 (an answerable item's expected value appears in a retrieved memory): ra
 
 ## Accuracy, LongMemEval-S (98 items)
 
-| category | n | buffer | rag | full_context | engram |
-|---|---|---|---|---|---|
-| cross-session recall (multi-session) | 24 | 0% | 38% | 38% | 29% |
-| knowledge update | 14 | 14% | 79% | 64% | 64% |
-| temporal reasoning | 25 | 0% | 40% | 48% | 32% |
-| single-session recall | 30 | 3% | 53% | 63% | 50% |
-| abstention | 5 | 100% | 100% | 80% | 100% |
-| **all** | 98 | **8%** | **52%** | **54%** | **45%** |
+| category | n | buffer | rag | full_context | engram | engram_consolidated |
+|---|---|---|---|---|---|---|
+| cross-session recall (multi-session) | 24 | 0% | 38% | 38% | 29% | 42% |
+| knowledge update | 14 | 14% | 79% | 64% | 64% | 57% |
+| temporal reasoning | 25 | 0% | 40% | 48% | 32% | 24% |
+| single-session recall | 30 | 3% | 53% | 63% | 50% | 47% |
+| abstention | 5 | 100% | 100% | 80% | 100% | 100% |
+| **all** | 98 | **8%** | **52%** | **54%** | **45%** | **44%** |
 
-recall@8: rag 51%, engram 45%. `engram_consolidated` on LongMemEval is pending (ledger row 46: about 4,500 summary calls, two days of free quota).
+recall@8: rag 51%, engram 45%, engram_consolidated 45%. The consolidated run finished on 2026-11-03 (ledger row 46): about 4,500 summary calls spread over several days of free quota.
 
 **Reading it.** Engram trails rag by 7 points and full_context by 9. The reasons, in order of evidence:
 
@@ -62,6 +62,8 @@ recall@8: rag 51%, engram 45%. `engram_consolidated` on LongMemEval is pending (
    Both were forced by free-tier quotas, and both apply to Engram only.
 3. **Abstention:** Engram and rag abstain correctly on all 5 unanswerable items; full_context answers one of them.
 
+**Consolidation on LongMemEval.** It doesn't move the total: 44% against engram's 45%, one item of 98. Item by item, it gained 3 cross-session questions (29% → 42%, ahead of rag and full_context at 38%) and lost 4 spread across three categories: 2 temporal, 1 knowledge update, 1 single-session. With 24 to 30 items per category, differences of 2 or 3 items are within noise, so the gain on cross-session questions is a hint, not a result. Recall@8 is unchanged at 45%. It costs about 111 more model requests per item (175.5 against 64.4), nearly all of them summaries (about 47 per history), paid once at ingest. Two clusters were refused by the model's safety filter and consolidated without a summary (ADR-023).
+
 ## Cost per item
 
 Model requests per item, counting generate and embedding requests, whether sent or replayed from the bench cache. Prompt tokens are those sent to the generation model.
@@ -69,8 +71,8 @@ Model requests per item, counting generate and embedding requests, whether sent 
 | | buffer | rag | full_context | engram | engram_consolidated |
 |---|---|---|---|---|---|
 | test: requests / item | 1.0 | 3.0 | 1.0 | 33.8 | 45.0 |
-| LongMemEval: requests / item | 1.0 | 10.2 | 1.0 | 64.4 | pending |
-| LongMemEval: prompt tokens / question | 2,026 | 1,057 | **48,432** | about 1,000 (see note) | |
+| LongMemEval: requests / item | 1.0 | 10.2 | 1.0 | 64.4 | 175.5 |
+| LongMemEval: prompt tokens / question | 2,026 | 1,057 | **48,432** | about 1,000 (see note) | about 1,000 |
 
 **Reading it.** The costs fall at different times.
 - **Engram** pays at ingest: one extraction per session, embeddings, resolution, done once. A question then costs one query embedding plus one compose call over at most 8 memories, about rag's prompt size.
