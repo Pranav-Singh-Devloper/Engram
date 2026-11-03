@@ -170,7 +170,8 @@ export function Dashboard() {
             Run with local embeddings (embeddinggemma) and packed extraction to fit free quotas
             (ADR-018); both cost Engram points on dev-long. Judged by our Groq judge, not the
             paper’s GPT-4o. Engram distills ~25 facts per 470-turn history, and these detail
-            questions favor raw-turn retrieval.
+            questions favor raw-turn retrieval. Consolidation gains 3 cross-session questions and
+            loses 4 elsewhere: no change in the total, within noise at 98 items.
           </p>
         )}
       </section>

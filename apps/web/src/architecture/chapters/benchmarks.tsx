@@ -249,7 +249,9 @@ export function Benchmarks() {
     values: Object.fromEntries(modes.map((m) => [m, byMode[m]?.accuracy ?? null])),
     n: Object.values(byMode)[0]?.n,
   }));
-  const fc = run.modes.full_context;
+  // The LongMemEval note quotes LongMemEval's numbers whichever split is selected.
+  const lme = RUNS.find((r) => r.split === 'longmemeval')?.modes;
+  const fc = lme?.full_context;
   return (
     <div>
       <p className="max-w-3xl text-muted-foreground">
@@ -317,7 +319,10 @@ export function Benchmarks() {
             Engram here. Engram distills about 25 facts from 470 turns, while these questions mostly
             ask about one throwaway turn. And two quota-forced handicaps, local embeddings and
             packed extraction, cost about 5 points each on dev-long. Nothing was tuned on
-            LongMemEval to close the gap.
+            LongMemEval to close the gap. Consolidation doesn’t change the total (
+            {pct(lme?.engram_consolidated?.accuracy ?? 0)} against {pct(lme?.engram?.accuracy ?? 0)}
+            ): it gained 3 cross-session questions and lost 4 elsewhere, which is within noise at 98
+            items.
           </p>
         </div>
       </div>
