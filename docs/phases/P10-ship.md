@@ -1,6 +1,6 @@
 # P10 — Ship
 
-**Status:** done 2026-10-25, with rows 46 and 47 paused by your decision (they need Ollama; see Outcome). Expanded from the outline at phase start, using what P08–P09c learned.
+**Status:** done 2026-10-25. Rows 46 and 47, paused at close by your decision, ran after it on your go: row 47 on 2026-10-26, row 46 on 2026-11-03 (see Outcome). Expanded from the outline at phase start, using what P08–P09c learned.
 
 **Approval (2026-10-23):**
 - decisions 1–6, 8 and 9 approved as written;
@@ -162,6 +162,11 @@ The landing page's fallback at the daily cap is covered by `chat.int.test.ts` ("
 - That night's consolidation backfilled Marseille with record time 2026-10-24. So "2010, as known at 2024-09-01" correctly stays empty.
 
 **Nightly (row 25).** Run 40097912204 logged the decay sweep, the demo cleanup and consolidation: merged 4, backfilled 1, 5 promoted to `long_term`.
+
+**Rows 46 and 47 (after close, on your go of 2026-10-26).**
+- Row 47 (2026-10-26): embeddinggemma's per-pair calibration scores were recorded, and the explorer's galaxy toggles between the Gemini and embeddinggemma spaces.
+- Row 46 (2026-11-03): LongMemEval `engram_consolidated` finished, 98/98 items, and was merged into `2026-10-19-longmemeval` beside the other four modes. It scored 44% (43/98) against engram's 45%: it gained 3 cross-session items and lost 4 spread across three categories, which is within noise. Recall@8 was unchanged at 45%, at 175.5 requests per item. The run was resumed after a refused prompt (ADR-023), after network drops, and after a reboot that removed Ollama.
+- Its final day used keys K3, K5, K2 and K1. The website and the nightly job now share K4 alone.
 
 **Row 48.** The idle preload made no measurable difference over 3 runs of `explorer-perf.mjs`, so it was removed rather than shipped. Row 31 closed as won't-do (decision 8).
 
